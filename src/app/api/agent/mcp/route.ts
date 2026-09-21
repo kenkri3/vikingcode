@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * 🛠️ Model Context Protocol (MCP) Server for VikingCode
- * Lar Botsify-agenten (eller andre MCP-klienter) kalle verktøy direkte i systemet:
+ * Lar AI-agenten (eller andre MCP-klienter) kalle verktøy direkte i systemet:
  * 1. build_project: Autonomt generere Next.js kode, Prisma og Railway-konfigurasjon
  * 2. export_to_github: Pushe kildekoden direkte til brukerens eget GitHub-repo
  * 3. get_railway_deploy_url: Lage 1-klikks distribusjonslenke for Railway
@@ -80,7 +80,7 @@ const TOOLS = [
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
-    const secret = process.env.BOTSIFY_WEBHOOK_SECRET || process.env.AGENT_API;
+    const secret = process.env.AGENT_WEBHOOK_SECRET || process.env.BOTSIFY_WEBHOOK_SECRET || process.env.AGENT_API;
 
     // Valider token hvis hemmelighet er definert
     if (secret && authHeader) {
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
               content: [
                 {
                   type: "text",
-                  text: `🚂 1-Klikks Railway Deploy URL:\n${deployUrl}\n\nKunden oppretter containeren direkte på sin egen Railway-konto. Ingen serverkostnad belastes VikingCode.`,
+                  text: `🚂 1-Klikks Railway Deploy URL:\n${deployUrl}\n\nDistribueres direkte til din egen sky og Railway-konto med full kontroll.`,
                 },
               ],
             },

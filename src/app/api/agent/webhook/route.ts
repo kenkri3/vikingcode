@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyTokenQuota } from "@/lib/tokens";
-import { BotsifyWebhookPayload, UserSession } from "@/lib/types";
+import { AgentWebhookPayload, UserSession } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const payload: BotsifyWebhookPayload = await req.json();
+    const payload: AgentWebhookPayload = await req.json();
     const {
       action,
       user_id,
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       userSession = {
         id: user_id,
         email: "demo@aiprogram.no",
-        name: "Botsify Demo",
+        name: "AI Demo",
         plan: "PRO",
         tokensRemaining: 1500000,
         trialPromptsUsed: 0,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: userSession.id,
           name: project_name,
-          description: `Opprettet via Botsify webhook (${action})`,
+          description: `Opprettet via AI webhook (${action})`,
           filesJson: files as any,
           hasDatabase: requires_database,
         },
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: userSession.id,
           tokensUsed: estimated_tokens,
-          promptAction: `BOTSIFY_WEBHOOK_${action}: ${project_name}`,
+          promptAction: `AGENT_WEBHOOK_${action}: ${project_name}`,
         },
       });
     } catch (e) {
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: `Oppdrag '${action}' for '${project_name}' ble fullført.`,
       project: projectResult || {
-        id: "proj-botsify-" + Date.now(),
+        id: "proj-agent-" + Date.now(),
         name: project_name,
         filesCount: files.length,
         hasDatabase: requires_database,

@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     systemHealth: {
       stripeConfigured: isStripeConfigured(),
+      aiAgentActive: Boolean(process.env.AGENT_API),
       botsifyAgentActive: Boolean(process.env.AGENT_API),
       databaseConnected: true,
       domain: "aiprogram.no",

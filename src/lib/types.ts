@@ -58,7 +58,7 @@ export interface GenerateRequest {
   currentFiles?: ProjectFile[];
 }
 
-export interface BotsifyWebhookPayload {
+export interface AgentWebhookPayload {
   action: "CODE_GENERATE" | "PUSH_GITHUB" | "EXPORT_LOCAL";
   user_id: string;
   project_name: string;
@@ -67,6 +67,8 @@ export interface BotsifyWebhookPayload {
   database_schema?: string;
   files: ProjectFile[];
 }
+
+export type BotsifyWebhookPayload = AgentWebhookPayload;
 
 export interface PlanConfig {
   name: string;

@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       Math.floor(estimateTokenCount(prompt) * 8 + 3800)
     );
 
-    // Sjekk om Botsify AGENT_API er tilgjengelig for direkte agent-resonnering
+    // Sjekk om AGENT_API er tilgjengelig for direkte agent-resonnering
     let agentThought = `Analyserer prompten "${prompt}". Validerer krav til norsk språk, mørk obsidian-profil, responsive Tailwind-komponenter, Prisma-skjema for PostgreSQL på Railway, samt 1-klikks distribusjonskrav i railway.json.`;
 
     if (process.env.AGENT_API) {
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
               .filter(Boolean)
               .join("\n\n");
             if (replies) {
-              agentThought = `Botsify Agent (${process.env.AGENT_API.slice(0, 6)}...): ${replies}`;
+              agentThought = replies;
             }
           }
         }
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       {
         id: "act-2",
         type: "thought",
-        title: process.env.AGENT_API ? "Botsify Agent Resonnering" : "Thought for 4.2s",
+        title: process.env.AGENT_API ? "Autonom Agent Resonnering" : "Thought for 4.2s",
         content: agentThought,
         duration: "3.8s",
         timestamp: new Date().toISOString(),

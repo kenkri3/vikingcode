@@ -80,7 +80,7 @@ export default function LandingPage() {
     },
     {
       q: "Hvordan fungerer hosting og serverdrift?",
-      a: "For å holde dine kostnader minimale og gi deg full kontroll, hoster vi ikke applikasjonene dine på våre servere. AIProgram klargjør automatisk `railway.json` og produksjonsklare Docker/Nixpacks-oppsett. Med 1 klikk distribueres koden til din egen Railway- eller GitHub-konto, hvor du kun betaler eventuelle faktiske hostingkostnader direkte uten påslag fra oss.",
+      a: "Du har full frihet og kontroll over din egen infrastruktur. AIProgram klargjør automatisk `railway.json` og produksjonsklare Docker- og Nixpacks-konfigurasjoner. Med 1 klikk distribueres koden til din egen Railway- eller GitHub-konto med optimal ytelse, sikkerhet og skalerbarhet.",
     },
     {
       q: "Hva skjer hvis jeg går tom for tokens?",
@@ -170,9 +170,9 @@ export default function LandingPage() {
         </h1>
 
         <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Beskriv hva du ønsker å bygge på norsk. Vår autonome AI-agent designer databasen, skriver
+          Beskriv hva du ønsker å bygge – på norsk, engelsk eller ditt favorittspråk. Vår autonome AI-agent designer databasen, skriver
           komplett TypeScript- og React-kode, og klargjør 1-klikks distribusjon til din egen
-          Railway- og GitHub-konto. 100 % kildekode-eierskap og null serverkostnader for oss.
+          Railway- og GitHub-konto med 100 % kildekode-eierskap og produksjonsklar arkitektur.
         </p>
 
         {/* Interactive Prompt Input Box */}
@@ -244,8 +244,8 @@ export default function LandingPage() {
           <div className="flex items-start gap-2 text-slate-300">
             <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-white">Null Hostingkostnad for oss</p>
-              <p className="text-slate-400">Du betaler kun egne servere direkte til Railway.</p>
+              <p className="font-bold text-white">Full Arkitektur-Frihet</p>
+              <p className="text-slate-400">Deploy til din egen sky eller hosting med 1 klikk.</p>
             </div>
           </div>
         </div>
@@ -417,14 +417,14 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-700/50 flex items-center justify-center text-purple-300 font-black text-sm mb-4">
                 01
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Beskriv ideen på norsk</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Beskriv ideen på valgfritt språk</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Fortell AI-agenten hva du behøver. Agenten forstår forretningslogikk, norske
-                bransjestandarder, priskalkulatorer og datamodeller umiddelbart.
+                Skriv på norsk, engelsk eller ditt favorittspråk. Vår AI-agent forstår komplekse
+                forretningskrav, norske bransjestandarder, priskalkulatorer og datamodeller umiddelbart.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-[#1F2937] text-[11px] text-purple-300 font-mono">
-              → Gemini 3.8 Flash & Botsify
+              → Gemini 3.8 Flash High & Autonom AI
             </div>
           </div>
 
@@ -451,14 +451,14 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-700/50 flex items-center justify-center text-purple-300 font-black text-sm mb-4">
                 03
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Deploy til egen Railway-konto</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Deploy til din egen sky</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Kildekoden pushes til ditt private GitHub-repo med ferdig `railway.json`. Åpne
-                Railway og start appen med 1 klikk – du eier alt og betaler kun egen hosting.
+                Kildekoden synkroniseres til ditt private GitHub-repo med ferdig `railway.json`. Åpne
+                Railway og start appen med 1 klikk – produksjonsklar arkitektur med full suverenitet.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-[#1F2937] text-[11px] text-blue-400 font-mono">
-              → 1-Klikk Railway Template
+              → 1-Klikk Cloud Deployment
             </div>
           </div>
         </div>
@@ -478,9 +478,9 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
           <div className="p-6 rounded-2xl bg-[#12161F] border border-[#1F2937]">
             <Cpu className="w-6 h-6 text-[#A78BFA] mb-3" />
-            <h3 className="text-base font-bold text-white mb-1.5">Botsify & Gemini 3.8</h3>
+            <h3 className="text-base font-bold text-white mb-1.5">Autonom AI-Agent</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Utstyrt med dyp forståelse for moderne TypeScript, Next.js App Router, Tailwind CSS og
+              Drevet av Gemini 3.8 Flash High med dyp forståelse for moderne TypeScript, Next.js App Router, Tailwind CSS og
               Prisma ORM.
             </p>
           </div>
@@ -542,8 +542,7 @@ export default function LandingPage() {
             Velg planen som passer ditt tempo
           </p>
           <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mt-3">
-            Ingen skjulte gebyrer. Du betaler kun for AIProgram tokens – servere drifter du på egen
-            konto hos Railway til ren kostpris.
+            Ingen skjulte gebyrer. Forutsigbare priser i NOK med full fleksibilitet til å skalere og tilpasse etter din byggetakt.
           </p>
         </div>
 

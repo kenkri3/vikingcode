@@ -66,7 +66,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       "5 000 000 tokens / mnd (Byrålisens)",
       "Multi-database støtte (PostgreSQL, Redis)",
       "Maksimal prioritet og ultrarask generering",
-      "Dedikert webhook og Botsify agent-tilgang",
+      "Dedikert webhook og autonom agent-tilgang",
       "Prioritert support fra Viking-teamet",
     ],
     allowsZipExport: true,

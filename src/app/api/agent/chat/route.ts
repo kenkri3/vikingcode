@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
 /**
- * 🤖 VikingCode Headless Agent Proxy (samme arkitektur som i ksmester)
- * Kommuniserer med Botsify via REST API.
+ * 🤖 AIProgram Headless Agent Proxy
+ * Kommuniserer med AI-agent via REST API.
  */
 
 const BOT_API_KEY =
   process.env.AGENT_API ||
+  process.env.AGENT_TOKEN ||
   process.env.NEXT_PUBLIC_BOTSIFY_TOKEN ||
   "WrVETkxMW1es8yUXkdan1l9HEFuLPCVjvsemSKF1";
 

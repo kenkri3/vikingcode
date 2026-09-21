@@ -220,11 +220,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="p-4 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-1">
-                <span className="text-xs text-slate-400">Botsify Agent</span>
+                <span className="text-xs text-slate-400">Autonom AI-Agent</span>
                 <div className="flex items-center gap-2 pt-1">
-                  <span className={`w-2.5 h-2.5 rounded-full ${adminData.systemHealth?.botsifyAgentActive ? "bg-emerald-400" : "bg-rose-500"}`} />
+                  <span className={`w-2.5 h-2.5 rounded-full ${adminData.systemHealth?.aiAgentActive ? "bg-emerald-400" : "bg-rose-500"}`} />
                   <span className="text-sm font-bold text-white">
-                    {adminData.systemHealth?.botsifyAgentActive ? "AGENT_API Tilkoblet" : "Ikke satt"}
+                    {adminData.systemHealth?.aiAgentActive ? "AGENT_API Tilkoblet" : "Ikke satt"}
                   </span>
                 </div>
               </div>

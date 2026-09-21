@@ -46,6 +46,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Feil ved proxying av bot-frame:", error);
-    return new NextResponse(`Feil ved kontakt med Botsify: ${error.message}`, { status: 502 });
+    return new NextResponse(`Feil ved kontakt med AI-agenten: ${error.message}`, { status: 502 });
   }
 }
