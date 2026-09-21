@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0A0D12;
+  --foreground: #F9FAFB;
+  --card-bg: #12161F;
+  --border-color: #1F2937;
+  --viking-purple: #7C3AED;
+  --viking-accent: #A78BFA;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0D12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Purple Glows & Utilities */
+.viking-glow {
+  box-shadow: 0 0 25px -4px rgba(124, 58, 237, 0.35);
+}
+
+.viking-glow-focus:focus-within {
+  box-shadow: 0 0 30px -4px rgba(124, 58, 237, 0.45);
+}
+
+.viking-border-glow:hover {
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 0 15px -3px rgba(124, 58, 237, 0.25);
+}
+
+/* Subtle Shimmer for Agents */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}

@@ -1,0 +1,53 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PlanTier {
+  TRIAL
+  STARTER
+  PRO
+  MESTER
+}
+
+model User {
+  id               String       @id @default(uuid())
+  email            String       @unique
+  name             String?
+  plan             PlanTier     @default(TRIAL)
+  tokensRemaining  Int          @default(50000) // 50k tokens tildeles for prøveperiode
+  trialPromptsUsed Int          @default(0)     // Maks 3 prompter for TRIAL
+  isActive         Boolean      @default(true)
+  githubToken      String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  projects         Project[]
+  tokenLogs        TokenUsage[]
+}
+
+model Project {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  description  String?
+  filesJson    Json     // Array av { path: string, content: string }
+  hasDatabase  Boolean  @default(false)
+  githubRepo   String?
+  railwayId    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TokenUsage {
+  id           String   @id @default(uuid())
+  userId       String
+  tokensUsed   Int
+  promptAction String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
