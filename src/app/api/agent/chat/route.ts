@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
       text: enrichedMessage,
       message: enrichedMessage,
       current_messages: enrichedMessage,
-      url: "https://vikingcode.no",
-      user_name: userName || "VikingCode Utvikler",
+      url: "https://aiprogram.no",
+      user_name: userName || "AIProgram Utvikler",
       messages: [],
     };
 

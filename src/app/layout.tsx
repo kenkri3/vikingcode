@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VikingCode | Autonom Vibecoding & Programvarebygger",
-  description: "Bygg norske nettsider og applikasjoner autonomt. Med live sandbox preview, token-kontroll og 1-klikks Railway distribusjon.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://aiprogram.no"),
+  title: "AIProgram.no | Autonom Programvarebygger & Vibecoding",
+  description:
+    "Bygg norske nettsider og applikasjoner autonomt på aiprogram.no. Live sandbox preview, token-sikkerhet, GitHub-eksport og 1-klikks Railway distribusjon.",
+  openGraph: {
+    title: "AIProgram.no | Autonom Programvarebygger",
+    description: "Bygg norske nettsider og applikasjoner autonomt. Med live sandbox preview og 1-klikks Railway distribusjon.",
+    url: "https://aiprogram.no",
+    siteName: "AIProgram.no",
+    locale: "nb_NO",
+    type: "website",
+  },
   icons: {
     icon: "/favicon.ico",
   },

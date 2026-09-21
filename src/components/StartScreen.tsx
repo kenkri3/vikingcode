@@ -61,7 +61,7 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
           Hva vil du bygge i dag?
         </h1>
         <p className="text-sm sm:text-base text-slate-400 max-w-lg mx-auto">
-          Beskriv programvaren eller nettsiden på naturlig norsk. VikingCode genererer kildekode, live forhåndsvisning og distribusjon på sekunder.
+          Beskriv programvaren eller nettsiden på naturlig norsk. AIProgram.no genererer kildekode, live forhåndsvisning og distribusjon på sekunder.
         </p>
       </div>
 

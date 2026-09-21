@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const {
       prompt,
       userId = "user-demo-1",
-      userEmail = "kenneth@vikingcode.no",
+      userEmail = "kenneth@aiprogram.no",
       currentPlan = "TRIAL",
       tokensRemaining = 50000,
       trialPromptsUsed = 0,
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
             text: `[VikingCode Task] ${prompt}`,
             message: prompt,
             current_messages: prompt,
-            url: "https://vikingcode.no",
+            url: "https://aiprogram.no",
           }),
           signal: controller.signal,
         });

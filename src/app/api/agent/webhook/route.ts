@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       // Fallback for tests/demo
       userSession = {
         id: user_id,
-        email: "demo@vikingcode.no",
+        email: "demo@aiprogram.no",
         name: "Botsify Demo",
         plan: "PRO",
         tokensRemaining: 1500000,
