@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
       `# ${projectName}\n\nGenerert autonomt av **VikingCode** (vikingcode.no).\n\n## Kjøring lokalt\n\`\`\`bash\nnpm install\nnpx prisma generate\nnpm run dev\n\`\`\`\n\n## Distribusjon til Railway\nProsjektet inneholder en ferdig \`railway.json\` for 1-klikks distribusjon med Nixpacks og PostgreSQL.\n`
     );
 
-    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+    const zipBytes = await zip.generateAsync({ type: "uint8array" });
 
-    return new NextResponse(zipBuffer, {
+    return new Response(zipBytes as any, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
