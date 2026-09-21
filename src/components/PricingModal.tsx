@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { PLAN_CONFIGS, TOP_UP_OFFER } from "@/lib/tokens";
 import { PlanTier, UserSession } from "@/lib/types";
 import { Check, Zap, Sparkles, X, Shield, Lock, Crown, ArrowRight, ExternalLink } from "lucide-react";
@@ -20,9 +20,63 @@ export function PricingModal({
   onSelectPlan,
   onTopUp,
 }: PricingModalProps) {
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const tiers: PlanTier[] = ["TRIAL", "STARTER", "PRO", "MESTER"];
+
+  const handleChoosePlan = async (tier: PlanTier) => {
+    if (tier === "TRIAL") {
+      onSelectPlan(tier);
+      onClose();
+      return;
+    }
+
+    setLoadingTier(tier);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: tier }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        onSelectPlan(tier);
+        onClose();
+      }
+    } catch {
+      onSelectPlan(tier);
+      onClose();
+    } finally {
+      setLoadingTier(null);
+    }
+  };
+
+  const handleChooseTopUp = async () => {
+    setLoadingTier("TOPUP");
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isTopup: true }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        onTopUp();
+        onClose();
+      }
+    } catch {
+      onTopUp();
+      onClose();
+    } finally {
+      setLoadingTier(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -67,14 +121,12 @@ export function PricingModal({
           </div>
 
           <button
-            onClick={() => {
-              onTopUp();
-              onClose();
-            }}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9061F9] hover:from-[#6D28D9] hover:to-[#7C3AED] text-xs font-bold text-white shadow-lg shadow-purple-900/30 flex items-center gap-1.5 transition"
+            onClick={handleChooseTopUp}
+            disabled={loadingTier === "TOPUP"}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#9061F9] hover:from-[#6D28D9] hover:to-[#7C3AED] text-xs font-bold text-white shadow-lg shadow-purple-900/30 flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
           >
             <Zap className="w-3.5 h-3.5" />
-            Kjøp påfyll (199 kr / 500k tokens)
+            {loadingTier === "TOPUP" ? "Kobler til Stripe..." : "Kjøp påfyll (199 kr / 250k tokens)"}
           </button>
         </div>
 
@@ -133,12 +185,9 @@ export function PricingModal({
 
                 <div>
                   <button
-                    onClick={() => {
-                      onSelectPlan(tier);
-                      onClose();
-                    }}
-                    disabled={isCurrent}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                    onClick={() => handleChoosePlan(tier)}
+                    disabled={isCurrent || loadingTier === tier}
+                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                       isCurrent
                         ? "bg-slate-800 text-slate-400 cursor-default"
                         : isPopular
@@ -146,8 +195,12 @@ export function PricingModal({
                         : "bg-[#181E2B] hover:bg-[#1F2937] text-white border border-[#1F2937]"
                     }`}
                   >
-                    {isCurrent ? "Nåværende pakke" : `Velg ${plan.name}`}
-                    {!isCurrent && <ArrowRight className="w-3.5 h-3.5" />}
+                    {isCurrent
+                      ? "Nåværende pakke"
+                      : loadingTier === tier
+                      ? "Kobler til Stripe..."
+                      : `Velg ${plan.name}`}
+                    {!isCurrent && loadingTier !== tier && <ArrowRight className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { VikingLogo } from "./VikingLogo";
 import { UserSession, Project } from "@/lib/types";
 import { PLAN_CONFIGS } from "@/lib/tokens";
@@ -13,6 +14,7 @@ import {
   ExternalLink,
   FolderGit2,
   Rocket,
+  LayoutDashboard,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -220,6 +222,16 @@ export function Header({
             </div>
           )}
         </div>
+
+        {/* Action Button 3: Dashboard / SuperAdmin */}
+        <Link
+          href="/dashboard"
+          className="h-8 px-2.5 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+          title="Gå til Dashboard / SuperAdmin"
+        >
+          <LayoutDashboard className="w-3.5 h-3.5 text-[#A78BFA]" />
+          <span className="hidden lg:inline">Dashboard</span>
+        </Link>
       </div>
     </header>
   );
