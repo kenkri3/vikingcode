@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/vikingcode_fallback";
+  process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/aiprogram_fallback";
 }
 
 const globalForPrisma = globalThis as unknown as {

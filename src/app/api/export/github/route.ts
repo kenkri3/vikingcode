@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { projectName = "vikingcode-app", githubToken, files = [] } = await req.json();
+    const { projectName = "aiprogram-app", githubToken, files = [] } = await req.json();
 
     const sanitizedRepoName = projectName
       .toLowerCase()
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
     // Hvis githubToken finnes kan Octokit brukes direkte.
     // Her returnerer vi en komplett struktur med 1-klikks Railway deployment URL.
-    const repoOwner = "vikingcode-user";
+    const repoOwner = "aiprogram-user";
     const repoUrl = `https://github.com/${repoOwner}/${sanitizedRepoName}`;
     const railwayTemplateUrl = `https://railway.com/template?template=${encodeURIComponent(repoUrl)}`;
 

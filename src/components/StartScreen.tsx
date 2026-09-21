@@ -37,7 +37,7 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
     },
     {
       title: "Lokal E-handelsløsning",
-      brand: "VikingCode",
+      brand: "AI Program",
       description: "Vareoversikt med Vipps-kasse og automatisk ordrebekreftelse.",
       prompt: "Lag en lettbent e-handelsløsning for lokale håndverksprodukter med Vipps-betaling og automatisk ordrebekreftelse.",
       icon: ShoppingBag,

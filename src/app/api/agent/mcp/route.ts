@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 /**
- * 🛠️ Model Context Protocol (MCP) Server for VikingCode
+ * 🛠️ Model Context Protocol (MCP) Server for AI Program
  * Lar AI-agenten (eller andre MCP-klienter) kalle verktøy direkte i systemet:
  * 1. build_project: Autonomt generere Next.js kode, Prisma og Railway-konfigurasjon
  * 2. export_to_github: Pushe kildekoden direkte til brukerens eget GitHub-repo
@@ -54,7 +54,7 @@ const TOOLS = [
   {
     name: "get_railway_deploy_url",
     description:
-      "Generer en 1-klikks distribusjonslenke for Railway slik at kunden publiserer på egen Railway-konto (ingen driftskostnad for VikingCode).",
+      "Generer en 1-klikks distribusjonslenke for Railway slik at kunden publiserer på egen Railway-konto (ingen driftskostnad for AI Program).",
     inputSchema: {
       type: "object",
       properties: {
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
               content: [
                 {
                   type: "text",
-                  text: `✅ Prosjektet '${project_name}' er ferdig bygget i VikingCode!\n\n` +
+                  text: `✅ Prosjektet '${project_name}' er ferdig bygget i AI Program!\n\n` +
                     `📁 Filer generert:\n` +
                     `- app/page.tsx (Responsiv UI med mørkt tema #0A0D12)\n` +
                     `- prisma/schema.prisma (PostgreSQL-modell med Prisma Client)\n` +

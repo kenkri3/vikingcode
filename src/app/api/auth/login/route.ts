@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       const adminUser = {
         id: "superadmin-master-id",
         email: adminEmail,
-        name: "Administrator (VikingCode / AIProgram)",
+        name: "Administrator (AI Program)",
         role: "ADMIN",
         plan: "MESTER",
         tokensRemaining: 99999999,

@@ -23,6 +23,9 @@ interface SidebarProps {
   activeProject: Project;
   onSelectProject: (name: string) => void;
   onNewConversation: () => void;
+  onOpenHistory?: () => void;
+  onOpenTasks?: () => void;
+  onOpenSettings?: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -32,19 +35,22 @@ export function Sidebar({
   activeProject,
   onSelectProject,
   onNewConversation,
+  onOpenHistory,
+  onOpenTasks,
+  onOpenSettings,
   isOpen,
   onToggle,
 }: SidebarProps) {
   const [projectsExpanded, setProjectsExpanded] = useState(true);
 
   const projectsList = [
-    { name: "Vikingmester", desc: "Håndverkerportal & SEO" },
-    { name: "Vikingnet", desc: "Hovedportal & Nettverk" },
-    { name: "VikingCRM", desc: "Kunderelasjoner & Pipeline" },
-    { name: "Helge", desc: "Kundeadministrasjon" },
-    { name: "Opplev Horten", desc: "Lokalguide Horten" },
-    { name: "Eidsfossmarked", desc: "Markedsportal" },
-    { name: "Opplev Tønsberg", desc: "Byportal Tønsberg" },
+    { name: "Vikingmester", desc: "Håndverkerportal & Priskalkulator" },
+    { name: "Vikingnet", desc: "Bedriftsportal & Ressursbase" },
+    { name: "VikingCRM", desc: "Kunderelasjoner & Salgspipeline" },
+    { name: "Helge", desc: "Kundeadministrasjon & Timeføring" },
+    { name: "Opplev Horten", desc: "Lokalguide & Opplevelser" },
+    { name: "Eidsfossmarked", desc: "Markedsplass & Bod-booking" },
+    { name: "Opplev Tønsberg", desc: "Byguide & Kulturportal" },
   ];
 
   if (!isOpen) {
@@ -52,21 +58,25 @@ export function Sidebar({
       <div className="w-12 bg-[#0A0D12] border-r border-[#1F2937] flex flex-col items-center py-3 justify-between shrink-0 select-none">
         <button
           onClick={onToggle}
-          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#12161F] transition"
+          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
           title="Åpne sidepanel"
         >
           <PanelLeft className="w-4 h-4" />
         </button>
         <button
           onClick={onNewConversation}
-          className="p-2 rounded-xl text-purple-400 hover:text-white hover:bg-purple-950/50 transition"
+          className="p-2 rounded-xl text-purple-400 hover:text-white hover:bg-purple-950/50 transition cursor-pointer"
           title="Ny samtale"
         >
           <Plus className="w-4 h-4" />
         </button>
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center text-xs font-bold text-white">
+        <button
+          onClick={onOpenSettings}
+          className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:opacity-90 transition"
+          title="Innstillinger"
+        >
           K
-        </div>
+        </button>
       </div>
     );
   }
@@ -81,7 +91,7 @@ export function Sidebar({
           </span>
           <button
             onClick={onToggle}
-            className="p-1 rounded-md text-slate-500 hover:text-white hover:bg-[#12161F] transition"
+            className="p-1 rounded-md text-slate-500 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
             title="Lukk sidepanel"
           >
             <PanelLeftClose className="w-3.5 h-3.5" />
@@ -91,7 +101,7 @@ export function Sidebar({
         {/* New Conversation Button */}
         <button
           onClick={onNewConversation}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-white transition shadow-sm"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-white transition shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4 text-[#A78BFA]" />
           <span>+ Ny Samtale</span>
@@ -99,11 +109,17 @@ export function Sidebar({
 
         {/* Navigation Items */}
         <div className="space-y-0.5 pt-1">
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition">
+          <button
+            onClick={onOpenHistory}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
+          >
             <History className="w-4 h-4 text-slate-400" />
             <span>Samtalehistorikk</span>
           </button>
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition">
+          <button
+            onClick={onOpenTasks}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
+          >
             <Clock className="w-4 h-4 text-slate-400" />
             <span>Planlagte Oppgaver</span>
           </button>
@@ -113,7 +129,7 @@ export function Sidebar({
         <div className="pt-3">
           <button
             onClick={() => setProjectsExpanded(!projectsExpanded)}
-            className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition"
+            className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition cursor-pointer"
           >
             <span className="uppercase tracking-wider">Prosjekter</span>
             {projectsExpanded ? (
@@ -131,7 +147,7 @@ export function Sidebar({
                   <button
                     key={p.name}
                     onClick={() => onSelectProject(p.name)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition cursor-pointer ${
                       isActive
                         ? "bg-purple-950/40 text-white border border-purple-800/50 font-medium"
                         : "text-slate-400 hover:text-slate-200 hover:bg-[#12161F]"
@@ -165,11 +181,15 @@ export function Sidebar({
               <p className="text-xs font-semibold text-white truncate">Kenneth Glosli K.</p>
               <div className="flex items-center gap-1 text-[10px] text-[#A78BFA]">
                 <Sparkles className="w-2.5 h-2.5" />
-                <span>{user.plan === "TRIAL" ? "Prøveperiode" : `Viking ${user.plan}`}</span>
+                <span>{user.plan === "TRIAL" ? "Prøveperiode" : `AI ${user.plan}`}</span>
               </div>
             </div>
           </div>
-          <button className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition">
+          <button
+            onClick={onOpenSettings}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+            title="Innstillinger & API-nøkler"
+          >
             <Settings className="w-4 h-4" />
           </button>
         </div>

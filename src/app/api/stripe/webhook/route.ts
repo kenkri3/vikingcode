@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +13,14 @@ export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   const rawBody = await req.text();
-  let event: Stripe.Event;
+  let event: any;
 
   try {
     if (webhookSecret && signature) {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     } else {
       // Fallback i utvikling dersom webhook secret ikke er lagt inn
-      event = JSON.parse(rawBody) as Stripe.Event;
+      event = JSON.parse(rawBody);
     }
   } catch (err: any) {
     console.error("⚠️ [Stripe Webhook] Ugyldig signatur:", err.message);
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object as any;
         const userId = session.metadata?.userId;
         const planId = session.metadata?.planId;
         const tokensToAdd = Number(session.metadata?.tokensToAdd || 0);
@@ -64,9 +63,9 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object as any;
         const customerId = invoice.customer as string;
-        const subscriptionId = (invoice as any).subscription || (invoice as any).parent?.subscription_details?.subscription;
+        const subscriptionId = invoice.subscription || invoice.parent?.subscription_details?.subscription;
 
         if (customerId && subscriptionId) {
           // Finn bruker basert på stripeCustomerId
@@ -94,7 +93,7 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         const customerId = subscription.customer as string;
 
         if (customerId) {

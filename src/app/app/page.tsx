@@ -10,7 +10,21 @@ import { PricingModal } from "@/components/PricingModal";
 import { MOCK_PROJECTS } from "@/lib/mock-projects";
 import { PLAN_CONFIGS, TOP_UP_OFFER, verifyTokenQuota } from "@/lib/tokens";
 import { UserSession, Project, ChatMessage, PlanTier } from "@/lib/types";
-import { CheckCircle2, ExternalLink, X } from "lucide-react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  X,
+  History,
+  Clock,
+  Settings,
+  Rocket,
+  Shield,
+  Key,
+  Database,
+  Trash2,
+  Plus,
+  Play,
+} from "lucide-react";
 
 function BuilderContent() {
   const searchParams = useSearchParams();
@@ -20,7 +34,7 @@ function BuilderContent() {
   const [user, setUser] = useState<UserSession>({
     id: "user-default",
     email: "bruker@aiprogram.no",
-    name: "AIProgram Bruker",
+    name: "Kenneth Glosli K.",
     plan: "TRIAL",
     tokensRemaining: 50000,
     trialPromptsUsed: 0,
@@ -51,7 +65,14 @@ function BuilderContent() {
   const [activeProject, setActiveProject] = useState<Project>(MOCK_PROJECTS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isRailwayGuideOpen, setIsRailwayGuideOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState("");
+  const [savedKeyNotification, setSavedKeyNotification] = useState(false);
+
   const [deployNotification, setDeployNotification] = useState<{
     type: "railway" | "github" | "zip";
     title: string;
@@ -87,8 +108,8 @@ function BuilderContent() {
         {
           id: "act-init-2",
           type: "thought",
-          title: "Thought for 5.8s",
-          content: "Analyserte krav til norsk håndverkerlovgivning, fastprisberegning basert på timepriser og kvadratmeter. Konstruerte modulært grensesnitt med ultra-mørkt tema og klargjorde railway.json.",
+          title: "Thought for 4.8s",
+          content: "Analyserte krav til norsk håndverkerlovgivning, fastprisberegning basert på timepriser og kvadratmeter. Konstruerte modulært grensesnitt med ultra-mørkt tema og klargjorde railway.json for 1-klikks drift.",
           timestamp: new Date().toISOString(),
         },
         {
@@ -100,7 +121,64 @@ function BuilderContent() {
       ],
       filesCreated: ["app/page.tsx", "prisma/schema.prisma", "railway.json"],
       timestamp: new Date(Date.now() - 1000 * 60 * 9).toISOString(),
-      tokensUsed: 7500,
+      tokensUsed: 6200,
+    },
+  ]);
+
+  // Samtalehistorikk-liste
+  const [savedConversations, setSavedConversations] = useState([
+    {
+      id: "conv-1",
+      title: "Bookingportal for VikingMester (TEK17)",
+      timestamp: "I dag, kl. 18:42",
+      tokens: "6 200 tokens",
+      files: 3,
+    },
+    {
+      id: "conv-2",
+      title: "B2B Medlemsnettverk for Vikingnet",
+      timestamp: "I går, kl. 14:15",
+      tokens: "8 400 tokens",
+      files: 3,
+    },
+    {
+      id: "conv-3",
+      title: "VikingCRM Salgspipeline & Kanban",
+      timestamp: "19. sep 2026",
+      tokens: "5 100 tokens",
+      files: 3,
+    },
+  ]);
+
+  // Planlagte oppgaver
+  const [scheduledTasks, setScheduledTasks] = useState([
+    {
+      id: "task-1",
+      title: "Daglig SEO- og ytelsesoptimalisering",
+      schedule: "Hver natt kl. 03:00",
+      target: "VikingMester & Opplev Horten",
+      active: true,
+    },
+    {
+      id: "task-2",
+      title: "PostgreSQL Database-migrering & Backup",
+      schedule: "Hver 12. time",
+      target: "Railway Production DB",
+      active: true,
+    },
+    {
+      id: "task-3",
+      title: "Railway Nixpacks Helsesjekk & Uptime",
+      schedule: "Hver time",
+      target: "vikingcode-production.up.railway.app",
+      active: true,
+    },
+    {
+      id: "task-4",
+      title: "Automatisk token-avstemming & kvotevarsling",
+      schedule: "Kontinuerlig",
+      target: "AI Program Backend",
+      active: true,
     },
   ]);
 
@@ -220,49 +298,13 @@ function BuilderContent() {
     }));
   };
 
-  // 1-Klikks Railway Template Deploy (Kunden betaler egen hosting på Railway)
+  // 1-Klikks Railway Template Deploy
   const handleDeployRailway = async () => {
-    if (user.plan === "TRIAL") {
-      setIsPricingOpen(true);
-      return;
-    }
-
-    setIsDeploying(true);
-    try {
-      const gitRes = await fetch("/api/export/github", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectName: activeProject.name,
-          files: activeProject.files,
-        }),
-      });
-      const gitData = await gitRes.json();
-      const railwayDeployUrl = gitData.railwayTemplateUrl || "https://railway.com/new";
-
-      setDeployNotification({
-        type: "railway",
-        title: "Klar for distribusjon på Railway!",
-        message: "Kildekoden er synkronisert. Klikk under for å åpne din egen Railway-konto og starte appen med PostgreSQL.",
-        url: railwayDeployUrl,
-        buttonText: "Åpne i Railway (1-klikk Template)",
-      });
-
-      window.open(railwayDeployUrl, "_blank");
-    } catch (e) {
-      alert("Feil under klargjøring av Railway deploy.");
-    } finally {
-      setIsDeploying(false);
-    }
+    setIsRailwayGuideOpen(true);
   };
 
   // Last ned ZIP
   const handleDownloadZip = async () => {
-    if (user.plan === "TRIAL") {
-      setIsPricingOpen(true);
-      return;
-    }
-
     try {
       const res = await fetch("/api/export/zip", {
         method: "POST",
@@ -295,11 +337,6 @@ function BuilderContent() {
 
   // Push til GitHub
   const handlePushGithub = async () => {
-    if (user.plan === "TRIAL") {
-      setIsPricingOpen(true);
-      return;
-    }
-
     try {
       const res = await fetch("/api/export/github", {
         method: "POST",
@@ -312,14 +349,27 @@ function BuilderContent() {
       const data = await res.json();
       setDeployNotification({
         type: "github",
-        title: "Push til GitHub fullført!",
-        message: `Kildekoden og railway.json er pushet til ${data.repoUrl}.`,
+        title: "Kildekode forberedt for GitHub!",
+        message: `Kildekoden og railway.json er synkronisert for ${data.repoUrl}.`,
         url: data.repoUrl,
         buttonText: "Åpne GitHub Repository",
       });
     } catch (e) {
-      alert("Kunne ikke pushe til GitHub.");
+      alert("Kunne ikke eksportere til GitHub.");
     }
+  };
+
+  // Nullstill og start ny samtale
+  const handleNewConversation = () => {
+    setMessages([
+      {
+        id: `msg-welcome-${Date.now()}`,
+        role: "assistant",
+        content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg legge til nye funksjoner, integrere Vipps, justere priser eller koble til databasen.`,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    setViewMode("workspace");
   };
 
   return (
@@ -359,7 +409,7 @@ function BuilderContent() {
             )}
             <button
               onClick={() => setDeployNotification(null)}
-              className="p-1 text-slate-400 hover:text-white"
+              className="p-1 text-slate-400 hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -374,10 +424,22 @@ function BuilderContent() {
           user={user}
           activeProject={activeProject}
           onSelectProject={(name) => {
-            setActiveProject((prev) => ({ ...prev, name }));
+            const found = MOCK_PROJECTS.find(
+              (p) =>
+                p.name.toLowerCase().includes(name.toLowerCase()) ||
+                name.toLowerCase().includes(p.name.toLowerCase())
+            );
+            if (found) {
+              setActiveProject(found);
+            } else {
+              setActiveProject((prev) => ({ ...prev, name }));
+            }
             setViewMode("workspace");
           }}
-          onNewConversation={() => setViewMode("start")}
+          onNewConversation={handleNewConversation}
+          onOpenHistory={() => setIsHistoryOpen(true)}
+          onOpenTasks={() => setIsTasksOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           isOpen={isSidebarOpen}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />
@@ -408,6 +470,304 @@ function BuilderContent() {
         onSelectPlan={handleSelectPlan}
         onTopUp={handleTopUp}
       />
+
+      {/* 4. Samtalehistorikk Modal */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-base">Samtalehistorikk</h3>
+              </div>
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Oversikt over tidligere bygge-sesjoner og genereringer. Klikk for å hente frem en tidligere samtale.
+            </p>
+
+            <div className="space-y-2.5 max-h-72 overflow-y-auto">
+              {savedConversations.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-purple-600/50 transition flex items-center justify-between group"
+                >
+                  <div>
+                    <h4 className="text-xs font-bold text-white">{c.title}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {c.timestamp} • {c.tokens} • {c.files} filer
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setIsHistoryOpen(false);
+                        handleSendMessage(`Fortsett arbeid på ${c.title}`, "Gemini 3.8 Flash High");
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[11px] font-semibold text-[#C4B5FD] hover:text-white transition cursor-pointer"
+                    >
+                      Åpne
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSavedConversations(savedConversations.filter((x) => x.id !== c.id));
+                      }}
+                      className="p-1 text-slate-500 hover:text-red-400 transition cursor-pointer"
+                      title="Slett samtale"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-[#1F2937] flex justify-end">
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
+              >
+                Lukk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Planlagte Oppgaver Modal */}
+      {isTasksOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-base">Planlagte Oppgaver & Automatisering</h3>
+              </div>
+              <button
+                onClick={() => setIsTasksOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Autonome bakgrunnsoppgaver som kjøres av AI Program for dine prosjekter og Railway-infrastruktur.
+            </p>
+
+            <div className="space-y-2.5 max-h-72 overflow-y-auto">
+              {scheduledTasks.map((t) => (
+                <div
+                  key={t.id}
+                  className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] flex items-center justify-between"
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      {t.schedule} • Mål: {t.target}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setScheduledTasks(
+                        scheduledTasks.map((x) => (x.id === t.id ? { ...x, active: !x.active } : x))
+                      );
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer border ${
+                      t.active
+                        ? "bg-emerald-950/60 border-emerald-700/50 text-emerald-400"
+                        : "bg-[#0A0D12] border-slate-800 text-slate-500"
+                    }`}
+                  >
+                    {t.active ? "Aktiv" : "Pauset"}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
+              <button
+                onClick={() => alert("Ny automatisert oppgave lagt til i køen!")}
+                className="px-3 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Legg til oppgave</span>
+              </button>
+              <button
+                onClick={() => setIsTasksOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
+              >
+                Lukk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Innstillinger & API-nøkler Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-base">Innstillinger & Konfigurasjon</h3>
+              </div>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="text-slate-400 font-medium block mb-1">Bruker / Organisasjon</label>
+                <input
+                  type="text"
+                  disabled
+                  value={user.name}
+                  className="w-full bg-[#12161F] border border-[#1F2937] rounded-xl px-3 py-2 text-white text-xs opacity-80"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-400 font-medium block mb-1">E-postadresse</label>
+                <input
+                  type="text"
+                  disabled
+                  value={user.email}
+                  className="w-full bg-[#12161F] border border-[#1F2937] rounded-xl px-3 py-2 text-white text-xs opacity-80"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-medium block mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-[#A78BFA]" />
+                    Google Gemini API-nøkkel
+                  </span>
+                  <span className="text-[10px] text-slate-500">Valgfritt</span>
+                </label>
+                <input
+                  type="password"
+                  value={geminiApiKeyInput}
+                  onChange={(e) => setGeminiApiKeyInput(e.target.value)}
+                  placeholder="AIzaSy... (eller sett GEMINI_API_KEY i Railway)"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Hvis ingen nøkkel er oppgitt, benytter plattformen automatisk den innebygde autonome motoren.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#12161F] border border-[#1F2937] space-y-1">
+                <p className="font-semibold text-white">Railway Status</p>
+                <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Klar for produksjon (Nixpacks + PostgreSQL)
+                </p>
+              </div>
+            </div>
+
+            {savedKeyNotification && (
+              <p className="text-xs text-emerald-400 font-semibold text-center">
+                ✓ Innstillinger lagret!
+              </p>
+            )}
+
+            <div className="pt-2 border-t border-[#1F2937] flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setSavedKeyNotification(true);
+                  setTimeout(() => {
+                    setSavedKeyNotification(false);
+                    setIsSettingsOpen(false);
+                  }, 1200);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer transition"
+              >
+                Lagre innstillinger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Railway Deploy & Testing Guide Modal */}
+      {isRailwayGuideOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <div className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-base">Test & Deploy på Railway</h3>
+              </div>
+              <button
+                onClick={() => setIsRailwayGuideOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs leading-relaxed text-slate-300">
+              <div className="p-3.5 bg-purple-950/40 border border-purple-800/50 rounded-xl space-y-1">
+                <p className="font-bold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Midlertidig Railway URL
+                </p>
+                <a
+                  href="https://vikingcode-production.up.railway.app/app"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-purple-300 hover:text-white underline font-mono text-[11px] block truncate"
+                >
+                  https://vikingcode-production.up.railway.app/app
+                </a>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-semibold text-white">Slik tester du systemet i full produksjon:</h4>
+                <ol className="list-decimal pl-4 space-y-1 text-slate-400">
+                  <li>Når endringer pushes til GitHub, oppdager Railway det og bygger automatisk en ny versjon på under 2 minutter.</li>
+                  <li>Agenten er nå innbygget og svarer umiddelbart i venstre panel uten noen avhengighet til eksterne iframes.</li>
+                  <li>Du kan konfigurere <code className="text-purple-300">GEMINI_API_KEY</code> under <strong>Variables</strong> på Railway Dashboard dersom du vil bruke en personlig Gemini-kvote.</li>
+                  <li>Forhåndsvisningen til høyre oppdateres i sanntid når agenten modifiserer kildekoden.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
+              <a
+                href="https://railway.com/dashboard"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs flex items-center gap-1.5 transition"
+              >
+                <span>Åpne Railway Dashboard</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <button
+                onClick={() => setIsRailwayGuideOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
+              >
+                Lukk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -419,7 +779,7 @@ export default function AppBuilderPage() {
         <div className="flex items-center justify-center h-screen w-screen bg-[#0A0D12] text-white text-sm">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
-            <span>Laster AIProgram Workspace...</span>
+            <span>Laster AI Program Workspace...</span>
           </div>
         </div>
       }

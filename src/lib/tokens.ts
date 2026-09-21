@@ -3,7 +3,7 @@ import { PlanConfig, PlanTier, UserSession } from "./types";
 export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
   TRIAL: {
     name: "Prøveperiode",
-    displayName: "Viking Trial",
+    displayName: "AI Trial",
     tier: "TRIAL",
     priceMonthly: 0,
     tokensPerMonth: 50000,
@@ -22,7 +22,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
   },
   STARTER: {
     name: "Starter",
-    displayName: "Viking Starter",
+    displayName: "AI Starter",
     tier: "STARTER",
     priceMonthly: 490,
     tokensPerMonth: 500000,
@@ -40,7 +40,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
   },
   PRO: {
     name: "Pro",
-    displayName: "Viking Pro",
+    displayName: "AI Pro",
     tier: "PRO",
     priceMonthly: 990,
     tokensPerMonth: 1500000,
@@ -58,7 +58,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
   },
   MESTER: {
     name: "Mester",
-    displayName: "Viking Mester",
+    displayName: "AI Mester",
     tier: "MESTER",
     priceMonthly: 2490,
     tokensPerMonth: 5000000,
@@ -67,7 +67,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       "Multi-database støtte (PostgreSQL, Redis)",
       "Maksimal prioritet og ultrarask generering",
       "Dedikert webhook og autonom agent-tilgang",
-      "Prioritert support fra Viking-teamet",
+      "Prioritert support fra AI Program-teamet",
     ],
     allowsZipExport: true,
     allowsGithubExport: true,
@@ -96,7 +96,7 @@ export function verifyTokenQuota(user: UserSession): TokenCheckResult {
     return {
       allowed: false,
       errorCode: "ACCOUNT_INACTIVE",
-      message: "Kontoen din er deaktivert. Kontakt support@vikingcode.no.",
+      message: "Kontoen din er deaktivert. Kontakt support@aiprogram.no.",
       tokensRemaining: user.tokensRemaining,
       trialPromptsUsed: user.trialPromptsUsed,
     };

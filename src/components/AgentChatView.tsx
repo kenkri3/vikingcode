@@ -120,7 +120,7 @@ export function AgentChatView({ messages, isLoading, currentThought }: AgentChat
               <div className="flex items-center justify-between border-b border-[#1F2937] pb-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
-                  <span>VikingCode Autonom Agent</span>
+                  <span>AI Program Autonom Agent</span>
                 </div>
                 {msg.tokensUsed && (
                   <span className="text-[10px] text-purple-300/80 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-800/40">

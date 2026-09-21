@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const demoHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 12);
     const fbId = `v${demoHash}`;
 
-    const contextHeader = `[VikingCode Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]`;
+    const contextHeader = `[AI Program Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]`;
     const enrichedMessage = `${contextHeader}\n${message}`;
 
     const payload = {
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       raw: data,
     });
   } catch (error: any) {
-    console.error("VikingCode agent chat proxy error:", error);
+    console.error("AI Program agent chat proxy error:", error);
     return NextResponse.json(
       {
         error: "Intern serverfeil ved kommunikasjon med agenten",

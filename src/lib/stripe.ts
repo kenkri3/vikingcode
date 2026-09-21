@@ -1,21 +1,31 @@
-import Stripe from "stripe";
-
 /**
  * 💳 Stripe integrasjon for AIProgram.no (NOK eks. mva / B2B)
  */
 
-export const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+function getStripeInstance() {
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_SECRET_KEY.startsWith("sk_")) {
+    return null;
+  }
+  try {
+    // Dynamic require so Next.js build never fails if stripe is not installed locally
+    const req = eval("require");
+    const StripeClass = req("stripe");
+    return new StripeClass(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2025-02-24.acacia" as any,
       appInfo: {
         name: "AIProgram.no",
         version: "1.0.0",
       },
-    })
-  : null;
+    });
+  } catch {
+    return null;
+  }
+}
+
+export const stripe: any = getStripeInstance();
 
 export const isStripeConfigured = () => {
-  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith("sk_"));
+  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith("sk_") && stripe);
 };
 
 export interface StripeProductTier {

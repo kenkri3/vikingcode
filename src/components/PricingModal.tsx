@@ -93,7 +93,7 @@ export function PricingModal({
         <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-800/50 text-xs font-semibold text-[#C4B5FD]">
             <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
-            VikingCode Forretningsmodell & Planer
+            AI Program Planer & Abonnement
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             Velg pakken tilpasset din byggetakt
@@ -112,7 +112,7 @@ export function PricingModal({
             <div>
               <p className="text-xs text-slate-400">Nåværende aktiv konto:</p>
               <p className="text-sm font-bold text-white flex items-center gap-2">
-                {user.plan === "TRIAL" ? "Prøveperiode (Gratis)" : `Viking ${user.plan}`}
+                {user.plan === "TRIAL" ? "Prøveperiode (Gratis)" : `AI ${user.plan}`}
                 <span className="text-xs font-normal text-slate-400">
                   ({user.tokensRemaining.toLocaleString("no-NO")} tokens gjenstår)
                 </span>

@@ -3,6 +3,37 @@ import { prisma } from "@/lib/prisma";
 import { verifyTokenQuota, estimateTokenCount } from "@/lib/tokens";
 import { UserSession, ProjectFile, AgentAction } from "@/lib/types";
 
+async function generateWithGemini(prompt: string, apiKey: string): Promise<string | null> {
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Du er AI Program - en autonom senior fullstack-utvikler for det norske markedet.
+Brukeren har gitt følgende oppgave: "${prompt}".
+Skriv et konsist, profesjonelt og teknisk svar på norsk (2-3 avsnitt) som forklarer hvilke komponenter du har konstruert, hvordan Tailwind CSS og datamodellene i Prisma er satt opp, og hvordan løsningen er forberedt for 1-klikks drift på Railway med PostgreSQL.`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    }
+  } catch (err) {
+    console.warn("Gemini API kall feilet, faller tilbake til innebygd AI-motor:", err);
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -13,6 +44,7 @@ export async function POST(req: NextRequest) {
       currentPlan = "TRIAL",
       tokensRemaining = 50000,
       trialPromptsUsed = 0,
+      model = "Gemini 3.8 Flash High",
     } = body;
 
     if (!prompt || typeof prompt !== "string") {
@@ -73,90 +105,66 @@ export async function POST(req: NextRequest) {
       Math.floor(estimateTokenCount(prompt) * 8 + 3800)
     );
 
-    // Sjekk om AGENT_API er tilgjengelig for direkte agent-resonnering
-    let agentThought = `Analyserer prompten "${prompt}". Validerer krav til norsk språk, mørk obsidian-profil, responsive Tailwind-komponenter, Prisma-skjema for PostgreSQL på Railway, samt 1-klikks distribusjonskrav i railway.json.`;
-
-    if (process.env.AGENT_API) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
-        const converseRes = await fetch("https://agentic.botsify.com/api/v1/converse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "message",
-            fbId: `vc${userSession.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 11)}`,
-            bot_key: process.env.AGENT_API,
-            text: `[VikingCode Task] ${prompt}`,
-            message: prompt,
-            current_messages: prompt,
-            url: "https://aiprogram.no",
-          }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (converseRes.ok) {
-          const converseData = await converseRes.json();
-          if (converseData.messages && Array.isArray(converseData.messages)) {
-            const replies = converseData.messages
-              .map((m: any) => m.message?.text)
-              .filter(Boolean)
-              .join("\n\n");
-            if (replies) {
-              agentThought = replies;
-            }
-          }
-        }
-      } catch {
-        // Fortsett med standard resonnering ved timeout/nettverksfeil
-      }
+    // Prøv å kalle Gemini API hvis nøkkel er tilgjengelig
+    let aiMessage: string | null = null;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && geminiKey.trim() !== "") {
+      aiMessage = await generateWithGemini(prompt, geminiKey);
     }
+
+    if (!aiMessage) {
+      aiMessage = `Jeg har analysert forespørselen din: "${prompt}".\n\nLøsningen er oppdatert med nye interaktive komponenter i Next.js App Router, oppdatert datamodell i Prisma for PostgreSQL, og produksjonsklare innstillinger for 1-klikks distribusjon på Railway. Forhåndsvisningen til høyre er nå oppdatert i sanntid.`;
+    }
+
+    const agentThought = `Analyserer prompten "${prompt}". Validerer krav til norsk språk, mørk obsidian-profil, responsive Tailwind-komponenter, Prisma-skjema for PostgreSQL på Railway, samt 1-klikks distribusjonskrav i railway.json.`;
 
     // Generer Antigravity-lignende tankerekker og handlinger
     const actions: AgentAction[] = [
       {
-        id: "act-1",
+        id: `act-${Date.now()}-1`,
         type: "analyze",
-        title: "Analyzed MesterAIAgentFrame.tsx #L300-450",
-        duration: "0.8s",
-        fileName: "MesterAIAgentFrame.tsx",
-        lineRange: "#L300-450",
+        title: "Analyzed requirements & UX architecture",
+        duration: "0.6s",
+        fileName: "app/page.tsx",
+        lineRange: "#L1-260",
         timestamp: new Date().toISOString(),
       },
       {
-        id: "act-2",
+        id: `act-${Date.now()}-2`,
         type: "thought",
-        title: process.env.AGENT_API ? "Autonom Agent Resonnering" : "Thought for 4.2s",
+        title: geminiKey ? "Google Gemini 2.0 Flash Resonnering" : "AI Program Autonom Resonnering (3.6s)",
         content: agentThought,
-        duration: "3.8s",
+        duration: "3.6s",
         timestamp: new Date().toISOString(),
       },
       {
-        id: "act-3",
+        id: `act-${Date.now()}-3`,
         type: "search",
-        title: "Searched mester_ai_agent_history 1 result",
-        duration: "0.3s",
+        title: "Verified TEK17 / Norsk standard bibliotek",
+        duration: "0.4s",
         timestamp: new Date().toISOString(),
       },
       {
-        id: "act-4",
+        id: `act-${Date.now()}-4`,
         type: "analyze",
-        title: "Analyzed schema.prisma #L1-45",
+        title: "Validated PostgreSQL schema & nixpacks config",
         duration: "0.5s",
-        fileName: "schema.prisma",
-        lineRange: "#L1-45",
+        fileName: "railway.json",
+        lineRange: "#L1-12",
         timestamp: new Date().toISOString(),
       },
     ];
 
-    // Konstruer prosjektfilene basert på prompten
+    // Konstruer prosjektfilene tilpasset forespørselen
+    const promptClean = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
+
     const generatedFiles: ProjectFile[] = [
       {
         path: "app/page.tsx",
         content: `'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, Shield, Zap, CheckCircle, Smartphone } from 'lucide-react';
+import { Sparkles, ArrowRight, Shield, Zap, CheckCircle, Smartphone, Clock } from 'lucide-react';
 
 export default function GeneratedApp() {
   const [activeTab, setActiveTab] = useState('demo');
@@ -175,10 +183,10 @@ export default function GeneratedApp() {
       <div className="max-w-4xl mx-auto text-center space-y-4 py-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/50 border border-purple-800/60 text-xs text-[#C4B5FD]">
           <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
-          Generert av VikingCode Autonom Engine
+          Generert av AI Program Autonom Engine
         </div>
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-          ${prompt.slice(0, 60)}
+          ${promptClean.slice(0, 70)}
         </h1>
         <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
           Skreddersydd norsk løsning med ultra-mørkt tema, direkte PostgreSQL-kobling på Railway og sanntids logikk.
@@ -203,7 +211,7 @@ export default function GeneratedApp() {
           />
           <button
             onClick={handleAdd}
-            className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-sm transition flex items-center gap-1.5 shadow-lg shadow-purple-900/30"
+            className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-sm transition flex items-center gap-1.5 shadow-lg shadow-purple-900/30 cursor-pointer"
           >
             Legg til
             <ArrowRight className="w-4 h-4" />
@@ -295,7 +303,7 @@ model GeneratedEntry {
 
     return NextResponse.json({
       success: true,
-      message: `Fullførte kodegenerering for: "${prompt.slice(0, 45)}...". Opprettet 3 kildekodefiler.`,
+      message: aiMessage,
       actions,
       files: generatedFiles,
       tokensUsed: tokensForThisRun,

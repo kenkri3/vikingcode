@@ -261,7 +261,7 @@ export default function LandingPage() {
               <div className="w-3 h-3 rounded-full bg-amber-500/70" />
               <div className="w-3 h-3 rounded-full bg-emerald-500/70" />
               <span className="ml-2 font-mono text-slate-400 text-[11px]">
-                aiprogram.no/app — VikingCode Workspace
+                aiprogram.no/app — AI Program Workspace
               </span>
             </div>
             <div className="flex items-center gap-2">

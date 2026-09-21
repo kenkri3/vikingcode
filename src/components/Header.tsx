@@ -46,7 +46,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 h-14 bg-[#0A0D12]/95 backdrop-blur-md border-b border-[#1F2937] px-4 flex items-center justify-between select-none">
-      {/* Left: VikingCode Logo & Project breadcrumb */}
+      {/* Left: AI Program Logo & Project breadcrumb */}
       <div className="flex items-center gap-3">
         <button
           onClick={onResetToStart}
@@ -57,13 +57,13 @@ export function Header({
           <div className="hidden sm:flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-extrabold tracking-tight text-white font-sans">
-                AIProgram
+                AI Program
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40">
                 .no
               </span>
             </div>
-            <span className="text-[9px] text-slate-400 -mt-0.5">aiprogram.no • Viking-økosystemet</span>
+            <span className="text-[9px] text-slate-400 -mt-0.5">aiprogram.no • Autonom Kodebygger</span>
           </div>
         </button>
 
