@@ -24,6 +24,10 @@ import {
   Trash2,
   Plus,
   Play,
+  MessageSquare,
+  Eye,
+  Code2,
+  FolderGit2,
 } from "lucide-react";
 
 function BuilderContent() {
@@ -63,7 +67,16 @@ function BuilderContent() {
 
   // Prosjekter og aktivt prosjekt
   const [activeProject, setActiveProject] = useState<Project>(MOCK_PROJECTS[0]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"agent" | "preview" | "code">("agent");
+
+  // Åpne sidepanelet automatisk på desktop
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
+
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isTasksOpen, setIsTasksOpen] = useState(false);
@@ -384,6 +397,7 @@ function BuilderContent() {
         onPushGithub={handlePushGithub}
         isDeploying={isDeploying}
         onResetToStart={() => setViewMode("start")}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
       />
 
       {/* Deploy & Export Notification Banner */}
@@ -458,9 +472,67 @@ function BuilderContent() {
             onSendMessage={handleSendMessage}
             onUpdateFile={handleUpdateFile}
             isQuotaExceeded={isQuotaExceeded}
+            mobileTab={mobileTab}
+            onSetMobileTab={setMobileTab}
           />
         )}
       </div>
+
+      {/* Mobile Bottom Navigation Bar (App-like native dock) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0E121A]/95 backdrop-blur-lg border-t border-[#1F2937] z-40 flex items-center justify-around px-2 select-none">
+        <button
+          onClick={() => {
+            setViewMode("workspace");
+            setMobileTab("agent");
+          }}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            viewMode === "workspace" && mobileTab === "agent"
+              ? "text-[#A78BFA]"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <MessageSquare className="w-5 h-5" />
+          <span className="text-[10px] font-semibold mt-0.5">Agent</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setViewMode("workspace");
+            setMobileTab("preview");
+          }}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            viewMode === "workspace" && mobileTab === "preview"
+              ? "text-[#A78BFA]"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Eye className="w-5 h-5" />
+          <span className="text-[10px] font-semibold mt-0.5">Preview</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setViewMode("workspace");
+            setMobileTab("code");
+          }}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            viewMode === "workspace" && mobileTab === "code"
+              ? "text-[#A78BFA]"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Code2 className="w-5 h-5" />
+          <span className="text-[10px] font-semibold mt-0.5">Kode</span>
+        </button>
+
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 py-1 transition text-slate-400 hover:text-white cursor-pointer"
+        >
+          <FolderGit2 className="w-5 h-5" />
+          <span className="text-[10px] font-semibold mt-0.5">Prosjekter</span>
+        </button>
+      </nav>
 
       {/* 3. Pricing & Token Upgrade Modal */}
       <PricingModal

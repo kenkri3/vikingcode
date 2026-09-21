@@ -109,9 +109,10 @@ export function FloatingInputBar({
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0A0D12] border border-[#1F2937] hover:border-slate-600 text-[11px] font-medium text-slate-300 hover:text-white transition"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[#0A0D12] border border-[#1F2937] hover:border-slate-600 text-[11px] font-medium text-slate-300 hover:text-white transition"
             >
-              <span>{selectedModel}</span>
+              <span className="hidden sm:inline">{selectedModel}</span>
+              <span className="sm:hidden">{selectedModel.replace(" Flash High", "").replace(" Engine", "")}</span>
               <ChevronUp className="w-3 h-3 text-slate-500" />
             </button>
           </div>

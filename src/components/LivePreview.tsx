@@ -457,8 +457,8 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
     <div className="flex-1 flex flex-col h-full bg-[#0A0D12]">
       {/* Top Browser Bar / Toolbar */}
       <div className="h-10 bg-[#12161F] border-b border-[#1F2937] px-3 flex items-center justify-between select-none">
-        {/* Left: Device switcher */}
-        <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1F2937]">
+        {/* Left: Device switcher (Desktop) or Title (Mobile) */}
+        <div className="hidden md:flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1F2937]">
           <button
             onClick={() => setDevice("desktop")}
             className={`p-1 rounded-md text-xs transition cursor-pointer ${
@@ -494,6 +494,13 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
           </button>
         </div>
 
+        <div className="md:hidden flex items-center gap-2">
+          <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Live App Preview
+          </span>
+        </div>
+
         {/* Center: Fake URL Address bar */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-[#0A0D12] border border-[#1F2937] text-[11px] text-slate-400 font-mono w-72 justify-center">
           <span className="text-emerald-400 text-xs">🔒</span>
@@ -520,9 +527,9 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
       </div>
 
       {/* Frame Container */}
-      <div className="flex-1 p-3 flex items-center justify-center overflow-auto bg-[#07090D]">
+      <div className="flex-1 p-0 sm:p-3 flex items-center justify-center overflow-auto bg-[#07090D]">
         <div
-          className="h-full border border-[#1F2937] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#0A0D12]"
+          className="h-full w-full sm:border border-[#1F2937] sm:rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#0A0D12]"
           style={{ width: deviceWidths[device], maxWidth: "100%" }}
         >
           <iframe

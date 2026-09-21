@@ -51,16 +51,16 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[calc(100vh-3.5rem)] max-w-4xl mx-auto select-none">
-      {/* Centered Heading (ChatGPT style) */}
-      <div className="text-center mb-8 space-y-3">
-        <div className="flex justify-center mb-2">
-          <VikingLogo size={48} />
+    <div className="flex-1 flex flex-col items-center justify-start sm:justify-center p-4 sm:p-6 min-h-[calc(100vh-3.5rem-3.5rem)] md:min-h-[calc(100vh-3.5rem)] max-w-4xl mx-auto select-none overflow-y-auto pb-20 md:pb-6">
+      {/* Centered Heading */}
+      <div className="text-center mb-5 sm:mb-8 space-y-2 sm:space-y-3 pt-2 sm:pt-0">
+        <div className="flex justify-center mb-1 sm:mb-2">
+          <VikingLogo size={42} />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
           Hva vil du bygge i dag?
         </h1>
-        <p className="text-sm sm:text-base text-slate-400 max-w-lg mx-auto">
+        <p className="text-xs sm:text-base text-slate-400 max-w-lg mx-auto">
           Beskriv programvaren eller nettsiden på valgfritt språk. AIProgram.no genererer produksjonsklar kildekode, live forhåndsvisning og distribusjon på sekunder.
         </p>
       </div>
