@@ -73,6 +73,45 @@ export async function POST(req: NextRequest) {
       Math.floor(estimateTokenCount(prompt) * 8 + 3800)
     );
 
+    // Sjekk om Botsify AGENT_API er tilgjengelig for direkte agent-resonnering
+    let agentThought = `Analyserer prompten "${prompt}". Validerer krav til norsk språk, mørk obsidian-profil, responsive Tailwind-komponenter, Prisma-skjema for PostgreSQL på Railway, samt 1-klikks distribusjonskrav i railway.json.`;
+
+    if (process.env.AGENT_API) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const converseRes = await fetch("https://agentic.botsify.com/api/v1/converse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "message",
+            fbId: `vc${userSession.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 11)}`,
+            bot_key: process.env.AGENT_API,
+            text: `[VikingCode Task] ${prompt}`,
+            message: prompt,
+            current_messages: prompt,
+            url: "https://vikingcode.no",
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (converseRes.ok) {
+          const converseData = await converseRes.json();
+          if (converseData.messages && Array.isArray(converseData.messages)) {
+            const replies = converseData.messages
+              .map((m: any) => m.message?.text)
+              .filter(Boolean)
+              .join("\n\n");
+            if (replies) {
+              agentThought = `Botsify Agent (${process.env.AGENT_API.slice(0, 6)}...): ${replies}`;
+            }
+          }
+        }
+      } catch {
+        // Fortsett med standard resonnering ved timeout/nettverksfeil
+      }
+    }
+
     // Generer Antigravity-lignende tankerekker og handlinger
     const actions: AgentAction[] = [
       {
@@ -87,9 +126,9 @@ export async function POST(req: NextRequest) {
       {
         id: "act-2",
         type: "thought",
-        title: "Thought for 4.2s",
-        content: `Analyserer prompten "${prompt}". Validerer krav til norsk språk, mørk obsidian-profil, responsive Tailwind-komponenter, Prisma-skjema for PostgreSQL på Railway, samt 1-klikks distribusjonskrav i railway.json.`,
-        duration: "4.2s",
+        title: process.env.AGENT_API ? "Botsify Agent Resonnering" : "Thought for 4.2s",
+        content: agentThought,
+        duration: "3.8s",
         timestamp: new Date().toISOString(),
       },
       {

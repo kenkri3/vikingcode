@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const botKey =
     req.nextUrl.searchParams.get("bot_api") ||
+    process.env.AGENT_API ||
     process.env.NEXT_PUBLIC_BOTSIFY_TOKEN ||
     "WrVETkxMW1es8yUXkdan1l9HEFuLPCVjvsemSKF1";
 
