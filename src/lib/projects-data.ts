@@ -1,6 +1,6 @@
 import { Project } from "./types";
 
-export const MOCK_PROJECTS: Project[] = [
+export const INITIAL_PROJECTS: Project[] = [
   {
     id: "proj-vikingmester",
     userId: "user-demo-1",
@@ -1004,3 +1004,125 @@ model Event {
     ],
   },
 ];
+
+export const MOCK_PROJECTS = INITIAL_PROJECTS;
+
+const STORAGE_KEY = "aiprogram_user_projects";
+
+export function getStoredProjects(): Project[] {
+  if (typeof window === "undefined") return INITIAL_PROJECTS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return INITIAL_PROJECTS;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch {
+    // fallback
+  }
+  return INITIAL_PROJECTS;
+}
+
+export function saveStoredProjects(projects: Project[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+  } catch (err) {
+    console.error("Kunne ikke lagre prosjekter:", err);
+  }
+}
+
+export function createNewProject(name: string, description?: string): Project {
+  const cleanId = "proj-" + Date.now();
+  const slug = name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  
+  const newProj: Project = {
+    id: cleanId,
+    userId: "user-current",
+    name: name.trim(),
+    description: description || `Skreddersydd programvare bygget med AI Program`,
+    hasDatabase: true,
+    githubRepo: `aiprogram-org/${slug}`,
+    railwayId: `rw_${slug}_prod`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    files: [
+      {
+        path: "app/page.tsx",
+        content: `'use client';
+
+import React, { useState } from 'react';
+import { Sparkles, ArrowRight, ShieldCheck, Zap, CheckCircle2 } from 'lucide-react';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('oversikt');
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 p-6 md:p-12 font-sans selection:bg-[#7C3AED] selection:text-white">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <header className="flex items-center justify-between pb-6 border-b border-[#1F2937]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white shadow-lg">
+              ${name.slice(0, 1).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">${name}</h1>
+              <p className="text-xs text-slate-400">Autonomt generert av AI Program</p>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-700/40 text-xs text-emerald-400 font-medium">
+            ● Aktiv Løsning
+          </span>
+        </header>
+
+        <main className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-8 shadow-2xl space-y-6">
+          <h2 className="text-2xl font-bold text-white">Velkommen til ${name}</h2>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            Dette prosjektet er klart for tilpasning. Du kan be AI Program Agent om å legge til nye komponenter, datamodeller i Prisma, Vipps-betaling eller henvendelsesskjemaer.
+          </p>
+        </main>
+      </div>
+    </div>
+  );
+}
+`,
+      },
+      {
+        path: "prisma/schema.prisma",
+        content: `datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Item {
+  id        String   @id @default(uuid())
+  title     String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+`,
+      },
+      {
+        path: "railway.json",
+        content: `{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npx prisma migrate deploy && npm run start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}
+`,
+      },
+    ],
+  };
+
+  return newProj;
+}
+

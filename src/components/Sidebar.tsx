@@ -20,11 +20,13 @@ import { UserSession, Project } from "@/lib/types";
 interface SidebarProps {
   user: UserSession;
   activeProject: Project;
+  projects?: Project[];
   onSelectProject: (name: string) => void;
   onNewConversation: () => void;
   onOpenHistory?: () => void;
   onOpenTasks?: () => void;
   onOpenSettings?: () => void;
+  onNewProject?: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -32,25 +34,32 @@ interface SidebarProps {
 export function Sidebar({
   user,
   activeProject,
+  projects,
   onSelectProject,
   onNewConversation,
   onOpenHistory,
   onOpenTasks,
   onOpenSettings,
+  onNewProject,
   isOpen,
   onToggle,
 }: SidebarProps) {
   const [projectsExpanded, setProjectsExpanded] = useState(true);
 
-  const projectsList = [
-    { name: "Vikingmester", desc: "Håndverkerportal & Priskalkulator" },
-    { name: "Vikingnet", desc: "Bedriftsportal & Ressursbase" },
+  const defaultProjects = [
+    { name: "VikingMester", desc: "Håndverkerportal & Priskalkulator" },
+    { name: "VikingNet", desc: "Bedriftsportal & Ressursbase" },
     { name: "VikingCRM", desc: "Kunderelasjoner & Salgspipeline" },
     { name: "Helge", desc: "Kundeadministrasjon & Timeføring" },
     { name: "Opplev Horten", desc: "Lokalguide & Opplevelser" },
     { name: "Eidsfossmarked", desc: "Markedsplass & Bod-booking" },
     { name: "Opplev Tønsberg", desc: "Byguide & Kulturportal" },
   ];
+
+  const projectsList =
+    projects && projects.length > 0
+      ? projects.map((p) => ({ name: p.name, desc: p.description || "" }))
+      : defaultProjects;
 
   const handleAction = (cb?: () => void) => {
     if (cb) cb();
@@ -64,12 +73,12 @@ export function Sidebar({
       {/* Top action list */}
       <div className="p-3 space-y-2 overflow-y-auto flex-1">
         <div className="flex items-center justify-between mb-1 px-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Arbeidsflate
           </span>
           <button
             onClick={onToggle}
-            className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
             title="Lukk sidepanel"
             aria-label="Lukk sidepanel"
           >
@@ -80,67 +89,72 @@ export function Sidebar({
         {/* New Conversation Button */}
         <button
           onClick={() => handleAction(onNewConversation)}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-white transition shadow-sm cursor-pointer active:scale-98"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-medium text-slate-200 hover:text-white transition shadow-sm cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-[#A78BFA]" />
-          <span>+ Ny Samtale</span>
+          <Plus className="w-3.5 h-3.5 text-[#A78BFA]" />
+          <span>Ny samtale</span>
         </button>
 
         {/* Navigation Items */}
         <div className="space-y-0.5 pt-1">
           <button
             onClick={() => handleAction(onOpenHistory)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer text-left"
           >
-            <History className="w-4 h-4 text-slate-400" />
-            <span>Samtalehistorikk</span>
-          </button>
-          <button
-            onClick={() => handleAction(onOpenTasks)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#12161F] transition cursor-pointer text-left"
-          >
-            <Clock className="w-4 h-4 text-slate-400" />
-            <span>Planlagte Oppgaver</span>
+            <History className="w-3.5 h-3.5 text-slate-500" />
+            <span>Historikk</span>
           </button>
         </div>
 
         {/* Collapsible Projects Tree */}
         <div className="pt-3">
-          <button
-            onClick={() => setProjectsExpanded(!projectsExpanded)}
-            className="w-full flex items-center justify-between px-2 py-1.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition cursor-pointer"
-          >
-            <span className="uppercase tracking-wider">Prosjekter ({projectsList.length})</span>
-            {projectsExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+          <div className="flex items-center justify-between px-2 py-1">
+            <button
+              onClick={() => setProjectsExpanded(!projectsExpanded)}
+              className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition cursor-pointer"
+            >
+              <span className="uppercase tracking-wider">Prosjekter ({projectsList.length})</span>
+              {projectsExpanded ? (
+                <ChevronDown className="w-3 h-3 text-slate-500" />
+              ) : (
+                <ChevronRight className="w-3 h-3 text-slate-500" />
+              )}
+            </button>
+            {onNewProject && (
+              <button
+                type="button"
+                onClick={() => handleAction(onNewProject)}
+                className="p-1 rounded text-slate-500 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
+                title="Opprett nytt prosjekt"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
             )}
-          </button>
+          </div>
 
           {projectsExpanded && (
-            <div className="mt-1 space-y-1">
+            <div className="mt-1 space-y-0.5">
               {projectsList.map((p) => {
                 const isActive = activeProject.name.toLowerCase().includes(p.name.toLowerCase());
                 return (
                   <button
                     key={p.name}
                     onClick={() => handleAction(() => onSelectProject(p.name))}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition cursor-pointer text-left ${
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer text-left ${
                       isActive
-                        ? "bg-purple-950/40 text-white border border-purple-800/50 font-medium"
+                        ? "bg-[#161B26] text-white font-medium border border-purple-800/40"
                         : "text-slate-400 hover:text-slate-200 hover:bg-[#12161F]"
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
                       {isActive ? (
-                        <FolderOpen className="w-4 h-4 text-[#A78BFA] shrink-0" />
+                        <FolderOpen className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
                       ) : (
-                        <Folder className="w-4 h-4 text-slate-500 shrink-0" />
+                        <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       )}
                       <span className="truncate">{p.name}</span>
                     </div>
-                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0"></div>}
+                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0" />}
                   </button>
                 );
               })}

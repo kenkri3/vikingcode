@@ -98,83 +98,43 @@ export function Header({
       </div>
 
 
-      {/* Center/Right: Token Meter */}
-      <div className="flex items-center gap-3">
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#12161F] border border-[#1F2937]">
-          {isTrial ? (
-            /* TRIAL METER */
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-              <span className="text-amber-300 font-medium flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                Prøveperiode:
-              </span>
-              <span className="text-white font-semibold">
-                {user.trialPromptsUsed}/3 tester brukt
-              </span>
-              <span className="text-slate-400">
-                ({user.tokensRemaining.toLocaleString("no-NO")} tokens igjen)
-              </span>
-            </div>
-          ) : (
-            /* BETALENDE METER */
-            <div className="flex items-center gap-2.5 text-xs">
-              <span className="text-[#C4B5FD] font-semibold flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-[#A78BFA]" />
-                Saldo:
-              </span>
-              <span className="text-white font-bold">
-                {user.tokensRemaining.toLocaleString("no-NO")}
-              </span>
-              <span className="text-slate-400">/ {maxTokens.toLocaleString("no-NO")}</span>
-
-              {/* Progress bar */}
-              <div className="w-24 h-1.5 rounded-full bg-[#0A0D12] overflow-hidden border border-slate-800">
-                <div
-                  className="h-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-all duration-500"
-                  style={{ width: `${tokenPercent}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Oppgrader / Fyll på knapp */}
-          <button
-            onClick={onOpenPricing}
-            className="ml-2 px-2.5 py-1 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[11px] font-bold text-[#C4B5FD] hover:text-white transition"
-          >
-            Oppgrader / Fyll på
-          </button>
-        </div>
-
-        {/* Small Screen Token Button */}
+      {/* Center/Right: Clean, Minimalist Token Indicator & Actions */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Sleek Token Pill */}
         <button
           onClick={onOpenPricing}
-          className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#12161F] border border-[#1F2937] text-xs font-semibold text-[#A78BFA]"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs transition cursor-pointer group"
+          title="Klikk for å fylle på tokens eller se plan"
         >
-          <Zap className="w-3.5 h-3.5" />
-          <span>{user.tokensRemaining.toLocaleString("no-NO")}</span>
+          <Zap className="w-3.5 h-3.5 text-[#A78BFA] group-hover:scale-110 transition-transform" />
+          <span className="font-semibold text-slate-200">
+            {user.tokensRemaining.toLocaleString("no-NO")}{" "}
+            <span className="text-slate-400 font-normal hidden sm:inline">tokens</span>
+          </span>
+          <span className="text-[10px] font-medium text-[#C4B5FD] bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800/40">
+            {isTrial ? "Prøve" : user.plan}
+          </span>
         </button>
 
         {/* Action Button 1: Deploy til egen Railway-konto via GitHub (Desktop) */}
         <button
           onClick={isTrial ? onOpenPricing : onDeployRailway}
-          className={`hidden md:flex h-8 px-3 rounded-xl text-xs font-semibold items-center gap-1.5 transition shadow-sm ${
+          className={`hidden md:flex h-8 px-3 rounded-lg text-xs font-semibold items-center gap-1.5 transition cursor-pointer ${
             isTrial
-              ? "bg-[#181E2B] text-slate-400 border border-[#1F2937] hover:border-slate-600"
-              : "bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] hover:to-[#7C3AED] text-white shadow-purple-900/30"
+              ? "bg-[#141822] text-slate-400 border border-[#1F2937] hover:border-slate-600"
+              : "bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] hover:to-[#7C3AED] text-white shadow-sm shadow-purple-950/50"
           }`}
-          title={isTrial ? "Låst i prøveperiode - oppgrader for 1-klikks Railway Template deploy" : "Pushe til GitHub og deploy direkte på din egen Railway-konto"}
+          title={isTrial ? "Oppgrader for 1-klikks Railway Template deploy" : "Deploy direkte på din egen Railway-konto"}
         >
           {isTrial ? (
             <>
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Deploy på Railway</span>
+              <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+              <span>Deploy</span>
             </>
           ) : (
             <>
               <Rocket className="w-3.5 h-3.5" />
-              <span>Deploy på Railway (1-klikk)</span>
+              <span>Deploy</span>
             </>
           )}
         </button>
@@ -183,20 +143,15 @@ export function Header({
         <div className="relative hidden md:block">
           <button
             onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-            className="h-8 px-3 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition"
+            className="h-8 px-2.5 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-medium text-slate-300 hover:text-white flex items-center gap-1.5 transition cursor-pointer"
           >
-            {isTrial && <Lock className="w-3.5 h-3.5 text-amber-400" />}
-            <span className="hidden sm:inline">Eksporter kode</span>
+            {isTrial && <Lock className="w-3 h-3 text-amber-400/80" />}
+            <span>Eksport</span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {exportDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-[#12161F] border border-[#1F2937] rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="px-3 py-2 border-b border-[#1F2937] mb-1">
-                <p className="font-semibold text-white">Eksporter & Distribuer</p>
-                <p className="text-[11px] text-slate-400">Pushe til eget GitHub-repo eller last ned lokalt</p>
-              </div>
-
+            <div className="absolute right-0 mt-1.5 w-56 bg-[#12161F] border border-[#1F2937] rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
               {/* Push til GitHub */}
               <button
                 onClick={() => {
@@ -207,11 +162,11 @@ export function Header({
                     onPushGithub();
                   }
                 }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-200 hover:bg-[#1A212E] hover:text-white transition"
+                className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:bg-[#181E2B] hover:text-white transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  <Github className="w-3.5 h-3.5 text-slate-300" />
-                  Push til GitHub-repo
+                  <Github className="w-3.5 h-3.5 text-slate-400" />
+                  Push til GitHub
                 </span>
                 {isTrial && <Lock className="w-3 h-3 text-amber-400" />}
               </button>
@@ -226,11 +181,11 @@ export function Header({
                     onDownloadZip();
                   }
                 }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-200 hover:bg-[#1A212E] hover:text-white transition"
+                className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-slate-200 hover:bg-[#181E2B] hover:text-white transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
                   <Download className="w-3.5 h-3.5 text-[#A78BFA]" />
-                  Last ned ZIP-arkiv
+                  Last ned ZIP
                 </span>
                 {isTrial && <Lock className="w-3 h-3 text-amber-400" />}
               </button>
@@ -241,7 +196,7 @@ export function Header({
         {/* Action Button 3: Dashboard / SuperAdmin (Desktop) */}
         <Link
           href="/dashboard"
-          className="hidden md:flex h-8 px-2.5 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-slate-300 hover:text-white items-center gap-1.5 transition"
+          className="hidden md:flex h-8 px-2.5 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-medium text-slate-300 hover:text-white items-center gap-1.5 transition"
           title="Gå til Dashboard / SuperAdmin"
         >
           <LayoutDashboard className="w-3.5 h-3.5 text-[#A78BFA]" />

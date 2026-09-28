@@ -24,7 +24,7 @@ export function FloatingInputBar({
   const models = [
     { name: "Gemini 3.8 Flash High", tag: "Anbefalt" },
     { name: "Claude 3.7 Sonnet", tag: "Avansert" },
-    { name: "Viking Ultra Engine", tag: "Økosystem" },
+    { name: "AI Program Ultra", tag: "Kraftig" },
   ];
 
   const handleSend = () => {
@@ -50,11 +50,11 @@ export function FloatingInputBar({
   };
 
   return (
-    <div className="p-3 bg-[#0A0D12]/90 border-t border-[#1F2937] backdrop-blur-md">
-      <div className="relative max-w-3xl mx-auto bg-[#12161F] border border-[#1F2937] focus-within:border-[#7C3AED] focus-within:shadow-[0_0_25px_-5px_rgba(124,58,237,0.35)] rounded-2xl p-2.5 transition-all">
+    <div className="p-3 bg-[#0A0D12]/95 border-t border-[#1E2430]">
+      <div className="relative max-w-3xl mx-auto bg-[#12161F] border border-[#1E2430] focus-within:border-[#7C3AED]/70 rounded-xl p-2.5 transition-all">
         {/* Model dropdown overlay */}
         {modelDropdownOpen && (
-          <div className="absolute bottom-full left-4 mb-2 w-56 bg-[#12161F] border border-[#1F2937] rounded-xl shadow-2xl p-1.5 z-50 text-xs">
+          <div className="absolute bottom-full left-3 mb-2 w-56 bg-[#12161F] border border-[#1E2430] rounded-xl shadow-xl p-1.5 z-50 text-xs">
             <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-500">
               Velg AI-modell
             </p>
@@ -68,7 +68,7 @@ export function FloatingInputBar({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition ${
                   selectedModel === m.name
-                    ? "bg-purple-950/60 text-white font-medium"
+                    ? "bg-[#1E2430] text-white font-medium"
                     : "text-slate-300 hover:bg-[#181E2B] hover:text-white"
                 }`}
               >
@@ -89,17 +89,17 @@ export function FloatingInputBar({
           onChange={adjustHeight}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder="Ask anything, @ to mention, / for actions"
+          placeholder="Beskriv hva du vil bygge eller endre..."
           className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-slate-500 outline-none resize-none px-2 py-1 max-h-32"
         />
 
         {/* Action bar inside input box */}
-        <div className="flex items-center justify-between pt-1 mt-1 border-t border-[#1F2937]/50 text-xs">
+        <div className="flex items-center justify-between pt-1 mt-1 border-t border-[#1E2430]/60 text-xs">
           <div className="flex items-center gap-1.5">
             {/* Attachment */}
             <button
               type="button"
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#1A212E] transition"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#1E2430] transition"
               title="Legg til fil eller skjermbilde"
             >
               <Plus className="w-4 h-4" />
@@ -109,10 +109,10 @@ export function FloatingInputBar({
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[#0A0D12] border border-[#1F2937] hover:border-slate-600 text-[11px] font-medium text-slate-300 hover:text-white transition"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md bg-[#0A0D12] border border-[#1E2430] hover:border-slate-600 text-[11px] font-medium text-slate-300 hover:text-white transition"
             >
               <span className="hidden sm:inline">{selectedModel}</span>
-              <span className="sm:hidden">{selectedModel.replace(" Flash High", "").replace(" Engine", "")}</span>
+              <span className="sm:hidden">{selectedModel.replace(" Flash High", "").replace(" Ultra", "")}</span>
               <ChevronUp className="w-3 h-3 text-slate-500" />
             </button>
           </div>

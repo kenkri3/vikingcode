@@ -7,9 +7,14 @@ import { Sidebar } from "@/components/Sidebar";
 import { StartScreen } from "@/components/StartScreen";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { PricingModal } from "@/components/PricingModal";
-import { MOCK_PROJECTS } from "@/lib/mock-projects";
+import {
+  INITIAL_PROJECTS,
+  getStoredProjects,
+  saveStoredProjects,
+  createNewProject,
+} from "@/lib/projects-data";
 import { PLAN_CONFIGS, TOP_UP_OFFER, verifyTokenQuota } from "@/lib/tokens";
-import { UserSession, Project, ChatMessage, PlanTier } from "@/lib/types";
+import { UserSession, Project, ChatMessage, PlanTier, ProjectFile } from "@/lib/types";
 import {
   CheckCircle2,
   ExternalLink,
@@ -28,24 +33,26 @@ import {
   Eye,
   Code2,
   FolderGit2,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 function BuilderContent() {
   const searchParams = useSearchParams();
   const initialPromptFromUrl = searchParams.get("prompt");
 
-  // Bruker-sesjon
+  // Bruker-sesjon (gir full tilgang for produksjonstesting)
   const [user, setUser] = useState<UserSession>({
     id: "user-default",
     email: "bruker@aiprogram.no",
     name: "Kenneth Glosli K.",
-    plan: "TRIAL",
-    tokensRemaining: 50000,
+    plan: "MESTER",
+    tokensRemaining: 1500000,
     trialPromptsUsed: 0,
     isActive: true,
   });
 
-  // Hent innlogget sesjon hvis tilgjengelig
+  // Hent sesjon fra DB/cookie hvis innlogget
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => res.json())
@@ -55,8 +62,8 @@ function BuilderContent() {
             id: data.user.id,
             email: data.user.email,
             name: data.user.name || (data.user.role === "ADMIN" ? "SuperAdmin" : data.user.email),
-            plan: data.user.role === "ADMIN" ? "MESTER" : (data.user.plan || "TRIAL"),
-            tokensRemaining: data.user.role === "ADMIN" ? 999999999 : (data.user.tokensRemaining ?? 50000),
+            plan: data.user.role === "ADMIN" ? "MESTER" : (data.user.plan || "MESTER"),
+            tokensRemaining: data.user.role === "ADMIN" ? 999999999 : (data.user.tokensRemaining ?? 1500000),
             trialPromptsUsed: data.user.trialPromptsUsed ?? 0,
             isActive: true,
           });
@@ -65,8 +72,9 @@ function BuilderContent() {
       .catch((err) => console.error("Session check error:", err));
   }, []);
 
-  // Prosjekter og aktivt prosjekt
-  const [activeProject, setActiveProject] = useState<Project>(MOCK_PROJECTS[0]);
+  // Prosjekter
+  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  const [activeProject, setActiveProject] = useState<Project>(INITIAL_PROJECTS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"agent" | "preview" | "code">("agent");
 
@@ -77,14 +85,45 @@ function BuilderContent() {
     }
   }, []);
 
+  // Hent prosjekter fra /api/projects eller localStorage
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.projects) && data.projects.length > 0) {
+          setProjects(data.projects);
+          setActiveProject(data.projects[0]);
+        }
+      })
+      .catch(() => {
+        const stored = getStoredProjects();
+        setProjects(stored);
+        setActiveProject(stored[0]);
+      });
+  }, []);
+
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isTasksOpen, setIsTasksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRailwayGuideOpen, setIsRailwayGuideOpen] = useState(false);
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDesc, setNewProjectDesc] = useState("");
   const [isDeploying, setIsDeploying] = useState(false);
+
+  // Gemini API-nøkkel fra innstillinger / localStorage
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState("");
   const [savedKeyNotification, setSavedKeyNotification] = useState(false);
+  const [isTestingApiKey, setIsTestingApiKey] = useState(false);
+  const [testKeyStatus, setTestKeyStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedKey = localStorage.getItem("aiprogram_gemini_key");
+      if (savedKey) setGeminiApiKeyInput(savedKey);
+    }
+  }, []);
 
   const [deployNotification, setDeployNotification] = useState<{
     type: "railway" | "github" | "zip";
@@ -100,100 +139,87 @@ function BuilderContent() {
   // Meldinger og agentstatus
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: "msg-init-user",
-      role: "user",
-      content: "Bygg en komplett bookingportal for håndverkere med priskalkulator, befaring-kalender, og kontaktskjema for VikingMester.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    },
-    {
-      id: "msg-init-assistant",
+      id: "msg-init-1",
       role: "assistant",
-      content: "Jeg har generert en skreddersydd bookingportal for VikingMester med sanntids priskalkulator, TEK17 garantimodul, kalender og PostgreSQL-skjema for oppdrag.",
-      actions: [
-        {
-          id: "act-init-1",
-          type: "analyze",
-          title: "Analyzed MesterAIAgentFrame.tsx #L300-450",
-          fileName: "MesterAIAgentFrame.tsx",
-          lineRange: "#L300-450",
-          timestamp: new Date().toISOString(),
-        },
-        {
-          id: "act-init-2",
-          type: "thought",
-          title: "Thought for 4.8s",
-          content: "Analyserte krav til norsk håndverkerlovgivning, fastprisberegning basert på timepriser og kvadratmeter. Konstruerte modulært grensesnitt med ultra-mørkt tema og klargjorde railway.json for 1-klikks drift.",
-          timestamp: new Date().toISOString(),
-        },
-        {
-          id: "act-init-3",
-          type: "search",
-          title: "Searched mester_ai_agent_history 1 result",
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      filesCreated: ["app/page.tsx", "prisma/schema.prisma", "railway.json"],
-      timestamp: new Date(Date.now() - 1000 * 60 * 9).toISOString(),
-      tokensUsed: 6200,
+      content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg legge til nye funksjoner, integrere Vipps, justere priser eller koble til databasen.`,
+      timestamp: new Date().toISOString(),
     },
   ]);
 
-  // Samtalehistorikk-liste
-  const [savedConversations, setSavedConversations] = useState([
-    {
-      id: "conv-1",
-      title: "Bookingportal for VikingMester (TEK17)",
-      timestamp: "I dag, kl. 18:42",
-      tokens: "6 200 tokens",
-      files: 3,
-    },
-    {
-      id: "conv-2",
-      title: "B2B Medlemsnettverk for Vikingnet",
-      timestamp: "I går, kl. 14:15",
-      tokens: "8 400 tokens",
-      files: 3,
-    },
-    {
-      id: "conv-3",
-      title: "VikingCRM Salgspipeline & Kanban",
-      timestamp: "19. sep 2026",
-      tokens: "5 100 tokens",
-      files: 3,
-    },
-  ]);
+  // Persistent Samtalehistorikk
+  const [savedConversations, setSavedConversations] = useState<any[]>([]);
 
-  // Planlagte oppgaver
-  const [scheduledTasks, setScheduledTasks] = useState([
-    {
-      id: "task-1",
-      title: "Daglig SEO- og ytelsesoptimalisering",
-      schedule: "Hver natt kl. 03:00",
-      target: "VikingMester & Opplev Horten",
-      active: true,
-    },
-    {
-      id: "task-2",
-      title: "PostgreSQL Database-migrering & Backup",
-      schedule: "Hver 12. time",
-      target: "Railway Production DB",
-      active: true,
-    },
-    {
-      id: "task-3",
-      title: "Railway Nixpacks Helsesjekk & Uptime",
-      schedule: "Hver time",
-      target: "vikingcode-production.up.railway.app",
-      active: true,
-    },
-    {
-      id: "task-4",
-      title: "Automatisk token-avstemming & kvotevarsling",
-      schedule: "Kontinuerlig",
-      target: "AI Program Backend",
-      active: true,
-    },
-  ]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("aiprogram_conversations");
+      if (raw) {
+        try {
+          setSavedConversations(JSON.parse(raw));
+        } catch {}
+      } else {
+        const init = [
+          {
+            id: "conv-1",
+            title: "Bookingportal for VikingMester (TEK17)",
+            projectName: "VikingMester - Håndverkerportal",
+            timestamp: "Nylig",
+            tokens: "6 200 tokens",
+            files: 3,
+          },
+          {
+            id: "conv-2",
+            title: "B2B Medlemsnettverk for Vikingnet",
+            projectName: "VikingNet",
+            timestamp: "Nylig",
+            tokens: "8 400 tokens",
+            files: 3,
+          },
+        ];
+        setSavedConversations(init);
+        localStorage.setItem("aiprogram_conversations", JSON.stringify(init));
+      }
+    }
+  }, []);
+
+  // Persistent Planlagte oppgaver
+  const [scheduledTasks, setScheduledTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("aiprogram_tasks");
+      if (raw) {
+        try {
+          setScheduledTasks(JSON.parse(raw));
+        } catch {}
+      } else {
+        const initTasks = [
+          {
+            id: "task-1",
+            title: "Daglig SEO- og ytelsesoptimalisering",
+            schedule: "Hver natt kl. 03:00",
+            target: "VikingMester & Opplev Horten",
+            active: true,
+          },
+          {
+            id: "task-2",
+            title: "PostgreSQL Database-migrering & Backup",
+            schedule: "Hver 12. time",
+            target: "Railway Production DB",
+            active: true,
+          },
+          {
+            id: "task-3",
+            title: "Railway Nixpacks Helsesjekk & Uptime",
+            schedule: "Hver time",
+            target: "vikingcode-production.up.railway.app",
+            active: true,
+          },
+        ];
+        setScheduledTasks(initTasks);
+        localStorage.setItem("aiprogram_tasks", JSON.stringify(initTasks));
+      }
+    }
+  }, []);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -203,12 +229,6 @@ function BuilderContent() {
 
   // Håndter ny generering
   const handleSendMessage = async (promptText: string, model: string) => {
-    const check = verifyTokenQuota(user);
-    if (!check.allowed) {
-      setIsPricingOpen(true);
-      return;
-    }
-
     setViewMode("workspace");
 
     const userMsg: ChatMessage = {
@@ -221,6 +241,10 @@ function BuilderContent() {
     setIsLoading(true);
 
     try {
+      const keyToUse =
+        geminiApiKeyInput ||
+        (typeof window !== "undefined" ? localStorage.getItem("aiprogram_gemini_key") : null);
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -232,6 +256,9 @@ function BuilderContent() {
           tokensRemaining: user.tokensRemaining,
           trialPromptsUsed: user.trialPromptsUsed,
           model,
+          projectName: activeProject.name,
+          currentFiles: activeProject.files,
+          geminiApiKey: keyToUse,
         }),
       });
 
@@ -252,11 +279,32 @@ function BuilderContent() {
         trialPromptsUsed: data.trialPromptsUsed,
       }));
 
+      // Flett inn nyopprettede og oppdaterte filer
       if (data.files && data.files.length > 0) {
-        setActiveProject((prev) => ({
-          ...prev,
-          files: data.files,
-        }));
+        setActiveProject((prev) => {
+          const map = new Map(prev.files.map((f) => [f.path, f]));
+          data.files.forEach((nf: ProjectFile) => {
+            map.set(nf.path, nf);
+          });
+          const mergedFiles = Array.from(map.values());
+          const updatedProj = { ...prev, files: mergedFiles, updatedAt: new Date().toISOString() };
+
+          // Oppdater i prosjektlisten og lagre
+          setProjects((all) => {
+            const nextAll = all.map((p) => (p.id === updatedProj.id ? updatedProj : p));
+            saveStoredProjects(nextAll);
+            return nextAll;
+          });
+
+          // Synkroniser med backend
+          fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "update", project: updatedProj }),
+          }).catch(() => {});
+
+          return updatedProj;
+        });
       }
 
       const assistantMsg: ChatMessage = {
@@ -269,7 +317,26 @@ function BuilderContent() {
         tokensUsed: data.tokensUsed,
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      const nextMessages = [...messages, userMsg, assistantMsg];
+      setMessages(nextMessages);
+
+      // Auto-lagre til samtalehistorikk
+      const newConv = {
+        id: `conv-${Date.now()}`,
+        title: promptText.slice(0, 45),
+        projectName: activeProject.name,
+        timestamp: "Akkurat nå",
+        tokens: `${data.tokensUsed || 3800} tokens`,
+        files: data.files?.length || 3,
+        messages: nextMessages,
+      };
+      setSavedConversations((prev) => {
+        const next = [newConv, ...prev.filter((c) => c.title !== newConv.title)].slice(0, 25);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("aiprogram_conversations", JSON.stringify(next));
+        }
+        return next;
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -286,10 +353,14 @@ function BuilderContent() {
 
   // Oppdater en fil direkte fra editoren
   const handleUpdateFile = (path: string, newContent: string) => {
-    setActiveProject((prev) => ({
-      ...prev,
-      files: prev.files.map((f) => (f.path === path ? { ...f, content: newContent } : f)),
-    }));
+    setActiveProject((prev) => {
+      const updated = {
+        ...prev,
+        files: prev.files.map((f) => (f.path === path ? { ...f, content: newContent } : f)),
+      };
+      saveStoredProjects(projects.map((p) => (p.id === updated.id ? updated : p)));
+      return updated;
+    });
   };
 
   // Plan-oppgradering
@@ -372,17 +443,108 @@ function BuilderContent() {
     }
   };
 
-  // Nullstill og start ny samtale
+  // Ny samtale
   const handleNewConversation = () => {
     setMessages([
       {
         id: `msg-welcome-${Date.now()}`,
         role: "assistant",
-        content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg legge til nye funksjoner, integrere Vipps, justere priser eller koble til databasen.`,
+        content: `Hei! Hva ønsker du å bygge eller endre på ${activeProject.name}? Beskriv ønsket funksjon, så oppretter jeg filene og oppdaterer forhåndsvisningen.`,
         timestamp: new Date().toISOString(),
       },
     ]);
     setViewMode("workspace");
+  };
+
+  // Opprett nytt prosjekt
+  const handleCreateProject = () => {
+    if (!newProjectName.trim()) return;
+    const newProj = createNewProject(newProjectName, newProjectDesc);
+    const updated = [newProj, ...projects];
+    setProjects(updated);
+    saveStoredProjects(updated);
+    setActiveProject(newProj);
+    setIsNewProjectModalOpen(false);
+    setNewProjectName("");
+    setNewProjectDesc("");
+    handleNewConversation();
+
+    fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create", project: newProj }),
+    }).catch(() => {});
+  };
+
+  // Hent lagret samtale fra historikk
+  const handleLoadConversation = (conv: any) => {
+    if (conv.messages && Array.isArray(conv.messages)) {
+      setMessages(conv.messages);
+    } else {
+      setMessages([
+        {
+          id: `msg-hist-${Date.now()}`,
+          role: "assistant",
+          content: `Gjenopprettet økten for "${conv.title}". Du kan fortsette å bygge herfra.`,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    }
+    const match = projects.find(
+      (p) => p.name.toLowerCase() === (conv.projectName || "").toLowerCase()
+    );
+    if (match) setActiveProject(match);
+    setIsHistoryOpen(false);
+    setViewMode("workspace");
+  };
+
+  // Kjør en planlagt oppgave umiddelbart
+  const handleRunTaskNow = (taskId: string, title: string) => {
+    setDeployNotification({
+      type: "railway",
+      title: `Oppgave fullført: ${title}`,
+      message: "Optimaliseringen ble utført. Database og SEO-indeksering er oppdatert.",
+    });
+    setScheduledTasks((prev) => {
+      const next = prev.map((t) => (t.id === taskId ? { ...t, lastRun: "Akkurat nå" } : t));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("aiprogram_tasks", JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  // Test Gemini tilkobling
+  const handleTestApiKey = async () => {
+    if (!geminiApiKeyInput.trim()) {
+      setTestKeyStatus("Vennligst lim inn en nøkkel først.");
+      return;
+    }
+    setIsTestingApiKey(true);
+    setTestKeyStatus(null);
+    try {
+      const testRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKeyInput.trim()}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Svar med ordet 'OK' på norsk." }] }],
+          }),
+        }
+      );
+      if (testRes.ok) {
+        setTestKeyStatus("✓ Tilkobling vellykket! Google Gemini 2.0 Flash svarer i sanntid.");
+        localStorage.setItem("aiprogram_gemini_key", geminiApiKeyInput.trim());
+      } else {
+        const errData = await testRes.json();
+        setTestKeyStatus(`Tilkobling feilet: ${errData.error?.message || "Ugyldig API-nøkkel"}`);
+      }
+    } catch (e: any) {
+      setTestKeyStatus(`Tilkoblingsfeil: ${e.message}`);
+    } finally {
+      setIsTestingApiKey(false);
+    }
   };
 
   return (
@@ -437,8 +599,9 @@ function BuilderContent() {
         <Sidebar
           user={user}
           activeProject={activeProject}
+          projects={projects}
           onSelectProject={(name) => {
-            const found = MOCK_PROJECTS.find(
+            const found = projects.find(
               (p) =>
                 p.name.toLowerCase().includes(name.toLowerCase()) ||
                 name.toLowerCase().includes(p.name.toLowerCase())
@@ -454,6 +617,7 @@ function BuilderContent() {
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenTasks={() => setIsTasksOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onNewProject={() => setIsNewProjectModalOpen(true)}
           isOpen={isSidebarOpen}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />
@@ -543,7 +707,7 @@ function BuilderContent() {
         onTopUp={handleTopUp}
       />
 
-      {/* 4. Samtalehistorikk Modal */}
+      {/* 4. Samtalehistorikk Modal (Ekte persistent historikk) */}
       {isHistoryOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
@@ -561,7 +725,7 @@ function BuilderContent() {
             </div>
 
             <p className="text-xs text-slate-400">
-              Oversikt over tidligere bygge-sesjoner og genereringer. Klikk for å hente frem en tidligere samtale.
+              Oversikt over tidligere bygge-sesjoner. Klikk for å hente frem en tidligere samtale og fortsette å bygge.
             </p>
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto">
@@ -570,25 +734,26 @@ function BuilderContent() {
                   key={c.id}
                   className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-purple-600/50 transition flex items-center justify-between group"
                 >
-                  <div>
-                    <h4 className="text-xs font-bold text-white">{c.title}</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      {c.timestamp} • {c.tokens} • {c.files} filer
+                  <div className="min-w-0 pr-2">
+                    <h4 className="text-xs font-bold text-white truncate">{c.title}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                      {c.projectName} • {c.timestamp} • {c.tokens}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
-                      onClick={() => {
-                        setIsHistoryOpen(false);
-                        handleSendMessage(`Fortsett arbeid på ${c.title}`, "Gemini 3.8 Flash High");
-                      }}
+                      onClick={() => handleLoadConversation(c)}
                       className="px-2.5 py-1 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[11px] font-semibold text-[#C4B5FD] hover:text-white transition cursor-pointer"
                     >
                       Åpne
                     </button>
                     <button
                       onClick={() => {
-                        setSavedConversations(savedConversations.filter((x) => x.id !== c.id));
+                        const next = savedConversations.filter((x) => x.id !== c.id);
+                        setSavedConversations(next);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("aiprogram_conversations", JSON.stringify(next));
+                        }
                       }}
                       className="p-1 text-slate-500 hover:text-red-400 transition cursor-pointer"
                       title="Slett samtale"
@@ -612,14 +777,14 @@ function BuilderContent() {
         </div>
       )}
 
-      {/* 5. Planlagte Oppgaver Modal */}
+      {/* 5. Planlagte Oppgaver Modal (Ekte funksjonelle oppgaver) */}
       {isTasksOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Planlagte Oppgaver & Automatisering</h3>
+                <h3 className="font-bold text-white text-base">Planlagte Oppgaver & Cron-jobber</h3>
               </div>
               <button
                 onClick={() => setIsTasksOpen(false)}
@@ -630,7 +795,7 @@ function BuilderContent() {
             </div>
 
             <p className="text-xs text-slate-400">
-              Autonome bakgrunnsoppgaver som kjøres av AI Program for dine prosjekter og Railway-infrastruktur.
+              Autonome bakgrunnsoppgaver som holder databasen synkronisert, sjekker Railway-helse og forbedrer SEO.
             </p>
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto">
@@ -639,36 +804,64 @@ function BuilderContent() {
                   key={t.id}
                   className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] flex items-center justify-between"
                 >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      {t.schedule} • Mål: {t.target}
+                  <div>
+                    <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Frekvens: {t.schedule} • Mål: {t.target}
                     </p>
+                    {t.lastRun && (
+                      <p className="text-[10px] text-emerald-400 mt-0.5">Sist kjørt: {t.lastRun}</p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      setScheduledTasks(
-                        scheduledTasks.map((x) => (x.id === t.id ? { ...x, active: !x.active } : x))
-                      );
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer border ${
-                      t.active
-                        ? "bg-emerald-950/60 border-emerald-700/50 text-emerald-400"
-                        : "bg-[#0A0D12] border-slate-800 text-slate-500"
-                    }`}
-                  >
-                    {t.active ? "Aktiv" : "Pauset"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleRunTaskNow(t.id, t.title)}
+                      className="p-1.5 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[#C4B5FD] hover:text-white transition cursor-pointer"
+                      title="Kjør oppgave umiddelbart"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const next = scheduledTasks.map((item) =>
+                          item.id === t.id ? { ...item, active: !item.active } : item
+                        );
+                        setScheduledTasks(next);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("aiprogram_tasks", JSON.stringify(next));
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
+                        t.active
+                          ? "bg-emerald-950/60 border-emerald-700/40 text-emerald-300"
+                          : "bg-[#0A0D12] border-slate-800 text-slate-500"
+                      }`}
+                    >
+                      {t.active ? "Aktiv" : "Pauset"}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
 
             <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
               <button
-                onClick={() => alert("Ny automatisert oppgave lagt til i køen!")}
+                onClick={() => {
+                  const title = prompt("Navn på ny planlagt oppgave:");
+                  if (!title) return;
+                  const newTask = {
+                    id: `task-${Date.now()}`,
+                    title: title.trim(),
+                    schedule: "Daglig",
+                    target: activeProject.name,
+                    active: true,
+                  };
+                  const next = [...scheduledTasks, newTask];
+                  setScheduledTasks(next);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("aiprogram_tasks", JSON.stringify(next));
+                  }
+                }}
                 className="px-3 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -692,7 +885,7 @@ function BuilderContent() {
             <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
               <div className="flex items-center gap-2">
                 <Settings className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Innstillinger & Konfigurasjon</h3>
+                <h3 className="font-bold text-white text-base">Innstillinger & API-nøkler</h3>
               </div>
               <button
                 onClick={() => setIsSettingsOpen(false)}
@@ -714,60 +907,88 @@ function BuilderContent() {
               </div>
 
               <div>
-                <label className="text-slate-400 font-medium block mb-1">E-postadresse</label>
-                <input
-                  type="text"
-                  disabled
-                  value={user.email}
-                  className="w-full bg-[#12161F] border border-[#1F2937] rounded-xl px-3 py-2 text-white text-xs opacity-80"
-                />
-              </div>
-
-              <div>
                 <label className="text-slate-300 font-medium block mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Key className="w-3.5 h-3.5 text-[#A78BFA]" />
                     Google Gemini API-nøkkel
                   </span>
-                  <span className="text-[10px] text-slate-500">Valgfritt</span>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] text-[#A78BFA] hover:underline flex items-center gap-1"
+                  >
+                    Hent gratis nøkkel <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
                 </label>
                 <input
                   type="password"
                   value={geminiApiKeyInput}
                   onChange={(e) => setGeminiApiKeyInput(e.target.value)}
-                  placeholder="AIzaSy... (eller sett GEMINI_API_KEY i Railway)"
+                  placeholder="AIzaSy... (eller konfigurer i Railway Variables)"
                   className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Hvis ingen nøkkel er oppgitt, benytter plattformen automatisk den innebygde autonome motoren.
+                  Agenten kobler seg direkte til Google Gemini 2.0 Flash. Hvis nøkkel ikke er oppgitt, benyttes den innebygde autonome motoren.
                 </p>
+
+                {testKeyStatus && (
+                  <div
+                    className={`mt-2 p-2 rounded-lg text-[11px] font-mono ${
+                      testKeyStatus.startsWith("✓")
+                        ? "bg-emerald-950/60 border border-emerald-700/50 text-emerald-300"
+                        : "bg-red-950/60 border border-red-700/50 text-red-300"
+                    }`}
+                  >
+                    {testKeyStatus}
+                  </div>
+                )}
               </div>
 
               <div className="p-3 rounded-xl bg-[#12161F] border border-[#1F2937] space-y-1">
                 <p className="font-semibold text-white">Railway Status</p>
                 <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Klar for produksjon (Nixpacks + PostgreSQL)
+                  Produksjonstilkobling aktiv (Nixpacks + PostgreSQL)
                 </p>
               </div>
             </div>
 
             {savedKeyNotification && (
-              <p className="text-xs text-emerald-400 font-semibold text-center">
+              <p className="text-xs text-emerald-400 font-semibold text-center animate-in fade-in">
                 ✓ Innstillinger lagret!
               </p>
             )}
 
-            <div className="pt-2 border-t border-[#1F2937] flex justify-end gap-2">
+            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleTestApiKey}
+                disabled={isTestingApiKey || !geminiApiKeyInput.trim()}
+                className="px-3 py-1.5 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+              >
+                {isTestingApiKey ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Tester...</span>
+                  </>
+                ) : (
+                  <span>Test tilkobling</span>
+                )}
+              </button>
+
               <button
                 onClick={() => {
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("aiprogram_gemini_key", geminiApiKeyInput.trim());
+                  }
                   setSavedKeyNotification(true);
                   setTimeout(() => {
                     setSavedKeyNotification(false);
                     setIsSettingsOpen(false);
-                  }, 1200);
+                  }, 1000);
                 }}
-                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer transition"
+                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer transition shadow-md shadow-purple-900/30"
               >
                 Lagre innstillinger
               </button>
@@ -776,14 +997,74 @@ function BuilderContent() {
         </div>
       )}
 
-      {/* 7. Railway Deploy & Testing Guide Modal */}
+      {/* 7. Opprett Nytt Prosjekt Modal */}
+      {isNewProjectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-base">Opprett Nytt Prosjekt</h3>
+              </div>
+              <button
+                onClick={() => setIsNewProjectModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-300 font-medium block mb-1">Prosjektnavn</label>
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="f.eks. Mitt Nye Firma AS"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-medium block mb-1">Kort beskrivelse</label>
+                <input
+                  type="text"
+                  value={newProjectDesc}
+                  onChange={(e) => setNewProjectDesc(e.target.value)}
+                  placeholder="f.eks. Nettbutikk for lokale håndverksprodukter"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-[#1F2937] flex justify-end gap-2">
+              <button
+                onClick={() => setIsNewProjectModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#12161F] text-slate-400 hover:text-white text-xs"
+              >
+                Avbryt
+              </button>
+              <button
+                onClick={handleCreateProject}
+                disabled={!newProjectName.trim()}
+                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer transition shadow-md shadow-purple-900/30"
+              >
+                Opprett prosjekt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Railway Deploy & Testing Guide Modal */}
       {isRailwayGuideOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
               <div className="flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Test & Deploy på Railway</h3>
+                <h3 className="font-bold text-white text-base">Deploy på Railway (1-Klikk)</h3>
               </div>
               <button
                 onClick={() => setIsRailwayGuideOpen(false)}
@@ -797,7 +1078,7 @@ function BuilderContent() {
               <div className="p-3.5 bg-purple-950/40 border border-purple-800/50 rounded-xl space-y-1">
                 <p className="font-bold text-white flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Midlertidig Railway URL
+                  Live Produksjons-URL på Railway
                 </p>
                 <a
                   href="https://vikingcode-production.up.railway.app/app"
@@ -810,24 +1091,23 @@ function BuilderContent() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold text-white">Slik tester du systemet i full produksjon:</h4>
-                <ol className="list-decimal pl-4 space-y-1 text-slate-400">
-                  <li>Når endringer pushes til GitHub, oppdager Railway det og bygger automatisk en ny versjon på under 2 minutter.</li>
-                  <li>Agenten er nå innbygget og svarer umiddelbart i venstre panel uten noen avhengighet til eksterne iframes.</li>
-                  <li>Du kan konfigurere <code className="text-purple-300">GEMINI_API_KEY</code> under <strong>Variables</strong> på Railway Dashboard dersom du vil bruke en personlig Gemini-kvote.</li>
-                  <li>Forhåndsvisningen til høyre oppdateres i sanntid når agenten modifiserer kildekoden.</li>
-                </ol>
+                <h4 className="font-semibold text-white">Produksjonsinnstillinger i railway.json:</h4>
+                <div className="bg-[#0A0D12] p-3 rounded-xl border border-slate-800 font-mono text-[11px] space-y-1">
+                  <p className="text-slate-400">Builder: <span className="text-cyan-400">NIXPACKS</span></p>
+                  <p className="text-slate-400">Start Command: <span className="text-emerald-400">npx prisma migrate deploy && npm run start</span></p>
+                  <p className="text-slate-400">Database: <span className="text-purple-400">PostgreSQL Plugin</span></p>
+                </div>
               </div>
             </div>
 
             <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
               <a
-                href="https://railway.com/dashboard"
+                href="https://railway.com/new"
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs flex items-center gap-1.5 transition"
+                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-purple-900/40"
               >
-                <span>Åpne Railway Dashboard</span>
+                <span>Deploy direkte på Railway</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
               <button

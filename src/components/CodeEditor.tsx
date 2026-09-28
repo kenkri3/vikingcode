@@ -17,11 +17,19 @@ import { ProjectFile } from "@/lib/types";
 interface CodeEditorProps {
   files: ProjectFile[];
   onUpdateFile: (path: string, newContent: string) => void;
+  selectedFile?: string;
+  onSelectFile?: (path: string) => void;
 }
 
-export function CodeEditor({ files, onUpdateFile }: CodeEditorProps) {
-  const [activeFilePath, setActiveFilePath] = useState<string>(files[0]?.path || "app/page.tsx");
+export function CodeEditor({ files, onUpdateFile, selectedFile, onSelectFile }: CodeEditorProps) {
+  const [activeFilePath, setActiveFilePath] = useState<string>(selectedFile || files[0]?.path || "app/page.tsx");
   const [copied, setCopied] = useState(false);
+
+  React.useEffect(() => {
+    if (selectedFile && files.some((f) => f.path === selectedFile)) {
+      setActiveFilePath(selectedFile);
+    }
+  }, [selectedFile, files]);
 
   const activeFile = files.find((f) => f.path === activeFilePath) || files[0];
 

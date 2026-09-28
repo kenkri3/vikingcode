@@ -33,6 +33,13 @@ export function WorkspaceLayout({
 }: WorkspaceLayoutProps) {
   const [activeTab, setActiveTab] = useState<"preview" | "editor">("preview");
   const [chatMode, setChatMode] = useState<"agent" | "trace">("agent");
+  const [selectedFileForEditor, setSelectedFileForEditor] = useState<string>("app/page.tsx");
+
+  const handleOpenFile = (path: string) => {
+    setSelectedFileForEditor(path);
+    setActiveTab("editor");
+    if (onSetMobileTab) onSetMobileTab("code");
+  };
 
   // Keep internal activeTab synced with mobileTab if user selects preview or code
   useEffect(() => {
@@ -56,48 +63,12 @@ export function WorkspaceLayout({
         }`}
       >
         {/* Left Side Header */}
-        <div className="h-10 bg-[#0E121A] border-b border-[#1F2937] px-3 flex items-center justify-between select-none shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-              <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span className="truncate">AI Program Agent</span>
-            </div>
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live
-            </span>
+        <div className="h-9 bg-[#12161F]/40 border-b border-[#1E2430] px-3.5 flex items-center justify-between select-none shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-300">Samtale</span>
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="flex items-center bg-[#0A0D12] p-0.5 rounded-lg border border-[#1F2937]">
-              <button
-                type="button"
-                onClick={() => setChatMode("agent")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
-                  chatMode === "agent"
-                    ? "bg-purple-950/80 text-white border border-purple-800/40"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title="Vis interaktiv AI-agent"
-              >
-                <Bot className="w-3 h-3 text-[#A78BFA]" />
-                <span>AI Agent</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setChatMode("trace")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 ${
-                  chatMode === "trace"
-                    ? "bg-purple-950/80 text-white border border-purple-800/40"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title="Vis detaljert tankestrøm og bygger"
-              >
-                <Terminal className="w-3 h-3 text-cyan-400" />
-                <span>Kodebygger</span>
-              </button>
-            </div>
-
             <button
               type="button"
               onClick={() => {
@@ -108,32 +79,21 @@ export function WorkspaceLayout({
                   }
                 }
               }}
-              className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition cursor-pointer"
-              title="Kjør siste oppgave på nytt"
+              className="p-1 text-slate-400 hover:text-white rounded-md hover:bg-[#1E2430] transition cursor-pointer"
+              title="Kjør siste melding på nytt"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Quick Suggestion Chips Bar */}
-        <div className="bg-[#0E121A]/50 border-b border-[#1F2937]/50 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto select-none">
-          <span className="text-[10px] text-slate-500 font-semibold uppercase shrink-0">Forslag:</span>
-          {quickPrompts.map((q, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onSendMessage(q, "Gemini 3.8 Flash High")}
-              className="px-2 py-0.5 rounded-full bg-[#12161F] hover:bg-purple-950/60 border border-[#1F2937] hover:border-purple-700/50 text-[10px] text-slate-300 hover:text-white whitespace-nowrap transition cursor-pointer shrink-0"
-            >
-              ✦ {q}
-            </button>
-          ))}
-        </div>
-
         {/* Left Side Content: Interactive Live Agent & Builder Chat */}
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-          <AgentChatView messages={messages} isLoading={isLoading} />
+          <AgentChatView
+            messages={messages}
+            isLoading={isLoading}
+            onOpenFile={handleOpenFile}
+          />
           <FloatingInputBar
             onSendMessage={onSendMessage}
             isLoading={isLoading}
@@ -150,21 +110,21 @@ export function WorkspaceLayout({
         }`}
       >
         {/* Workspace Tab Header */}
-        <div className="h-10 bg-[#0E121A] border-b border-[#1F2937] px-3 sm:px-4 flex items-center justify-between select-none shrink-0">
-          <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1F2937]">
+        <div className="h-9 bg-[#12161F]/40 border-b border-[#1E2430] px-3 flex items-center justify-between select-none shrink-0">
+          <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1E2430]">
             <button
               onClick={() => {
                 setActiveTab("preview");
                 if (onSetMobileTab) onSetMobileTab("preview");
               }}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-purple-950/80 text-white shadow-sm border border-purple-800/40"
+                  ? "bg-[#1E2430] text-slate-100 font-semibold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
               <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span>Forhåndsvisning (Live)</span>
+              <span>Forhåndsvisning</span>
             </button>
 
             <button
@@ -172,20 +132,19 @@ export function WorkspaceLayout({
                 setActiveTab("editor");
                 if (onSetMobileTab) onSetMobileTab("code");
               }}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
                 activeTab === "editor"
-                  ? "bg-purple-950/80 text-white shadow-sm border border-purple-800/40"
+                  ? "bg-[#1E2430] text-slate-100 font-semibold"
                   : "text-slate-400 hover:text-white"
               }`}
             >
               <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span className="hidden sm:inline">Kodeeditor ({activeProject.files.length} filer)</span>
-              <span className="sm:hidden">Kode ({activeProject.files.length})</span>
+              <span>Kode ({activeProject.files.length})</span>
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-500 font-mono hidden sm:block">
-            Railway Ready (Nixpacks + PostgreSQL)
+          <div className="text-[11px] font-mono text-slate-500">
+            {activeProject.name}
           </div>
         </div>
 
@@ -200,6 +159,8 @@ export function WorkspaceLayout({
             <CodeEditor
               files={activeProject.files}
               onUpdateFile={onUpdateFile}
+              selectedFile={selectedFileForEditor}
+              onSelectFile={setSelectedFileForEditor}
             />
           )}
         </div>
@@ -207,3 +168,4 @@ export function WorkspaceLayout({
     </div>
   );
 }
+
