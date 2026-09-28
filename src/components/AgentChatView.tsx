@@ -19,6 +19,7 @@ interface AgentChatViewProps {
   isLoading: boolean;
   currentThought?: string;
   onOpenFile?: (path: string) => void;
+  onQuickReply?: (text: string) => void;
 }
 
 export function AgentChatView({
@@ -26,6 +27,7 @@ export function AgentChatView({
   isLoading,
   currentThought,
   onOpenFile,
+  onQuickReply,
 }: AgentChatViewProps) {
   const [expandedThoughts, setExpandedThoughts] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -169,6 +171,23 @@ export function AgentChatView({
                 </div>
               )}
             </div>
+
+            {/* Interactive Quick Replies */}
+            {msg.quickReplies && msg.quickReplies.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {msg.quickReplies.map((qr, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => onQuickReply?.(qr.title)}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#12161F] hover:bg-[#7C3AED]/20 border border-[#1E2430] hover:border-[#7C3AED]/60 text-slate-300 hover:text-white transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-2.5 h-2.5 text-[#A78BFA]" />
+                    <span>{qr.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}

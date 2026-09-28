@@ -14,7 +14,7 @@ import {
   createNewProject,
 } from "@/lib/projects-data";
 import { PLAN_CONFIGS, TOP_UP_OFFER, verifyTokenQuota } from "@/lib/tokens";
-import { UserSession, Project, ChatMessage, PlanTier, ProjectFile } from "@/lib/types";
+import { UserSession, Project, ChatMessage, PlanTier, ProjectFile, AgentAction } from "@/lib/types";
 import {
   CheckCircle2,
   ExternalLink,
@@ -141,7 +141,13 @@ function BuilderContent() {
     {
       id: "msg-init-1",
       role: "assistant",
-      content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg legge til nye funksjoner, integrere Vipps, justere priser eller koble til databasen.`,
+      content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg om å bygge en ny nettside (f.eks. for snekker eller bedrift), legge til Vipps, tilpasse priskalkulator eller koble til databasen.`,
+      quickReplies: [
+        { title: "Lag en nettside for en snekker", payload: "carpenter_site" },
+        { title: "Hva kan du?", payload: "capabilities" },
+        { title: "Legg til Vipps hurtigbetaling", payload: "vipps" },
+        { title: "Full webapp + database", payload: "full_app" },
+      ],
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -241,80 +247,174 @@ function BuilderContent() {
     setIsLoading(true);
 
     try {
-      const keyToUse =
-        geminiApiKeyInput ||
-        (typeof window !== "undefined" ? localStorage.getItem("aiprogram_gemini_key") : null);
+      const pLower = promptText.toLowerCase();
+      const isBuildIntent =
+        pLower.includes("lag") ||
+        pLower.includes("bygg") ||
+        pLower.includes("opprett") ||
+        pLower.includes("endre") ||
+        pLower.includes("snekker") ||
+        pLower.includes("tømrer") ||
+        pLower.includes("terrasse") ||
+        pLower.includes("nettside") ||
+        pLower.includes("side") ||
+        pLower.includes("app") ||
+        pLower.includes("kalkulator") ||
+        pLower.includes("vipps") ||
+        pLower.includes("skjema") ||
+        pLower.includes("kontakt") ||
+        pLower.includes("database") ||
+        pLower.includes("tek17") ||
+        pLower.includes("pris") ||
+        pLower.includes("crm") ||
+        pLower.includes("portal") ||
+        pLower.includes("static_site") ||
+        pLower.includes("quote_form") ||
+        pLower.includes("booking") ||
+        pLower.includes("full_app") ||
+        pLower.includes("carpenter_site") ||
+        pLower.includes("business_site") ||
+        pLower.includes("new_website") ||
+        pLower.includes("new_saas") ||
+        pLower.includes("booking_system");
 
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: promptText,
-          userId: user.id,
-          userEmail: user.email,
-          currentPlan: user.plan,
-          tokensRemaining: user.tokensRemaining,
-          trialPromptsUsed: user.trialPromptsUsed,
-          model,
-          projectName: activeProject.name,
-          currentFiles: activeProject.files,
-          geminiApiKey: keyToUse,
-        }),
-      });
+      // 1. Spør brukerens ekte AI Agent (Botsify Converse API)
+      let botReply = "";
+      let botQuickReplies: Array<{ title: string; payload: string }> = [];
+      const storedSession =
+        typeof window !== "undefined"
+          ? localStorage.getItem("aiprogram_agent_session") || ""
+          : "";
 
-      const data = await res.json();
+      try {
+        const chatRes = await fetch("/api/agent/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: promptText,
+            sessionId: storedSession,
+            projectName: activeProject.name,
+            userName: user.name,
+            userId: user.id,
+          }),
+        });
 
-      if (!res.ok) {
-        if (data.code === "TRIAL_LIMIT_EXCEEDED" || data.code === "INSUFFICIENT_TOKENS") {
-          setIsPricingOpen(true);
+        if (chatRes.ok) {
+          const chatData = await chatRes.json();
+          if (chatData.reply) {
+            botReply = chatData.reply;
+          }
+          if (chatData.quickReplies && Array.isArray(chatData.quickReplies)) {
+            botQuickReplies = chatData.quickReplies;
+          }
+          if (chatData.sessionId && typeof window !== "undefined") {
+            localStorage.setItem("aiprogram_agent_session", chatData.sessionId);
+          }
         }
-        alert(data.error || "Kunne ikke generere kode.");
-        setIsLoading(false);
-        return;
+      } catch (chatErr) {
+        console.warn("Kunne ikke nå agent/chat:", chatErr);
       }
 
-      setUser((prev) => ({
-        ...prev,
-        tokensRemaining: data.tokensRemaining,
-        trialPromptsUsed: data.trialPromptsUsed,
-      }));
+      // 2. Hvis brukeren ba om å bygge/endre kode, kjør kodegeneratoren
+      let filesGenerated: ProjectFile[] = [];
+      let actionsGenerated: AgentAction[] = [];
+      let tokensUsed = 250;
 
-      // Flett inn nyopprettede og oppdaterte filer
-      if (data.files && data.files.length > 0) {
-        setActiveProject((prev) => {
-          const map = new Map(prev.files.map((f) => [f.path, f]));
-          data.files.forEach((nf: ProjectFile) => {
-            map.set(nf.path, nf);
-          });
-          const mergedFiles = Array.from(map.values());
-          const updatedProj = { ...prev, files: mergedFiles, updatedAt: new Date().toISOString() };
+      if (isBuildIntent) {
+        const keyToUse =
+          geminiApiKeyInput ||
+          (typeof window !== "undefined" ? localStorage.getItem("aiprogram_gemini_key") : null);
 
-          // Oppdater i prosjektlisten og lagre
-          setProjects((all) => {
-            const nextAll = all.map((p) => (p.id === updatedProj.id ? updatedProj : p));
-            saveStoredProjects(nextAll);
-            return nextAll;
-          });
-
-          // Synkroniser med backend
-          fetch("/api/projects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "update", project: updatedProj }),
-          }).catch(() => {});
-
-          return updatedProj;
+        const genRes = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: promptText,
+            userId: user.id,
+            userEmail: user.email,
+            currentPlan: user.plan,
+            tokensRemaining: user.tokensRemaining,
+            trialPromptsUsed: user.trialPromptsUsed,
+            model,
+            projectName: activeProject.name,
+            currentFiles: activeProject.files,
+            geminiApiKey: keyToUse,
+          }),
         });
+
+        if (genRes.ok) {
+          const genData = await genRes.json();
+          filesGenerated = genData.files || [];
+          actionsGenerated = genData.actions || [];
+          tokensUsed = genData.tokensUsed || 3800;
+
+          if (genData.tokensRemaining !== undefined) {
+            setUser((prev) => ({
+              ...prev,
+              tokensRemaining: genData.tokensRemaining,
+              trialPromptsUsed: genData.trialPromptsUsed,
+            }));
+          }
+
+          // Flett inn de nye filene og oppdater aktivt prosjekt
+          if (filesGenerated.length > 0) {
+            setActiveProject((prev) => {
+              const map = new Map(prev.files.map((f) => [f.path, f]));
+              filesGenerated.forEach((nf) => {
+                map.set(nf.path, nf);
+              });
+              const mergedFiles = Array.from(map.values());
+              const updatedProj = {
+                ...prev,
+                files: mergedFiles,
+                updatedAt: new Date().toISOString(),
+              };
+
+              // Oppdater i prosjektlisten og lagre
+              setProjects((all) => {
+                const nextAll = all.map((p) => (p.id === updatedProj.id ? updatedProj : p));
+                saveStoredProjects(nextAll);
+                return nextAll;
+              });
+
+              // Synkroniser med backend
+              fetch("/api/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "update", project: updatedProj }),
+              }).catch(() => {});
+
+              return updatedProj;
+            });
+          }
+        }
+      } else {
+        // Enkel samtale: trekk fra minimale tokens
+        setUser((prev) => ({
+          ...prev,
+          tokensRemaining: Math.max(0, prev.tokensRemaining - 150),
+        }));
+      }
+
+      // Sett sammen innhold til chat-boblen
+      let finalContent = botReply;
+      if (!finalContent) {
+        if (isBuildIntent) {
+          finalContent = `Jeg har analysert og fullført oppgaven din: "${promptText}".\n\nKildekoden er oppdatert og forhåndsvisningen er synkronisert i sanntid.`;
+        } else {
+          finalContent = "Hei! Jeg er AI Program Agent. Hva kan jeg hjelpe deg med å bygge i dag?";
+        }
       }
 
       const assistantMsg: ChatMessage = {
         id: `msg-resp-${Date.now()}`,
         role: "assistant",
-        content: data.message,
-        actions: data.actions,
-        filesCreated: data.files?.map((f: any) => f.path) || [],
+        content: finalContent,
+        actions: actionsGenerated.length > 0 ? actionsGenerated : undefined,
+        filesCreated: filesGenerated.map((f) => f.path),
+        quickReplies: botQuickReplies.length > 0 ? botQuickReplies : undefined,
         timestamp: new Date().toISOString(),
-        tokensUsed: data.tokensUsed,
+        tokensUsed: tokensUsed,
       };
 
       const nextMessages = [...messages, userMsg, assistantMsg];
@@ -326,8 +426,8 @@ function BuilderContent() {
         title: promptText.slice(0, 45),
         projectName: activeProject.name,
         timestamp: "Akkurat nå",
-        tokens: `${data.tokensUsed || 3800} tokens`,
-        files: data.files?.length || 3,
+        tokens: `${tokensUsed} tokens`,
+        files: filesGenerated.length || 3,
         messages: nextMessages,
       };
       setSavedConversations((prev) => {

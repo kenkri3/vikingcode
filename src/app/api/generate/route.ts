@@ -96,7 +96,8 @@ function generateAutonomousCode(
   const createdFiles: ProjectFile[] = [];
 
   // Analyser intent
-  const isCraftsman = pLower.includes("snekker") || pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester");
+  const isCarpenter = pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("snekring");
+  const isCraftsman = !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester"));
   const isVipps = pLower.includes("vipp") || pLower.includes("betaling");
   const isCRM = pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg");
   const isNetwork = pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b");
@@ -114,7 +115,291 @@ function generateAutonomousCode(
 
   // Generer skreddersydd app/page.tsx
   let pageContent = "";
-  if (isCraftsman || pLower.includes("kalkulator") || pLower.includes("tek17")) {
+  if (isCarpenter) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import { Hammer, Ruler, ShieldCheck, Clock, CheckCircle2, Phone, Star, Sparkles, ChevronRight, MapPin, Award, Check } from 'lucide-react';
+
+export default function CarpenterWebsite() {
+  const [selectedService, setSelectedService] = useState('terrasse');
+  const [squareMeters, setSquareMeters] = useState(35);
+  const [woodType, setWoodType] = useState('impregnert');
+  const [inspectionAddress, setInspectionAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const services: Record<string, { title: string; rate: number; desc: string }> = {
+    terrasse: { title: 'Terrasse & Veranda', rate: 850, desc: 'Skreddersydd platting, rekkverk og trapper i kvalitetsvirke.' },
+    tilbygg: { title: 'Tilbygg & Rehabilitering', rate: 950, desc: 'Utvidelse av stue, råloft-innredning eller ny etasje i henhold til TEK17.' },
+    kledning: { title: 'Kledning & Etterisolering', rate: 890, desc: 'Ny utvendig fasadekledning med 10-15cm ekstra isolasjon og vindsperre.' },
+    innvendig: { title: 'Innvendig Snekring & Spiler', rate: 920, desc: 'Spesialtilpassede garderober, spilevegger i eik, listverk og dørmontering.' },
+    tak: { title: 'Tak & Vinduer', rate: 880, desc: 'Utskifting av takstein, undertak og montering av 3-lags lavenergivinduer.' },
+  };
+
+  const woodMultipliers: Record<string, { name: string; mult: number }> = {
+    impregnert: { name: 'Furu Impregnert kl. AB', mult: 1.0 },
+    termo: { name: 'Varmebehandlet Termofuru', mult: 1.25 },
+    moreroyal: { name: 'MøreRoyal Grå / Brun', mult: 1.45 },
+    kebony: { name: 'Kebony Clear Premium', mult: 1.75 },
+  };
+
+  const currentService = services[selectedService] || services.terrasse;
+  const currentWood = woodMultipliers[woodType] || woodMultipliers.impregnert;
+
+  const estHours = Math.round(squareMeters * 0.6 + 8);
+  const laborCost = estHours * currentService.rate;
+  const materialCost = Math.round(squareMeters * 420 * currentWood.mult);
+  const totalEstimate = laborCost + materialCost;
+
+  const handleBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phone.trim()) {
+      alert('Vennligst oppgi et gyldig telefonnummer for befaringsavtale.');
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
+      {/* Top Banner */}
+      <header className="max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-[#1F2937] mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white shadow-lg shadow-purple-900/40">
+            <Hammer className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              MesterSnekker'n AS
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40 flex items-center gap-1">
+                <Award className="w-3 h-3 text-[#A78BFA]" />
+                Mesterbrev & TEK17
+              </span>
+            </h1>
+            <p className="text-xs text-slate-400">Tradisjonshåndverk, nybygg og moderne snekkerarbeid</p>
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-950/50 border border-emerald-800/50 px-3 py-1.5 rounded-full">
+          <ShieldCheck className="w-4 h-4" />
+          <span>5 års håndverkergaranti</span>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="max-w-5xl mx-auto mb-8 bg-gradient-to-r from-[#12161F] via-[#161B26] to-[#12161F] border border-[#1F2937] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <div className="max-w-2xl space-y-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
+            ✦ Kvalitetsarbeid som varer
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+            Skal du bygge terrasse, tilbygg eller pusse opp?
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Vi leverer solid norsk snekker- og tømrerarbeid med millimeterpresisjon. Få et umiddelbart kostnadsestimat nedenfor eller bestill gratis befaring.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Grid: Calculator & Quote */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {/* Left: Calculator form */}
+        <div className="md:col-span-2 bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-6">
+          <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#A78BFA]" />
+              <span>1. Velg snekkertjeneste</span>
+            </h3>
+            <span className="text-[11px] font-mono text-slate-400">Fast timeprisgaranti</span>
+          </div>
+
+          {/* Service grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {Object.entries(services).map(([key, s]) => {
+              const active = selectedService === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedService(key)}
+                  className={\`p-3 rounded-xl text-left transition cursor-pointer border \${
+                    active
+                      ? 'bg-purple-950/60 border-[#7C3AED] ring-1 ring-[#7C3AED]'
+                      : 'bg-[#0E121A] border-[#1F2937] hover:border-slate-600'
+                  }\`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">{s.title}</span>
+                    <span className="text-[11px] font-mono text-[#A78BFA]">{s.rate} kr/t</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{s.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Area Slider */}
+          <div className="space-y-2 pt-2 border-t border-[#1F2937]">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-300 font-medium">Areal / Omfang:</span>
+              <span className="font-bold text-[#A78BFA] text-sm">{squareMeters} m²</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="150"
+              value={squareMeters}
+              onChange={(e) => setSquareMeters(Number(e.target.value))}
+              className="w-full accent-[#7C3AED] bg-[#0A0D12] h-2.5 rounded-lg cursor-pointer border border-slate-800"
+            />
+            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>10 m² (lite prosjekt)</span>
+              <span>75 m²</span>
+              <span>150 m² (stort prosjekt)</span>
+            </div>
+          </div>
+
+          {/* Wood selector */}
+          <div className="space-y-2 pt-2 border-t border-[#1F2937]">
+            <span className="text-xs text-slate-300 font-medium">Materialvalg:</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {Object.entries(woodMultipliers).map(([key, w]) => {
+                const active = woodType === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setWoodType(key)}
+                    className={\`px-2.5 py-2 rounded-xl text-left text-xs transition cursor-pointer border \${
+                      active
+                        ? 'bg-purple-950/70 border-[#7C3AED] text-white'
+                        : 'bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white'
+                    }\`}
+                  >
+                    <p className="font-semibold text-[11px]">{w.name}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Inspection Form */}
+          <form onSubmit={handleBooking} className="space-y-3 pt-3 border-t border-[#1F2937]">
+            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              Bestill uforpliktende gratis befaring
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={inspectionAddress}
+                onChange={(e) => setInspectionAddress(e.target.value)}
+                placeholder="Adresse / Postnummer..."
+                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
+              />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Telefonnummer..."
+                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
+              />
+            </div>
+            <button
+              type="submit"
+              className={\`w-full py-3 px-6 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer \${
+                submitted
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] text-white shadow-purple-900/40'
+              }\`}
+            >
+              {submitted ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Befaring registrert! Mesteren kontakter deg innen 24 timer.</span>
+                </>
+              ) : (
+                <>
+                  <span>Send befaringsforespørsel for {currentService.title}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Right: Price Summary Card */}
+        <div className="space-y-4">
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
+                Estimert Totalpris (inkl. mva)
+              </p>
+              <div className="text-2xl font-extrabold text-white">
+                kr {totalEstimate.toLocaleString('no-NO')} ,-
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Veiledende anslag inkl. arbeid og materialer</p>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-300 border-t border-[#1F2937] pt-3 font-mono">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Valgt fag:</span>
+                <span className="font-medium text-white">{currentService.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Timepris:</span>
+                <span className="font-medium text-white">{currentService.rate} kr/t</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Est. arbeidstimer:</span>
+                <span className="font-medium text-white">ca. {estHours} timer</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Materialklasse:</span>
+                <span className="font-medium text-white">{currentWood.name}</span>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#1F2937] space-y-2 text-[11px] text-slate-400">
+              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                <Check className="w-3.5 h-3.5" />
+                <span>Skriftlig tilbud før oppstart</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                <Check className="w-3.5 h-3.5" />
+                <span>TEK17 og HMS-sertifisert</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                <Check className="w-3.5 h-3.5" />
+                <span>Fastprisavtale tilbys</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Reference Projects */}
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 text-xs space-y-3">
+            <h4 className="font-bold text-white flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              Referanseprosjekter
+            </h4>
+            <div className="space-y-2 text-[11px]">
+              <div className="p-2.5 rounded-lg bg-[#0E121A] border border-[#1F2937]">
+                <p className="font-semibold text-white">Funkis tilbygg 42 m² – Bærum</p>
+                <p className="text-slate-400 text-[10px]">Utvidelse av helårsstue med sedumtak og eikespiler.</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#0E121A] border border-[#1F2937]">
+                <p className="font-semibold text-white">Terrasse 85 m² – Tønsberg</p>
+                <p className="text-slate-400 text-[10px]">MøreRoyal terrasse i to nivåer med integrert LED.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+`;
+  } else if (isCraftsman || pLower.includes("kalkulator") || pLower.includes("tek17")) {
     pageContent = `'use client';
 
 import React, { useState } from 'react';

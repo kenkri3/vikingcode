@@ -46,6 +46,7 @@ export interface ChatMessage {
   content: string;
   actions?: AgentAction[];
   filesCreated?: string[];
+  quickReplies?: Array<{ title: string; payload: string }>;
   timestamp: string;
   tokensUsed?: number;
 }

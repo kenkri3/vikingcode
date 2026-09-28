@@ -93,6 +93,7 @@ export function WorkspaceLayout({
             messages={messages}
             isLoading={isLoading}
             onOpenFile={handleOpenFile}
+            onQuickReply={(text) => onSendMessage(text, "Gemini 3.8 Flash High")}
           />
           <FloatingInputBar
             onSendMessage={onSendMessage}
