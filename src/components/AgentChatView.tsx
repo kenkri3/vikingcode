@@ -10,6 +10,8 @@ import {
   Sparkles,
   Atom,
   Loader2,
+  Eye,
+  Code2,
 } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
 import { VikingLogo } from "./VikingLogo";
@@ -20,6 +22,120 @@ interface AgentChatViewProps {
   currentThought?: string;
   onOpenFile?: (path: string) => void;
   onQuickReply?: (text: string) => void;
+  onOpenPreview?: () => void;
+  onOpenCode?: () => void;
+}
+
+function renderInlineText(raw: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(raw)) !== null) {
+    if (match.index > lastIndex) {
+      const plain = raw.substring(lastIndex, match.index).replace(/\*\*/g, "").replace(/\*/g, "");
+      if (plain) parts.push(plain);
+    }
+    const token = match[0];
+    if (token.startsWith("**") && token.endsWith("**")) {
+      parts.push(
+        <strong key={match.index} className="text-white font-semibold">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else if (token.startsWith("*") && token.endsWith("*")) {
+      parts.push(
+        <em key={match.index} className="text-slate-200">
+          {token.slice(1, -1)}
+        </em>
+      );
+    } else if (token.startsWith("`") && token.endsWith("`")) {
+      parts.push(
+        <code
+          key={match.index}
+          className="px-1.5 py-0.5 rounded bg-[#0A0D12] text-[#C4B5FD] font-mono text-[11px] border border-[#1E2430]"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < raw.length) {
+    const plain = raw.substring(lastIndex).replace(/\*\*/g, "").replace(/\*/g, "");
+    if (plain) parts.push(plain);
+  }
+
+  return parts;
+}
+
+function formatChatMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, lineIdx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={lineIdx} className="h-1.5" />;
+        }
+
+        if (trimmed.startsWith("---")) {
+          return <hr key={lineIdx} className="border-[#1E2430] my-2" />;
+        }
+
+        if (trimmed.startsWith("### ")) {
+          return (
+            <h4 key={lineIdx} className="text-xs font-bold text-white pt-1">
+              {renderInlineText(trimmed.slice(4))}
+            </h4>
+          );
+        }
+
+        if (trimmed.startsWith("## ") || trimmed.startsWith("# ")) {
+          const content = trimmed.startsWith("## ") ? trimmed.slice(3) : trimmed.slice(2);
+          return (
+            <h3 key={lineIdx} className="text-sm font-bold text-white pt-1.5">
+              {renderInlineText(content)}
+            </h3>
+          );
+        }
+
+        // Bullet list item (- or *)
+        const bulletMatch = trimmed.match(/^[-*•]\s+(.*)/);
+        if (bulletMatch) {
+          return (
+            <div key={lineIdx} className="flex items-start gap-2 pl-1 leading-relaxed">
+              <span className="text-[#A78BFA] font-bold text-xs select-none mt-0.5">•</span>
+              <div className="flex-1">{renderInlineText(bulletMatch[1])}</div>
+            </div>
+          );
+        }
+
+        // Numbered list item (1. 2. etc)
+        const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+        if (numberMatch) {
+          return (
+            <div key={lineIdx} className="flex items-start gap-2 pl-1 leading-relaxed">
+              <span className="text-[#C4B5FD] font-mono text-[11px] font-bold select-none mt-0.5">
+                {numberMatch[1]}.
+              </span>
+              <div className="flex-1">{renderInlineText(numberMatch[2])}</div>
+            </div>
+          );
+        }
+
+        return (
+          <p key={lineIdx} className="leading-relaxed">
+            {renderInlineText(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
 }
 
 export function AgentChatView({
@@ -28,6 +144,8 @@ export function AgentChatView({
   currentThought,
   onOpenFile,
   onQuickReply,
+  onOpenPreview,
+  onOpenCode,
 }: AgentChatViewProps) {
   const [expandedThoughts, setExpandedThoughts] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -147,12 +265,36 @@ export function AgentChatView({
                 )}
               </div>
 
-              <div className="leading-relaxed text-slate-300 whitespace-pre-wrap">
-                {msg.content}
+              <div className="leading-relaxed text-slate-300">
+                {formatChatMarkdown(msg.content)}
+              </div>
+
+              {/* Direct View Actions (Preview & Code) */}
+              <div className="pt-2.5 border-t border-[#1E2430] flex flex-wrap items-center gap-2">
+                {onOpenPreview && (
+                  <button
+                    type="button"
+                    onClick={onOpenPreview}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-[#7C3AED]/30 hover:from-purple-900 border border-[#7C3AED]/70 hover:border-[#7C3AED] text-white text-xs font-semibold shadow-sm transition cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#C4B5FD]" />
+                    <span>Åpne Forhåndsvisning (Live Preview)</span>
+                  </button>
+                )}
+                {onOpenCode && (
+                  <button
+                    type="button"
+                    onClick={onOpenCode}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-[#1E2430] text-slate-300 hover:text-white text-xs font-medium transition cursor-pointer"
+                  >
+                    <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
+                    <span>Se Koden</span>
+                  </button>
+                )}
               </div>
 
               {msg.filesCreated && msg.filesCreated.length > 0 && (
-                <div className="pt-2 border-t border-[#1E2430] flex flex-wrap items-center gap-1.5">
+                <div className="pt-2 border-t border-[#1E2430]/60 flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mr-1">
                     Filer:
                   </span>

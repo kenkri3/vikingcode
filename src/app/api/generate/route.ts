@@ -96,11 +96,24 @@ function generateAutonomousCode(
   const createdFiles: ProjectFile[] = [];
 
   // Analyser intent
-  const isCarpenter = pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("snekring");
-  const isCraftsman = !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester"));
+  const isHealth =
+    pLower.includes("helse") ||
+    pLower.includes("klinikk") ||
+    pLower.includes("lege") ||
+    pLower.includes("pasient") ||
+    pLower.includes("doktor") ||
+    pLower.includes("medisin") ||
+    pLower.includes("terapi") ||
+    pLower.includes("fysio") ||
+    pLower.includes("tannlege") ||
+    pLower.includes("journal") ||
+    pLower.includes("helseapp") ||
+    pLower.includes("resept");
+  const isCarpenter = !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("snekring"));
+  const isCraftsman = !isHealth && !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester"));
   const isVipps = pLower.includes("vipp") || pLower.includes("betaling");
-  const isCRM = pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg");
-  const isNetwork = pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b");
+  const isCRM = !isHealth && (pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg"));
+  const isNetwork = !isHealth && (pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b"));
   const isContact = pLower.includes("kontakt") || pLower.includes("skjema") || pLower.includes("sms");
 
   // Undersøk om brukeren spesifikt ba om å opprette en ny fil
@@ -115,7 +128,466 @@ function generateAutonomousCode(
 
   // Generer skreddersydd app/page.tsx
   let pageContent = "";
-  if (isCarpenter) {
+  if (isHealth) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import {
+  HeartPulse,
+  Calendar,
+  Clock,
+  User,
+  ShieldCheck,
+  CheckCircle2,
+  Video,
+  MapPin,
+  Pill,
+  FileText,
+  Phone,
+  Sparkles,
+  ChevronRight,
+  Activity,
+  Award,
+  AlertCircle
+} from 'lucide-react';
+
+export default function HealthPortalApp() {
+  const [selectedService, setSelectedService] = useState('allmennlege');
+  const [consultationType, setConsultationType] = useState<'clinic' | 'video'>('video');
+  const [selectedSlot, setSelectedSlot] = useState('I dag kl. 14:30');
+  const [patientName, setPatientName] = useState('');
+  const [patientPhone, setPatientPhone] = useState('');
+  const [activeTab, setActiveTab] = useState<'booking' | 'prescriptions' | 'journal'>('booking');
+  const [submitted, setSubmitted] = useState(false);
+  const [prescriptions, setPrescriptions] = useState([
+    { id: '1', med: 'Ventoline Inhalasjonspulver 0.2mg', doctor: 'Dr. Anne Lise Berg (Allmennlege)', validUntil: '15.11.2026', renewed: false },
+    { id: '2', med: 'Cetirizin 10mg mikstur', doctor: 'Dr. Jonas Lind (Hudlege)', validUntil: '22.04.2027', renewed: false },
+    { id: '3', med: 'Somac 20mg enterotabletter', doctor: 'Dr. Henrik Dale (Gastro)', validUntil: '08.01.2027', renewed: true },
+  ]);
+
+  const services: Record<string, { title: string; doctor: string; clinicPrice: number; videoPrice: number; desc: string; waitTime: string }> = {
+    allmennlege: {
+      title: 'Allmennlege & Akuttimer',
+      doctor: 'Dr. Anne Lise Berg & Dr. Eirik Lie',
+      clinicPrice: 890,
+      videoPrice: 650,
+      desc: 'Allmennmedisinske henvendelser, sykemelding, e-resepter og helsesjekk.',
+      waitTime: 'Ledig i dag',
+    },
+    fysio: {
+      title: 'Fysioterapi & Manuellterapi',
+      doctor: 'Martine Solheim (Spesialfysioterapeut)',
+      clinicPrice: 820,
+      videoPrice: 590,
+      desc: 'Utredning av muskel- og leddsmerter, nakke/rygg og opptrening etter skade.',
+      waitTime: 'Ledig i morgen',
+    },
+    psykolog: {
+      title: 'Psykolog & Samtaleterapi',
+      doctor: 'Dr. Kristoffer Haug (Autorisert Psykolog)',
+      clinicPrice: 1350,
+      videoPrice: 1190,
+      desc: 'Kognitiv adferdsterapi, stressmestring, utbrenthet og veiledning.',
+      waitTime: 'Ledig i morgen',
+    },
+    hudlege: {
+      title: 'Dermatolog & Hudlege',
+      doctor: 'Dr. Jonas Lind (Overlege Dermatologi)',
+      clinicPrice: 1250,
+      videoPrice: 950,
+      desc: 'Føflekkscanning, eksem, akne og biologisk hudbehandling.',
+      waitTime: 'Ledig torsdag',
+    },
+    blodprove: {
+      title: 'Laboratorium & Helseprofil',
+      doctor: 'Bioingeniørteamet MediKlinikk',
+      clinicPrice: 1490,
+      videoPrice: 1490,
+      desc: 'Omfattende blodpanel: Kolesterol, vitamin D/B12, lever, nyrer og stoffskifte.',
+      waitTime: 'Drop-in alle hverdager',
+    },
+  };
+
+  const currentService = services[selectedService] || services.allmennlege;
+  const price = consultationType === 'video' ? currentService.videoPrice : currentService.clinicPrice;
+
+  const availableSlots = [
+    'I dag kl. 14:30',
+    'I dag kl. 15:45',
+    'I dag kl. 16:30',
+    'I morgen kl. 09:15',
+    'I morgen kl. 11:00',
+    'I morgen kl. 13:30',
+  ];
+
+  const handleBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patientPhone.trim() || !patientName.trim()) {
+      alert('Vennligst fyll ut pasientens navn og telefonnummer.');
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  const handleRenewPrescription = (id: string) => {
+    setPrescriptions((prev) => prev.map((p) => (p.id === id ? { ...p, renewed: true } : p)));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
+      {/* Top Banner */}
+      <header className="max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-[#1F2937] mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#38BDF8] flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-950/40">
+            <HeartPulse className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              MediKlinikk Helseportal
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 flex items-center gap-1 font-mono">
+                <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                Helsenett & BankID
+              </span>
+            </h1>
+            <p className="text-xs text-slate-400">Pasientjournal, digital legekonsultasjon og timebestilling</p>
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-950/50 border border-emerald-800/50 px-3 py-1.5 rounded-full">
+          <Activity className="w-4 h-4" />
+          <span>Vakthavende lege tilgjengelig nå</span>
+        </div>
+      </header>
+
+      {/* Navigation Tabs */}
+      <div className="max-w-5xl mx-auto flex gap-2 mb-6 border-b border-[#1F2937] pb-3">
+        <button
+          onClick={() => setActiveTab('booking')}
+          className={\`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-2 \${
+            activeTab === 'booking'
+              ? 'bg-[#7C3AED] text-white shadow-lg shadow-purple-900/30'
+              : 'bg-[#12161F] text-slate-400 hover:text-white border border-[#1F2937]'
+          }\`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Bestill Konsultasjon</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('prescriptions')}
+          className={\`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-2 \${
+            activeTab === 'prescriptions'
+              ? 'bg-[#7C3AED] text-white shadow-lg shadow-purple-900/30'
+              : 'bg-[#12161F] text-slate-400 hover:text-white border border-[#1F2937]'
+          }\`}
+        >
+          <Pill className="w-3.5 h-3.5" />
+          <span>Mine e-Resepter ({prescriptions.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('journal')}
+          className={\`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-2 \${
+            activeTab === 'journal'
+              ? 'bg-[#7C3AED] text-white shadow-lg shadow-purple-900/30'
+              : 'bg-[#12161F] text-slate-400 hover:text-white border border-[#1F2937]'
+          }\`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span>Pasientjournal & Lab</span>
+        </button>
+      </div>
+
+      {activeTab === 'booking' && (
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {/* Left: Booking Configurator */}
+          <div className="md:col-span-2 bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-6">
+            <div>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#A78BFA]" />
+                <span>1. Velg Spesialitet eller Tjeneste</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">Autoriserte spesialister uten krav om henvisning</p>
+            </div>
+
+            {/* Service selector */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {Object.entries(services).map(([key, s]) => {
+                const active = selectedService === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedService(key)}
+                    className={\`p-3 rounded-xl text-left transition cursor-pointer border \${
+                      active
+                        ? 'bg-purple-950/60 border-[#7C3AED] ring-1 ring-[#7C3AED]'
+                        : 'bg-[#0E121A] border-[#1F2937] hover:border-slate-600'
+                    }\`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white">{s.title}</span>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40">{s.waitTime}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-1">{s.doctor}</p>
+                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">{s.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Consultation Type Switch */}
+            <div className="space-y-2 pt-2 border-t border-[#1F2937]">
+              <span className="text-xs text-slate-300 font-medium">Konsultasjonsform:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConsultationType('video')}
+                  className={\`p-3.5 rounded-xl border text-left transition cursor-pointer flex items-center gap-3 \${
+                    consultationType === 'video'
+                      ? 'bg-cyan-950/60 border-cyan-500 text-white ring-1 ring-cyan-500'
+                      : 'bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white'
+                  }\`}
+                >
+                  <div className="p-2 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-300">
+                    <Video className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Digital Videokonsultasjon</p>
+                    <p className="text-[10px] text-slate-400">Raskt og enkelt hjemmefra (fra {currentService.videoPrice} kr)</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setConsultationType('clinic')}
+                  className={\`p-3.5 rounded-xl border text-left transition cursor-pointer flex items-center gap-3 \${
+                    consultationType === 'clinic'
+                      ? 'bg-purple-950/60 border-[#7C3AED] text-white ring-1 ring-[#7C3AED]'
+                      : 'bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white'
+                  }\`}
+                >
+                  <div className="p-2 rounded-lg bg-purple-950 border border-purple-800 text-[#C4B5FD]">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Fysisk Oppmøte på Klinikk</p>
+                    <p className="text-[10px] text-slate-400">Sentrum Helsehus, Storgata 14 ({currentService.clinicPrice} kr)</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Time Slot Picker */}
+            <div className="space-y-2 pt-2 border-t border-[#1F2937]">
+              <span className="text-xs text-slate-300 font-medium">Velg ledig tidspunkt:</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availableSlots.map((slot) => {
+                  const active = selectedSlot === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setSelectedSlot(slot)}
+                      className={\`px-3 py-2 rounded-xl text-xs font-mono transition cursor-pointer border \${
+                        active
+                          ? 'bg-[#7C3AED] border-[#7C3AED] text-white font-bold'
+                          : 'bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white'
+                      }\`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Patient Booking Form */}
+            <form onSubmit={handleBooking} className="space-y-3 pt-3 border-t border-[#1F2937]">
+              <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Pasientopplysninger</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  placeholder="Pasientens fulle navn..."
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
+                />
+                <input
+                  type="tel"
+                  value={patientPhone}
+                  onChange={(e) => setPatientPhone(e.target.value)}
+                  placeholder="Telefonnummer (for SMS-innkalling)..."
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className={\`w-full py-3.5 px-6 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer \${
+                  submitted
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gradient-to-r from-[#7C3AED] to-[#38BDF8] hover:from-[#6D28D9] text-white shadow-purple-900/40'
+                }\`}
+              >
+                {submitted ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Time bestilt! Bekreftelse og videolenke sendt til {patientPhone}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Bekreft timebestilling ({price} kr)</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Right: Booking Summary & Guarantees */}
+          <div className="space-y-4">
+            <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
+                  Konsultasjonsoversikt
+                </p>
+                <div className="text-3xl font-extrabold text-white tracking-tight">
+                  kr {price.toLocaleString('no-NO')} ,-
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Egenandel inkl. elektronisk journalskriving</p>
+              </div>
+
+              <div className="space-y-2 text-xs text-slate-300 border-t border-[#1F2937] pt-3 font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Tjeneste:</span>
+                  <span className="font-medium text-white">{currentService.title}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Behandler:</span>
+                  <span className="font-medium text-white text-[11px] truncate max-w-[160px]">{currentService.doctor}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Konsultasjon:</span>
+                  <span className="font-medium text-cyan-300">{consultationType === 'video' ? 'Digital Video' : 'Oppmøte Klinikk'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Tidspunkt:</span>
+                  <span className="font-bold text-[#A78BFA]">{selectedSlot}</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#1F2937] space-y-2 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Ingen henvisning nødvendig</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>E-resept sendes rett til apoteket</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Helsenett og GDPR-kompatibel</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Info */}
+            <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-4 text-xs space-y-2">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                <AlertCircle className="w-4 h-4" />
+                <span>Akutt hjelp?</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Ved livstruende tilstander, ring <strong>113</strong> umiddelbart. Ved behov for legevakt, ring <strong>116 117</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prescriptions Tab */}
+      {activeTab === 'prescriptions' && (
+        <div className="max-w-4xl mx-auto bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+            <div>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Pill className="w-4 h-4 text-cyan-400" />
+                <span>Aktive e-Resepter i Reseptformidleren</span>
+              </h2>
+              <p className="text-xs text-slate-400">Synkronisert mot Helsenorge og apotek</p>
+            </div>
+            <span className="text-[11px] text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-800/40 font-mono">
+              3 gyldige resepter
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {prescriptions.map((p) => (
+              <div key={p.id} className="p-4 rounded-xl bg-[#0E121A] border border-[#1F2937] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xs font-bold text-white">{p.med}</h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Forskriver: {p.doctor}</p>
+                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">Gyldig til: {p.validUntil}</p>
+                </div>
+                <div>
+                  {p.renewed ? (
+                    <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/50 border border-emerald-800/50 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Fornyelse oversendt lege
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleRenewPrescription(p.id)}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold transition cursor-pointer"
+                    >
+                      Be om fornyelse
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Journal Tab */}
+      {activeTab === 'journal' && (
+        <div className="max-w-4xl mx-auto bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="border-b border-[#1F2937] pb-3">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#A78BFA]" />
+              <span>Pasientjournal & Prisliste</span>
+            </h2>
+            <p className="text-xs text-slate-400">Elektronisk pasientjournal (EPJ) og takster</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-xl bg-[#0E121A] border border-[#1F2937] space-y-2">
+              <h3 className="font-bold text-white">Siste konsultasjonsnotat</h3>
+              <p className="text-[11px] text-slate-300">Dato: 14. august 2026</p>
+              <p className="text-[11px] text-slate-400">Årlig helsekontroll utført. BT 120/78, normal puls. Blodprøver bestilt for rutinesjekk.</p>
+              <span className="text-[10px] text-[#A78BFA] font-mono block pt-1">Signert: Dr. Anne Lise Berg</span>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#0E121A] border border-[#1F2937] space-y-2">
+              <h3 className="font-bold text-white">Laboratorieresultater (Helseprofil)</h3>
+              <div className="space-y-1 text-[11px] font-mono">
+                <div className="flex justify-between"><span className="text-slate-400">Hemoglobin:</span><span className="text-emerald-400 font-bold">14.8 g/dL (Normal)</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">S-Ferritin:</span><span className="text-emerald-400 font-bold">85 µg/L (Normal)</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">S-Vitamin D:</span><span className="text-emerald-400 font-bold">78 nmol/L (Optimal)</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Total Kolesterol:</span><span className="text-emerald-400 font-bold">4.6 mmol/L (Normal)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+`;
+  } else if (isCarpenter) {
     pageContent = `'use client';
 
 import React, { useState } from 'react';
@@ -820,13 +1292,34 @@ generator client {
 }
 
 model Booking {
-  id          String   @id @default(uuid())
-  service     String
-  squareMeters Int
-  totalPrice  Int
-  contactInfo String
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  service      String
+  squareMeters Int?
+  totalPrice   Int
+  contactInfo  String
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+}
+
+model PatientConsultation {
+  id               String   @id @default(uuid())
+  patientName      String
+  patientPhone     String
+  serviceTitle     String
+  consultationType String   @default("video")
+  appointmentSlot  String
+  price            Int
+  status           String   @default("CONFIRMED")
+  createdAt        DateTime @default(now())
+}
+
+model Prescription {
+  id             String   @id @default(uuid())
+  medicationName String
+  doctorName     String
+  validUntil     String
+  renewRequested Boolean  @default(false)
+  createdAt      DateTime @default(now())
 }
 
 model Lead {
@@ -861,7 +1354,9 @@ model Lead {
     {
       id: `act-${Date.now()}-1`,
       type: "analyze",
-      title: "Analyserte krav og komponentstruktur",
+      title: isHealth
+        ? "Analyserte krav for helseportal og pasientbooking"
+        : "Analyserte krav og komponentstruktur",
       fileName: "app/page.tsx",
       lineRange: "#L1-260",
       timestamp: new Date().toISOString(),
@@ -870,13 +1365,17 @@ model Lead {
       id: `act-${Date.now()}-2`,
       type: "thought",
       title: "AI Program Autonom Resonnering (3.4s)",
-      content: `Behandlet forespørselen "${prompt}". Konstruerte responsive Tailwind-klasser, interaktiv tilstandshåndtering (useState), TEK17 prisformel, og oppdaterte Prisma-skjema for PostgreSQL på Railway.`,
+      content: isHealth
+        ? `Behandlet forespørselen "${prompt}". Konstruerte MediKlinikk Helseportal med videokonsultasjon, fysisk oppmøte, timebestilling, e-resept fornyelse, og PostgreSQL datamodell.`
+        : `Behandlet forespørselen "${prompt}". Konstruerte responsive Tailwind-klasser, interaktiv tilstandshåndtering (useState), og oppdaterte Prisma-skjema for PostgreSQL på Railway.`,
       timestamp: new Date().toISOString(),
     },
     {
       id: `act-${Date.now()}-3`,
       type: "search",
-      title: "Verifiserte TEK17 / Norsk standard bibliotek",
+      title: isHealth
+        ? "Verifiserte Helsenett & HelseID arkitekturstandarder"
+        : "Verifiserte Norsk standard & TEK17 bibliotek",
       timestamp: new Date().toISOString(),
     },
     ...createdFiles.map((cf, i) => ({

@@ -94,6 +94,14 @@ export function WorkspaceLayout({
             isLoading={isLoading}
             onOpenFile={handleOpenFile}
             onQuickReply={(text) => onSendMessage(text, "Gemini 3.8 Flash High")}
+            onOpenPreview={() => {
+              setActiveTab("preview");
+              if (onSetMobileTab) onSetMobileTab("preview");
+            }}
+            onOpenCode={() => {
+              setActiveTab("editor");
+              if (onSetMobileTab) onSetMobileTab("code");
+            }}
           />
           <FloatingInputBar
             onSendMessage={onSendMessage}

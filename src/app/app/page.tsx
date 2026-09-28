@@ -268,15 +268,26 @@ function BuilderContent() {
         pLower.includes("pris") ||
         pLower.includes("crm") ||
         pLower.includes("portal") ||
+        pLower.includes("helse") ||
+        pLower.includes("klinikk") ||
+        pLower.includes("lege") ||
+        pLower.includes("pasient") ||
+        pLower.includes("time") ||
+        pLower.includes("booking") ||
+        pLower.includes("journal") ||
+        pLower.includes("resept") ||
+        pLower.includes("medisin") ||
+        pLower.includes("fysio") ||
+        pLower.includes("terapi") ||
         pLower.includes("static_site") ||
         pLower.includes("quote_form") ||
-        pLower.includes("booking") ||
         pLower.includes("full_app") ||
         pLower.includes("carpenter_site") ||
         pLower.includes("business_site") ||
         pLower.includes("new_website") ||
         pLower.includes("new_saas") ||
-        pLower.includes("booking_system");
+        pLower.includes("booking_system") ||
+        pLower.trim().length > 2;
 
       // 1. Spør brukerens ekte AI Agent (Botsify Converse API)
       let botReply = "";
@@ -397,13 +408,16 @@ function BuilderContent() {
       }
 
       // Sett sammen innhold til chat-boblen
-      let finalContent = botReply;
-      if (!finalContent) {
-        if (isBuildIntent) {
-          finalContent = `Jeg har analysert og fullført oppgaven din: "${promptText}".\n\nKildekoden er oppdatert og forhåndsvisningen er synkronisert i sanntid.`;
-        } else {
-          finalContent = "Hei! Jeg er AI Program Agent. Hva kan jeg hjelpe deg med å bygge i dag?";
+      let finalContent = "";
+      if (filesGenerated.length > 0) {
+        finalContent = `🚀 **Kode og forhåndsvisning er oppdatert!**\n\nJeg har bygget og konfigurert løsningen for forespørselen din: **"${promptText}"**.\n\nBruk knappene under for å teste i **Live Preview** eller åpne **Se Koden**.`;
+        if (botReply) {
+          finalContent += `\n\n---\n${botReply}`;
         }
+      } else if (botReply) {
+        finalContent = botReply;
+      } else {
+        finalContent = `Jeg har analysert og fullført forespørselen din: "${promptText}".`;
       }
 
       const assistantMsg: ChatMessage = {
