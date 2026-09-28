@@ -35,6 +35,7 @@ import {
   FolderGit2,
   Sparkles,
   Loader2,
+  Server,
 } from "lucide-react";
 
 function BuilderContent() {
@@ -76,7 +77,9 @@ function BuilderContent() {
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [activeProject, setActiveProject] = useState<Project>(INITIAL_PROJECTS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"agent" | "preview" | "code">("agent");
+  const [mobileTab, setMobileTab] = useState<
+    "agent" | "preview" | "backend" | "database" | "code" | "terminal"
+  >("agent");
 
   // Åpne sidepanelet automatisk på desktop
   useEffect(() => {
@@ -757,7 +760,7 @@ function BuilderContent() {
       </div>
 
       {/* Mobile Bottom Navigation Bar (App-like native dock) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0E121A]/95 backdrop-blur-lg border-t border-[#1F2937] z-40 flex items-center justify-around px-2 select-none">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0E121A]/95 backdrop-blur-lg border-t border-[#1F2937] z-40 flex items-center justify-around px-1 select-none">
         <button
           onClick={() => {
             setViewMode("workspace");
@@ -769,8 +772,8 @@ function BuilderContent() {
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-[10px] font-semibold mt-0.5">Agent</span>
+          <MessageSquare className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Agent</span>
         </button>
 
         <button
@@ -784,8 +787,38 @@ function BuilderContent() {
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Eye className="w-5 h-5" />
-          <span className="text-[10px] font-semibold mt-0.5">Preview</span>
+          <Eye className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Frontend</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setViewMode("workspace");
+            setMobileTab("backend");
+          }}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            viewMode === "workspace" && mobileTab === "backend"
+              ? "text-cyan-400 font-bold"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Server className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Backend</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setViewMode("workspace");
+            setMobileTab("database");
+          }}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            viewMode === "workspace" && mobileTab === "database"
+              ? "text-emerald-400 font-bold"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Database</span>
         </button>
 
         <button
@@ -799,16 +832,16 @@ function BuilderContent() {
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Code2 className="w-5 h-5" />
-          <span className="text-[10px] font-semibold mt-0.5">Kode</span>
+          <Code2 className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Kode</span>
         </button>
 
         <button
           onClick={() => setIsSidebarOpen(true)}
           className="flex flex-col items-center justify-center flex-1 py-1 transition text-slate-400 hover:text-white cursor-pointer"
         >
-          <FolderGit2 className="w-5 h-5" />
-          <span className="text-[10px] font-semibold mt-0.5">Prosjekter</span>
+          <FolderGit2 className="w-4 h-4" />
+          <span className="text-[9px] font-semibold mt-0.5">Filer</span>
         </button>
       </nav>
 

@@ -208,6 +208,43 @@ model Booking {
 `,
       },
       {
+        path: "app/api/carpenter/calculator/route.ts",
+        content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { squareMeters = 45, woodType = 'impregnert', serviceKey = 'snekker' } = body || {};
+    const rate = 850;
+    const estHours = Math.round(Number(squareMeters) * 0.6 + 8);
+    const laborCost = estHours * rate;
+    const materialCost = Math.round(Number(squareMeters) * 380);
+    return NextResponse.json({
+      serviceKey,
+      squareMeters,
+      woodType,
+      estimatedHours: estHours,
+      laborCost,
+      materialCost,
+      totalEstimate: laborCost + materialCost,
+      compliance: 'TEK17 Standard & Mestergaranti'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig kalkulasjonsdata' }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'online',
+    service: 'VikingMester Kalkulator API',
+    baseRatePerHour: 850,
+    supportedMaterials: ['impregnert', 'moreroyal', 'kebony', 'termofuru']
+  });
+}
+`,
+      },
+      {
         path: "railway.json",
         content: `{
   "$schema": "https://railway.com/railway.schema.json",
@@ -518,6 +555,38 @@ model Deal {
   value     Float
   stage     String   @default("lead")
   createdAt DateTime @default(now())
+}
+`,
+      },
+      {
+        path: "app/api/crm/deals/route.ts",
+        content: `import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({
+    pipelineValue: '610 000 kr',
+    activeDealsCount: 4,
+    deals: [
+      { id: '1', title: 'Takomlegging Villa', customer: 'Lars Holm', val: '185 000 kr', stage: 'lead' },
+      { id: '2', title: 'Totalrehabilitering Bad', customer: 'Kari Lie', val: '240 000 kr', stage: 'befaring' },
+      { id: '3', title: 'El-kontroll Næringsbygg', customer: 'Nordic Eiendom', val: '65 000 kr', stage: 'tilbud' },
+      { id: '4', title: 'Maling Fasadeprosjekt', customer: 'Sameiet Sentrum', val: '120 000 kr', stage: 'vunnet' }
+    ]
+  });
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      id: 'deal-' + Date.now(),
+      data: body,
+      message: 'Nytt lead registrert i PostgreSQL CRM'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig leaddata' }, { status: 400 });
+  }
 }
 `,
       },

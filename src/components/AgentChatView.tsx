@@ -12,6 +12,9 @@ import {
   Loader2,
   Eye,
   Code2,
+  Server,
+  Database,
+  Terminal,
 } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
 import { VikingLogo } from "./VikingLogo";
@@ -23,7 +26,10 @@ interface AgentChatViewProps {
   onOpenFile?: (path: string) => void;
   onQuickReply?: (text: string) => void;
   onOpenPreview?: () => void;
+  onOpenBackend?: () => void;
+  onOpenDatabase?: () => void;
   onOpenCode?: () => void;
+  onOpenTerminal?: () => void;
 }
 
 function renderInlineText(raw: string): React.ReactNode[] {
@@ -145,7 +151,10 @@ export function AgentChatView({
   onOpenFile,
   onQuickReply,
   onOpenPreview,
+  onOpenBackend,
+  onOpenDatabase,
   onOpenCode,
+  onOpenTerminal,
 }: AgentChatViewProps) {
   const [expandedThoughts, setExpandedThoughts] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -269,26 +278,56 @@ export function AgentChatView({
                 {formatChatMarkdown(msg.content)}
               </div>
 
-              {/* Direct View Actions (Preview & Code) */}
-              <div className="pt-2.5 border-t border-[#1E2430] flex flex-wrap items-center gap-2">
+              {/* Direct Vibe Action Buttons */}
+              <div className="pt-2.5 border-t border-[#1E2430] flex flex-wrap items-center gap-1.5">
                 {onOpenPreview && (
                   <button
                     type="button"
                     onClick={onOpenPreview}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-[#7C3AED]/30 hover:from-purple-900 border border-[#7C3AED]/70 hover:border-[#7C3AED] text-white text-xs font-semibold shadow-sm transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-[#7C3AED]/30 hover:from-purple-900 border border-[#7C3AED]/70 hover:border-[#7C3AED] text-white text-xs font-semibold shadow-sm transition cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-[#C4B5FD]" />
-                    <span>Åpne Forhåndsvisning (Live Preview)</span>
+                    <span>Frontend App</span>
+                  </button>
+                )}
+                {onOpenBackend && (
+                  <button
+                    type="button"
+                    onClick={onOpenBackend}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-cyan-800/60 hover:border-cyan-500 text-cyan-300 hover:text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Server className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Backend API</span>
+                  </button>
+                )}
+                {onOpenDatabase && (
+                  <button
+                    type="button"
+                    onClick={onOpenDatabase}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-emerald-800/60 hover:border-emerald-500 text-emerald-300 hover:text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Database</span>
                   </button>
                 )}
                 {onOpenCode && (
                   <button
                     type="button"
                     onClick={onOpenCode}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-[#1E2430] text-slate-300 hover:text-white text-xs font-medium transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-[#1E2430] text-slate-300 hover:text-white text-xs font-medium transition cursor-pointer"
                   >
                     <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
-                    <span>Se Koden</span>
+                    <span>Kode</span>
+                  </button>
+                )}
+                {onOpenTerminal && (
+                  <button
+                    type="button"
+                    onClick={onOpenTerminal}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0E121A] hover:bg-[#1A2232] border border-amber-800/50 hover:border-amber-500 text-amber-300 hover:text-white text-xs font-medium transition cursor-pointer"
+                  >
+                    <Terminal className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Terminal</span>
                   </button>
                 )}
               </div>

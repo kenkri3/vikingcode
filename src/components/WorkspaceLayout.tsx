@@ -1,12 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Eye, Code2, Sparkles, Terminal, RotateCcw, Bot, Zap, MessageSquare } from "lucide-react";
+import {
+  Eye,
+  Code2,
+  Server,
+  Database,
+  Terminal,
+  RotateCcw,
+  Sparkles,
+  Bot,
+  Layers,
+} from "lucide-react";
 import { AgentChatView } from "./AgentChatView";
 import { FloatingInputBar } from "./FloatingInputBar";
 import { LivePreview } from "./LivePreview";
 import { CodeEditor } from "./CodeEditor";
+import { BackendExplorer } from "./BackendExplorer";
+import { DatabaseStudio } from "./DatabaseStudio";
+import { TerminalView } from "./TerminalView";
 import { ChatMessage, Project } from "@/lib/types";
+
+export type WorkspaceTab = "preview" | "backend" | "database" | "editor" | "terminal";
 
 interface WorkspaceLayoutProps {
   activeProject: Project;
@@ -16,8 +31,8 @@ interface WorkspaceLayoutProps {
   onUpdateFile: (path: string, content: string) => void;
   onStopGeneration?: () => void;
   isQuotaExceeded?: boolean;
-  mobileTab?: "agent" | "preview" | "code";
-  onSetMobileTab?: (tab: "agent" | "preview" | "code") => void;
+  mobileTab?: "agent" | "preview" | "backend" | "database" | "code" | "terminal";
+  onSetMobileTab?: (tab: "agent" | "preview" | "backend" | "database" | "code" | "terminal") => void;
 }
 
 export function WorkspaceLayout({
@@ -31,8 +46,7 @@ export function WorkspaceLayout({
   mobileTab = "agent",
   onSetMobileTab,
 }: WorkspaceLayoutProps) {
-  const [activeTab, setActiveTab] = useState<"preview" | "editor">("preview");
-  const [chatMode, setChatMode] = useState<"agent" | "trace">("agent");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("preview");
   const [selectedFileForEditor, setSelectedFileForEditor] = useState<string>("app/page.tsx");
 
   const handleOpenFile = (path: string) => {
@@ -41,31 +55,28 @@ export function WorkspaceLayout({
     if (onSetMobileTab) onSetMobileTab("code");
   };
 
-  // Keep internal activeTab synced with mobileTab if user selects preview or code
+  // Keep internal activeTab synced with mobileTab if user selects one
   useEffect(() => {
     if (mobileTab === "preview") setActiveTab("preview");
+    if (mobileTab === "backend") setActiveTab("backend");
+    if (mobileTab === "database") setActiveTab("database");
     if (mobileTab === "code") setActiveTab("editor");
+    if (mobileTab === "terminal") setActiveTab("terminal");
   }, [mobileTab]);
-
-  const quickPrompts = [
-    "Legg til Vipps hurtigbetaling og kvitteringsvisning",
-    "Oppdater TEK17 priskalkulator med nye timepriser",
-    "Lag et moderne kontaktskjema med SMS-varsling",
-    "Koble appen til PostgreSQL med automatisk migrering",
-  ];
 
   return (
     <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-[#0A0D12]">
       {/* LEFT SIDE (Agent Chat & Floating Input) */}
       <div
-        className={`w-full md:w-[40%] flex-col h-full border-r border-[#1F2937] bg-[#0A0D12] overflow-hidden ${
+        className={`w-full md:w-[38%] lg:w-[35%] flex-col h-full border-r border-[#1F2937] bg-[#0A0D12] overflow-hidden ${
           mobileTab === "agent" ? "flex" : "hidden md:flex"
         }`}
       >
         {/* Left Side Header */}
         <div className="h-9 bg-[#12161F]/40 border-b border-[#1E2430] px-3.5 flex items-center justify-between select-none shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-300">Samtale</span>
+            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse" />
+            <span className="text-xs font-semibold text-white">AI Autonom Utvikler</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -98,9 +109,21 @@ export function WorkspaceLayout({
               setActiveTab("preview");
               if (onSetMobileTab) onSetMobileTab("preview");
             }}
+            onOpenBackend={() => {
+              setActiveTab("backend");
+              if (onSetMobileTab) onSetMobileTab("backend");
+            }}
+            onOpenDatabase={() => {
+              setActiveTab("database");
+              if (onSetMobileTab) onSetMobileTab("database");
+            }}
             onOpenCode={() => {
               setActiveTab("editor");
               if (onSetMobileTab) onSetMobileTab("code");
+            }}
+            onOpenTerminal={() => {
+              setActiveTab("terminal");
+              if (onSetMobileTab) onSetMobileTab("terminal");
             }}
           />
           <FloatingInputBar
@@ -112,59 +135,127 @@ export function WorkspaceLayout({
         </div>
       </div>
 
-      {/* RIGHT SIDE: Live Sandbox Preview & Code Editor */}
+      {/* RIGHT SIDE: Multi-Tab Full-Stack Vibe Workspace */}
       <div
-        className={`w-full md:w-[60%] flex-col h-full bg-[#0A0D12] overflow-hidden ${
+        className={`w-full md:w-[62%] lg:w-[65%] flex-col h-full bg-[#0A0D12] overflow-hidden ${
           mobileTab !== "agent" ? "flex" : "hidden md:flex"
         }`}
       >
         {/* Workspace Tab Header */}
-        <div className="h-9 bg-[#12161F]/40 border-b border-[#1E2430] px-3 flex items-center justify-between select-none shrink-0">
-          <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1E2430]">
+        <div className="h-9 bg-[#12161F]/60 border-b border-[#1E2430] px-3 flex items-center justify-between select-none shrink-0 overflow-x-auto">
+          {/* 5 Tab Navigation: Frontend | Backend | Database | Kode | Terminal */}
+          <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1E2430] shrink-0">
+            {/* 1. Frontend Preview */}
             <button
               onClick={() => {
                 setActiveTab("preview");
                 if (onSetMobileTab) onSetMobileTab("preview");
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-[#1E2430] text-slate-100 font-semibold"
+                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
               <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span>Forhåndsvisning</span>
+              <span>Frontend App</span>
             </button>
 
+            {/* 2. Backend API Explorer */}
+            <button
+              onClick={() => {
+                setActiveTab("backend");
+                if (onSetMobileTab) onSetMobileTab("backend");
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+                activeTab === "backend"
+                  ? "bg-[#1E2430] text-cyan-300 font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Backend API</span>
+            </button>
+
+            {/* 3. Database Studio */}
+            <button
+              onClick={() => {
+                setActiveTab("database");
+                if (onSetMobileTab) onSetMobileTab("database");
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+                activeTab === "database"
+                  ? "bg-[#1E2430] text-emerald-300 font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Database</span>
+            </button>
+
+            {/* 4. Code Editor */}
             <button
               onClick={() => {
                 setActiveTab("editor");
                 if (onSetMobileTab) onSetMobileTab("code");
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
                 activeTab === "editor"
-                  ? "bg-[#1E2430] text-slate-100 font-semibold"
+                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
               <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
               <span>Kode ({activeProject.files.length})</span>
             </button>
+
+            {/* 5. Terminal */}
+            <button
+              onClick={() => {
+                setActiveTab("terminal");
+                if (onSetMobileTab) onSetMobileTab("terminal");
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+                activeTab === "terminal"
+                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5 text-amber-400" />
+              <span>Terminal</span>
+            </button>
           </div>
 
-          <div className="text-[11px] font-mono text-slate-500">
-            {activeProject.name}
+          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-400 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>Railway Fullstack Ready</span>
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content Display */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === "preview" ? (
+          {activeTab === "preview" && (
             <LivePreview
               files={activeProject.files}
               projectName={activeProject.name}
             />
-          ) : (
+          )}
+
+          {activeTab === "backend" && (
+            <BackendExplorer
+              files={activeProject.files}
+              projectName={activeProject.name}
+            />
+          )}
+
+          {activeTab === "database" && (
+            <DatabaseStudio
+              files={activeProject.files}
+              projectName={activeProject.name}
+            />
+          )}
+
+          {activeTab === "editor" && (
             <CodeEditor
               files={activeProject.files}
               onUpdateFile={onUpdateFile}
@@ -172,9 +263,12 @@ export function WorkspaceLayout({
               onSelectFile={setSelectedFileForEditor}
             />
           )}
+
+          {activeTab === "terminal" && (
+            <TerminalView projectName={activeProject.name} />
+          )}
         </div>
       </div>
     </div>
   );
 }
-

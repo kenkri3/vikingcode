@@ -26,18 +26,20 @@ Du hjelper brukeren med å bygge moderne, responsive og interaktive webapplikasj
 
 VIKTIG:
 1. Skriv ALLTID fungerende, interaktiv kode i app/page.tsx og eventuelle nye komponenter (bruk 'use client', useState, interaktive knapper, forms, kalkulatorer, etc.).
-2. Hvis brukeren ber om nye filer eller komponenter (f.eks. components/VippsCheckout.tsx, components/ContactModal.tsx), opprett disse filene i "files"-listen.
-3. Koden må være på norsk, tilpasset norske standarder (TEK17, Vipps, norske kroner kr, m², telefonnumre).
-4. Returner svaret KUN som et gyldig JSON-objekt med følgende struktur:
+2. Opprett ALLTID backend API-ruter (f.eks. app/api/data/route.ts eller relevante domeneruter) med GET og POST handlere.
+3. Opprett eller oppdater prisma/schema.prisma med relevante PostgreSQL modeller for prosjektet.
+4. Koden må være på norsk, tilpasset norske standarder (TEK17, Vipps, norske kroner kr, m², telefonnumre).
+5. Returner svaret KUN som et gyldig JSON-objekt med følgende struktur:
 {
   "message": "Norsk forklaring på hva som er bygget, hvilke filer som er opprettet, og hvordan forhåndsvisningen er oppdatert.",
   "thought": "Teknisk resonnering og arkitekturvalg...",
   "actions": [
     { "type": "analyze", "fileName": "app/page.tsx", "title": "Analyserte komponentstruktur", "lineRange": "#L1-250" },
-    { "type": "create", "fileName": "components/Calculator.tsx", "title": "Opprettet ny komponent" }
+    { "type": "create", "fileName": "app/api/data/route.ts", "title": "Opprettet backend REST API" }
   ],
   "files": [
     { "path": "app/page.tsx", "content": "..." },
+    { "path": "app/api/data/route.ts", "content": "..." },
     { "path": "prisma/schema.prisma", "content": "..." },
     { "path": "railway.json", "content": "..." }
   ]
@@ -71,6 +73,52 @@ Konstruer eller oppdater kildekoden, opprett nødvendige filer, og returner JSON
       if (rawText) {
         const parsed = JSON.parse(rawText);
         if (parsed.message && Array.isArray(parsed.files)) {
+          // Sikre at backend API og prisma schema alltid er til stede for fullstack tabs
+          if (!parsed.files.some((f: any) => f.path?.includes("api/"))) {
+            parsed.files.push({
+              path: "app/api/data/route.ts",
+              content: `import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'online',
+    project: '${projectName}',
+    timestamp: new Date().toISOString()
+  });
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({ success: true, data: body });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig forespørsel' }, { status: 400 });
+  }
+}
+`,
+            });
+          }
+          if (!parsed.files.some((f: any) => f.path?.includes("schema.prisma"))) {
+            parsed.files.push({
+              path: "prisma/schema.prisma",
+              content: `datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Item {
+  id        String   @id @default(uuid())
+  title     String
+  status    String   @default("Aktiv")
+  createdAt DateTime @default(now())
+}
+`,
+            });
+          }
           return {
             message: parsed.message,
             thought: parsed.thought || "Konstruerte arkitektur og kildekode.",
@@ -1279,7 +1327,138 @@ export default function Component() {
     }
   });
 
-  // Prisma schema
+  // 2. Backend REST API Route Handlers (Fullstack Next.js App Router)
+  if (isHealth) {
+    createdFiles.push({
+      path: "app/api/health/booking/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      bookingId: 'bk-helse-' + Date.now().toString(36),
+      patientName: body.patientName || 'Pasient',
+      service: body.serviceTitle || 'Allmennlege',
+      slot: body.appointmentSlot || 'I dag',
+      status: 'CONFIRMED',
+      message: 'Konsultasjon er bekreftet og registrert i pasientjournalen.'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig bookingdata' }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    clinic: 'MediKlinikk Sentrum Helsehus',
+    slots: [
+      { time: 'I dag kl. 14:30', doctor: 'Dr. Anne Lise Berg', available: true },
+      { time: 'I dag kl. 15:45', doctor: 'Dr. Anne Lise Berg', available: true },
+      { time: 'I morgen kl. 09:15', doctor: 'Dr. Kristoffer Haug', available: true }
+    ]
+  });
+}
+`,
+    });
+  } else if (isCarpenter) {
+    createdFiles.push({
+      path: "app/api/carpenter/calculator/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { squareMeters = 30, woodType = 'impregnert', serviceKey = 'terrasse' } = body || {};
+    const rate = 850;
+    const estHours = Math.round(Number(squareMeters) * 0.6 + 8);
+    const laborCost = estHours * rate;
+    const mult = woodType === 'kebony' ? 1.75 : woodType === 'moreroyal' ? 1.45 : 1.0;
+    const materialCost = Math.round(Number(squareMeters) * 420 * mult);
+    return NextResponse.json({
+      serviceKey,
+      squareMeters,
+      woodType,
+      estimatedHours: estHours,
+      laborCost,
+      materialCost,
+      totalEstimate: laborCost + materialCost,
+      compliance: 'TEK17 Standard & Mestergaranti'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig kalkulasjonsdata' }, { status: 400 });
+  }
+}
+`,
+    });
+  } else if (isCRM) {
+    createdFiles.push({
+      path: "app/api/crm/deals/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({
+    pipelineValue: '490 000 kr',
+    deals: [
+      { id: '1', title: 'Takomlegging Villa', client: 'Lars Holm', val: '185 000 kr', stage: 'lead' },
+      { id: '2', title: 'Rehabilitering Bad', client: 'Kari Lie', val: '240 000 kr', stage: 'befaring' },
+      { id: '3', title: 'El-kontroll Næring', client: 'Nordic Eiendom', val: '65 000 kr', stage: 'tilbud' }
+    ]
+  });
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      id: 'deal-' + Date.now(),
+      data: body,
+      message: 'Nytt lead registrert i PostgreSQL CRM'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig leaddata' }, { status: 400 });
+  }
+}
+`,
+    });
+  } else {
+    createdFiles.push({
+      path: "app/api/data/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'online',
+    project: '${projectName}',
+    items: [
+      { id: '1', title: 'Autonom ordrehåndtering', category: 'Kjerne', status: 'Aktiv' },
+      { id: '2', title: 'PostgreSQL & Prisma integrasjon', category: 'Database', status: 'Aktiv' },
+      { id: '3', title: 'Sanntidsvarsling & Webhook', category: 'Varsel', status: 'Aktiv' }
+    ],
+    timestamp: new Date().toISOString()
+  });
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      id: 'item-' + Date.now(),
+      message: 'Data lagret i PostgreSQL',
+      data: body
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig forespørsel' }, { status: 400 });
+  }
+}
+`,
+    });
+  }
+
+  // 3. Prisma schema med PostgreSQL datamodell
   createdFiles.push({
     path: "prisma/schema.prisma",
     content: `datasource db {
@@ -1328,6 +1507,14 @@ model Lead {
   client    String
   amount    String
   stage     String   @default("lead")
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id        String   @id @default(uuid())
+  title     String
+  category  String   @default("Standard")
+  status    String   @default("Aktiv")
   createdAt DateTime @default(now())
 }
 `,
@@ -1388,7 +1575,7 @@ model Lead {
   ];
 
   const fileListText = createdFiles.map((f) => f.path).join(", ");
-  const message = `Jeg har analysert og fullført oppgaven din: "${prompt}".\n\nFølgende kildekodefiler er nå opprettet og oppdatert: ${fileListText}. Løsningen er satt opp med responsive Tailwind-komponenter, interaktiv prisberegning og PostgreSQL datamodell. Forhåndsvisningen til høyre er oppdatert i sanntid.`;
+  const message = `Jeg har analysert og fullført oppgaven din: "${prompt}".\n\nFølgende fullstack-kildekodefiler er nå opprettet og oppdatert:\n${fileListText}\n\nLøsningen er fullt integrert og klar for testing:\n• **Frontend App**: Interaktiv React-applikasjon med sanntids forhåndsvisning.\n• **Backend API**: REST API-endepunkter klare for direkte testing i *Backend API*-fanen.\n• **Database**: PostgreSQL & Prisma datamodeller inspiserbare i *Database*-fanen.\n• **Terminal**: Sanntids bygge- og serverlogger i *Terminal*-fanen.`;
 
   return {
     message,

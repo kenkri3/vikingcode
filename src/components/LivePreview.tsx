@@ -935,82 +935,242 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
 </html>`;
     }
 
-    // 3. GENERISK MODERNE WEBAPP / KUNDEAPPLIKASJON
+    // 3. FULL DYNAMISK REACT / BABEL STANDALONE SANDKASSE (BOLT.NEW STYLE)
     return `<!DOCTYPE html>
 <html lang="no" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${projectName}</title>
+    <title>${projectName} - Live Forhåndsvisning</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { background-color: #0A0D12; color: #F9FAFB; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; padding: 0; }</style>
-  </head>
-  <body class="bg-[#0A0D12] text-slate-100 min-h-screen p-4 sm:p-8">
-    <div class="max-w-4xl mx-auto space-y-6 pb-20">
-      <header class="flex items-center justify-between pb-6 border-b border-[#1F2937]">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white shadow-lg">
-            AI
-          </div>
-          <div>
-            <h1 class="text-xl font-bold tracking-tight text-white">${projectName}</h1>
-            <p class="text-xs text-slate-400">Bygget autonomt med AI Program (aiprogram.no)</p>
-          </div>
-        </div>
-        <span class="px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-700/40 text-xs text-emerald-400 font-medium">
-          ● Aktiv Sandbox
-        </span>
-      </header>
-
-      <main class="bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold text-white">Fullverdig Webapplikasjon</h2>
-          <p class="text-slate-300 text-sm mt-1">Generert med Next.js 15, Tailwind CSS og Prisma PostgreSQL på Railway.</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="bg-[#0A0D12] p-4 rounded-xl border border-slate-800">
-            <p class="text-slate-500 text-[10px] uppercase font-bold">Kildekode</p>
-            <p class="text-white font-bold text-sm mt-1">${files.length} filer konfigurert</p>
-          </div>
-          <div class="bg-[#0A0D12] p-4 rounded-xl border border-slate-800">
-            <p class="text-slate-500 text-[10px] uppercase font-bold">Database</p>
-            <p class="text-emerald-400 font-bold text-sm mt-1">PostgreSQL Tilkoblet</p>
-          </div>
-          <div class="bg-[#0A0D12] p-4 rounded-xl border border-slate-800">
-            <p class="text-slate-500 text-[10px] uppercase font-bold">Distribusjon</p>
-            <p class="text-purple-400 font-bold text-sm mt-1">Railway 1-Klikk Klar</p>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-[#1F2937] space-y-3">
-          <label class="block text-xs font-semibold text-slate-300">Test interaktiv tilstand:</label>
-          <div class="flex gap-2">
-            <input id="test-inp" placeholder="Legg til et element eller oppdrag..." class="flex-1 bg-[#0A0D12] border border-[#1F2937] rounded-xl px-4 py-2.5 text-xs text-white outline-none" />
-            <button onclick="addListItem()" class="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold cursor-pointer">Legg til</button>
-          </div>
-          <div id="list-container" class="space-y-2 pt-2">
-            <div class="p-3 bg-[#0E121A] border border-[#1F2937] rounded-xl text-xs flex justify-between items-center text-slate-200">
-              <span>✓ Autonom ordrehåndtering og varsling</span>
-              <span class="text-[10px] text-emerald-400 font-mono">Aktiv</span>
-            </div>
-            <div class="p-3 bg-[#0E121A] border border-[#1F2937] rounded-xl text-xs flex justify-between items-center text-slate-200">
-              <span>✓ Norsk standard & Responsivt grensesnitt</span>
-              <span class="text-[10px] text-emerald-400 font-mono">Aktiv</span>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
     <script>
-      function addListItem() {
-        const inp = document.getElementById('test-inp');
-        if (!inp.value.trim()) return;
-        const d = document.createElement('div');
-        d.className = 'p-3 bg-[#0E121A] border border-[#1F2937] rounded-xl text-xs flex justify-between items-center text-slate-200 animate-in fade-in';
-        d.innerHTML = '<span>✓ ' + inp.value + '</span><span class="text-[10px] text-emerald-400 font-mono">Lagt til nå</span>';
-        document.getElementById('list-container').appendChild(d);
-        inp.value = '';
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: { 500: '#7C3AED', 600: '#6D28D9' }
+            }
+          }
+        }
+      };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body { background-color: #0A0D12; color: #F9FAFB; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 9999px; }
+    </style>
+  </head>
+  <body class="bg-[#0A0D12] text-slate-100 min-h-screen">
+    <div id="root">
+      <div class="flex flex-col items-center justify-center min-h-[380px] p-6 text-slate-400 gap-3">
+        <div class="w-8 h-8 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-mono text-slate-400">Kompilerer og starter React-sandkasse...</p>
+      </div>
+    </div>
+
+    <script>
+      const ICON_SVGS = {
+        HeartPulse: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+        Calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+        Clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        User: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        ShieldCheck: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+        CheckCircle2: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+        Check: '<path d="M20 6 9 17l-5-5"/>',
+        Video: '<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+        MapPin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+        Pill: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+        FileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+        Phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+        Sparkles: '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>',
+        ChevronRight: '<path d="m9 18 6-6-6-6"/>',
+        ChevronLeft: '<path d="m15 18-6-6 6-6"/>',
+        Activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+        Award: '<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+        AlertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+        Hammer: '<path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 3.26-6.36 6.36a1 1 0 0 0-.29.71v3.38l-4 4"/><path d="m18 10 4-4"/>',
+        Ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+        Star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+        Zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+        Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+        Plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+        Trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+        Trash2: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+        ArrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+        ArrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+        ExternalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+        Copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+        Layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+        Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>',
+        Server: '<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>',
+        Play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+        RotateCw: '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
+        CheckCheck: '<path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>',
+        X: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+        Menu: '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>',
+        Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
+      };
+
+      function createIcon(name) {
+        return function IconComp(props) {
+          const className = (props && props.className) || 'w-4 h-4 inline-block';
+          const innerSvg = ICON_SVGS[name] || '<circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/>';
+          return React.createElement('svg', {
+            ...props,
+            className: className,
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: '2',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            dangerouslySetInnerHTML: { __html: innerSvg }
+          });
+        };
+      }
+
+      const lucideProxy = new Proxy({}, {
+        get: (target, prop) => {
+          if (typeof prop === 'string') {
+            return createIcon(prop);
+          }
+          return createIcon('Check');
+        }
+      });
+
+      // Sandkasse Mock Fetch
+      const origFetch = window.fetch;
+      window.fetch = async (url, options) => {
+        console.log('[Sandkasse API]:', url, options);
+        if (typeof url === 'string' && url.includes('/api/')) {
+          return new Response(JSON.stringify({
+            success: true,
+            status: 200,
+            message: 'Sandkasse mock-respons',
+            timestamp: new Date().toISOString()
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return origFetch(url, options);
+      };
+
+      // Mock Next.js navigation & components
+      const Link = (props) => React.createElement('a', { href: props.href || '#', ...props }, props.children);
+      const Image = (props) => React.createElement('img', { ...props, alt: props.alt || '' });
+
+      function runSandbox() {
+        const rootEl = document.getElementById('root');
+        let code = ${JSON.stringify(rawCode).replace(/<\/script>/gi, "<\\/script>")};
+
+        if (!code || !code.trim()) {
+          rootEl.innerHTML = '<div class="p-8 text-center text-slate-500 font-mono text-xs">Venter på kildekode...</div>';
+          return;
+        }
+
+        try {
+          // Remove "use client";
+          code = code.replace(/['"]use client['"];?/g, '');
+
+          // Strip React imports
+          code = code.replace(/import\s+(?:React,\s*)?(?:\{[^}]*\})?\s*from\s*['"]react['"];?/g, '');
+
+          // Replace lucide-react imports with proxy assignments
+          code = code.replace(/import\s*\{([^}]+)\}\s*from\s*['"]lucide-react['"];?/g, (match, p1) => {
+            const icons = p1.split(',').map(s => s.trim()).filter(Boolean);
+            return icons.map(icon => 'const ' + icon + ' = lucideProxy.' + icon + ';').join('\\n');
+          });
+
+          // Replace next/link and next/image
+          code = code.replace(/import\s+Link\s+from\s*['"]next\\/link['"];?/g, 'const Link = (props) => React.createElement("a", { href: props.href || "#", ...props }, props.children);');
+          code = code.replace(/import\s+Image\s+from\s*['"]next\\/image['"];?/g, 'const Image = (props) => React.createElement("img", { ...props, alt: props.alt || "" });');
+
+          // Strip remaining imports
+          code = code.replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '');
+
+          // Export handling
+          let defaultCompName = 'App';
+          if (/export\s+default\s+function\s+([A-Za-z0-9_]+)/.test(code)) {
+            defaultCompName = code.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/)[1];
+            code = code.replace(/export\s+default\s+function/, 'function');
+          } else if (/export\s+default\s+([A-Za-z0-9_]+)/.test(code)) {
+            defaultCompName = code.match(/export\s+default\s+([A-Za-z0-9_]+)/)[1];
+            code = code.replace(/export\s+default\s+[A-Za-z0-9_]+;?/, '');
+          }
+
+          if (typeof Babel === 'undefined') {
+            throw new Error('Babel Standalone biblioteket laster inn... Prøv på nytt om et øyeblikk.');
+          }
+
+          // Transpile with Babel
+          const transpiled = Babel.transform(code, {
+            presets: ['react', 'typescript'],
+            filename: 'preview.tsx'
+          }).code;
+
+          // Execute
+          const execFn = new Function(
+            'React',
+            'useState',
+            'useEffect',
+            'useMemo',
+            'useCallback',
+            'useRef',
+            'lucideProxy',
+            'Link',
+            'Image',
+            transpiled + '\\nreturn typeof ' + defaultCompName + ' !== "undefined" ? ' + defaultCompName + ' : null;'
+          );
+
+          const Component = execFn(
+            React,
+            React.useState,
+            React.useEffect,
+            React.useMemo,
+            React.useCallback,
+            React.useRef,
+            lucideProxy,
+            Link,
+            Image
+          );
+
+          if (!Component) {
+            throw new Error('Fant ingen gyldig React-komponent å rendre i app/page.tsx.');
+          }
+
+          // Render
+          const root = ReactDOM.createRoot(rootEl);
+          root.render(React.createElement(Component));
+        } catch (err) {
+          console.error('[Sandbox Compiler Error]:', err);
+          rootEl.innerHTML = \`
+            <div class="p-6 max-w-2xl mx-auto my-8 bg-[#12161F] border border-amber-500/40 rounded-2xl shadow-2xl space-y-4">
+              <div class="flex items-center gap-3 text-amber-400">
+                <span class="text-xl">⚡</span>
+                <h3 class="font-bold text-sm">Sanntids React-sandkasse</h3>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Koden evalueres i sanntid. Ved kildekodesyntaks under redigering:
+                <code class="block mt-2 p-3 bg-[#0A0D12] text-amber-300 font-mono text-[11px] rounded-xl border border-amber-900/50 overflow-x-auto whitespace-pre-wrap">\${err.message}</code>
+              </p>
+              <div class="pt-2 border-t border-[#1F2937] flex items-center justify-between">
+                <span class="text-[11px] text-slate-400">Next.js 15 & Prisma PostgreSQL aktiv</span>
+                <button onclick="location.reload()" class="px-3.5 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold rounded-xl cursor-pointer">
+                  Last inn på nytt
+                </button>
+              </div>
+            </div>
+          \`;
+        }
+      }
+
+      if (typeof Babel !== 'undefined' && typeof React !== 'undefined') {
+        runSandbox();
+      } else {
+        window.addEventListener('load', runSandbox);
+        setTimeout(runSandbox, 1500);
       }
     </script>
   </body>
@@ -1070,10 +1230,14 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
           </button>
         </div>
 
-        {/* Center: Subtle Status indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span>Sandkasse aktiv</span>
+        {/* Center: Live Sandbox indicator */}
+        <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-[10px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Sandkasse: {pageFile?.path || "app/page.tsx"}
+          </span>
+          <span className="text-slate-600 hidden md:inline">•</span>
+          <span className="text-[10px] text-slate-400 hidden md:inline">Next.js 15 & Tailwind JIT</span>
         </div>
 
         {/* Right: Refresh & Popout */}
