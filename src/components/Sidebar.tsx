@@ -83,11 +83,16 @@ export function Sidebar({
 
   const renderContent = (isMobile: boolean = false) => (
     <div className="flex flex-col h-full bg-[#18181c] text-slate-200 text-xs select-none">
-      {/* 1. Header with VikingCode Logo, Name & Collapse Icon */}
+      {/* 1. Header with AI Program Logo, Name & Collapse Icon */}
       <div className="p-3.5 flex items-center justify-between border-b border-[#26262e] shrink-0">
         <div className="flex items-center gap-2">
           <VikingLogo size={22} />
-          <span className="font-bold text-white text-sm tracking-tight font-sans">VikingCode</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-white text-sm tracking-tight font-sans">AI Program</span>
+            <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40">
+              .no
+            </span>
+          </div>
         </div>
         <button
           onClick={onToggle}

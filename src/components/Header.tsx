@@ -70,7 +70,10 @@ export function Header({
           <VikingLogo size={22} />
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-bold tracking-tight text-white font-sans">
-              VikingCode
+              AI Program
+            </span>
+            <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40">
+              .no
             </span>
           </div>
         </button>
