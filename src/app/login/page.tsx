@@ -84,7 +84,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="deg@bedrift.no eller admin e-post"
+                placeholder="din@epost.no"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] text-sm text-white placeholder-slate-500 outline-none transition"
               />
             </div>
@@ -125,12 +125,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Superadmin Note */}
-          <div className="p-3 rounded-xl bg-[#0A0D12] border border-[#1F2937] text-[11px] text-slate-400 flex items-start gap-2">
-            <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold text-white">Administrator?</span> Logg inn med din <code className="text-[#C4B5FD]">ADMIN_EMAIL</code> og <code className="text-[#C4B5FD]">ADMIN_PASSWORD</code> fra Railway for direkte adgang til backend-panelet.
-            </div>
+          {/* Sikkerhetsindikator */}
+          <div className="p-2.5 rounded-xl bg-[#0A0D12] border border-[#1F2937] text-[11px] text-slate-400 flex items-center justify-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Sikker 256-bit kryptert innlogging • Norsk skyløsning</span>
           </div>
 
           <div className="pt-2 text-center text-xs text-slate-400">

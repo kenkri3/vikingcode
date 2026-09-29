@@ -26,6 +26,7 @@ import {
   DollarSign,
   Users,
   Compass,
+  Key,
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -91,8 +92,8 @@ export default function LandingPage() {
       a: "Ja! Alle nye kontoer får en gratis prøveperiode med 50 000 tokens og 3 fulle byggeprompter. Du trenger ikke legge inn kredittkort for å teste hvordan AI-agenten genererer arkitektur, frontend og database.",
     },
     {
-      q: "Hvordan logger SuperAdmin inn?",
-      a: "Hvis du drifter AIProgram.no for din organisasjon, konfigurerer du enkelt `ADMIN_EMAIL` og `ADMIN_PASSWORD` i Railway miljøvariabler. Ved innlogging på `/login` gjenkjenner systemet admin-opplysningene umiddelbart og gir ubegrenset MESTER-tilgang til backend.",
+      q: "Kan jeg bruke mine egne API-nøkler (BYOK)?",
+      a: "Ja, absolutt! Hvis du har en API-nøkkel fra Google Gemini, DeepSeek eller OpenAI, kan du enkelt legge den inn i innstillingene. Da kjører både agent-chat og kodegenerering direkte mot din egen leverandør med ubegrenset kvote, helt uten å trekke plattformtokens.",
     },
   ];
 
@@ -111,7 +112,7 @@ export default function LandingPage() {
                 .no
               </span>
             </div>
-            <span className="text-[10px] text-slate-400 -mt-0.5">Viking-økosystemet</span>
+            <span className="text-[10px] text-slate-400 -mt-0.5">Autonom programvarebygger</span>
           </div>
         </Link>
 
@@ -351,23 +352,23 @@ export default function LandingPage() {
                 <div className="p-4 rounded-xl bg-[#0A0D12] border border-[#1F2937] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-white">VikingMester Befaring</h4>
+                      <h4 className="text-sm font-bold text-white">AI Program Ultra Prosjekt</h4>
                       <p className="text-[11px] text-slate-400">
-                        Priskalkulator med TEK17 garanti og kalenderbooking
+                        Fullstack webapplikasjon med sanntids live preview og database
                       </p>
                     </div>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-                      Aktiv
+                      Produksjon
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="p-2 rounded-lg bg-[#12161F] border border-[#1F2937]">
-                      <span className="text-slate-400 text-[10px]">Areal</span>
-                      <p className="font-bold text-white">85 m² Våtrom</p>
+                      <span className="text-slate-400 text-[10px]">Arkitektur</span>
+                      <p className="font-bold text-white">Next.js 15 App Router</p>
                     </div>
                     <div className="p-2 rounded-lg bg-[#12161F] border border-[#1F2937]">
-                      <span className="text-slate-400 text-[10px]">Fastprisestimat</span>
-                      <p className="font-bold text-emerald-400">142 500 kr eks. mva</p>
+                      <span className="text-slate-400 text-[10px]">Undersider</span>
+                      <p className="font-bold text-emerald-400">Fler-sides ruter aktive</p>
                     </div>
                   </div>
                 </div>
@@ -522,11 +523,11 @@ export default function LandingPage() {
           </div>
 
           <div className="p-6 rounded-2xl bg-[#12161F] border border-[#1F2937]">
-            <Users className="w-6 h-6 text-teal-400 mb-3" />
-            <h3 className="text-base font-bold text-white mb-1.5">SuperAdmin Konsoll</h3>
+            <Key className="w-6 h-6 text-purple-400 mb-3" />
+            <h3 className="text-base font-bold text-white mb-1.5">Egen API-nøkkel (BYOK)</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Logg inn direkte med `ADMIN_EMAIL` og `ADMIN_PASSWORD` for å overvåke API-status,
-              Stripe og systemtokens.
+              Bruk dine egne API-nøkler (Google Gemini, DeepSeek, OpenAI) for direkte kvote og
+              ubegrenset bygging helt uten ekstra token-trekk.
             </p>
           </div>
         </div>
@@ -752,74 +753,53 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto border-t border-[#1F2937]">
         <div className="text-center mb-12">
           <h2 className="text-xs font-bold text-[#A78BFA] uppercase tracking-widest mb-2">
-            Viking-familien
+            Moderne Teknologistack
           </h2>
           <p className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Et integrert digitalt økosystem for norske bedrifter
+            Bygget på industriledende standarder for maksimal ytelse
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-          <div className="p-4 rounded-xl bg-[#12161F] border border-purple-700/60 shadow-md">
-            <div className="flex items-center gap-2 mb-2">
-              <VikingLogo size={20} />
-              <span className="font-bold text-white text-xs">AIProgram.no</span>
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Code2 className="w-5 h-5 text-purple-400" />
+              <span className="font-bold text-white text-sm">Next.js 15 & React 19</span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Vår kjerneplattform for autonom AI-programvarebygging og raske prototypinger.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              App Router, server-komponenter, fler-sides routing og optimalisert ytelse rett ut av boksen.
             </p>
           </div>
 
-          <a
-            href="https://vikingnet.no"
-            target="_blank"
-            rel="noreferrer"
-            className="p-4 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-slate-500 transition group"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-white text-xs group-hover:text-[#A78BFA] transition">
-                Vikingnet.no
-              </span>
-              <Compass className="w-3.5 h-3.5 text-slate-500" />
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+              <span className="font-bold text-white text-sm">Tailwind CSS</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Norsk sky- og nettverksinfrastruktur med dedikert drift og sikkerhet.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Sofistikert skandinavisk design, full responsivitet, mørkt tema og micro-animasjoner.
             </p>
-          </a>
+          </div>
 
-          <a
-            href="https://vikingmester.no"
-            target="_blank"
-            rel="noreferrer"
-            className="p-4 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-slate-500 transition group"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-white text-xs group-hover:text-[#A78BFA] transition">
-                VikingMester.no
-              </span>
-              <Compass className="w-3.5 h-3.5 text-slate-500" />
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Database className="w-5 h-5 text-emerald-400" />
+              <span className="font-bold text-white text-sm">PostgreSQL & Prisma</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Spesialiserte fagsystemer og kalkulatorer for norske håndverkere og byggmestre.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Type-sikker relasjonsdatabase med automatiske migreringer og tilkoblingspool.
             </p>
-          </a>
+          </div>
 
-          <a
-            href="https://vikingcrm.no"
-            target="_blank"
-            rel="noreferrer"
-            className="p-4 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-slate-500 transition group"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-white text-xs group-hover:text-[#A78BFA] transition">
-                VikingCRM.no
-              </span>
-              <Compass className="w-3.5 h-3.5 text-slate-500" />
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Rocket className="w-5 h-5 text-amber-400" />
+              <span className="font-bold text-white text-sm">Railway & GitHub</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Norsk kundeoppfølging, tilbudsprosesser og pipeline for voksende selskaper.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              1-klikk produksjonsdrift, automatiske deployments, SSL-sertifikater og eget domene.
             </p>
-          </a>
+          </div>
         </div>
       </section>
 

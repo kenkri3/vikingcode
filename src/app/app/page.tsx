@@ -47,7 +47,7 @@ function BuilderContent() {
   const [user, setUser] = useState<UserSession>({
     id: "user-default",
     email: "bruker@aiprogram.no",
-    name: "Kenneth Glosli K.",
+    name: "Utvikler",
     plan: "MESTER",
     tokensRemaining: 1500000,
     trialPromptsUsed: 0,
@@ -156,12 +156,12 @@ function BuilderContent() {
     {
       id: "msg-init-1",
       role: "assistant",
-      content: `Hei! Jeg er AI Program Agent – din autonome kodebygger. Hva ønsker du å bygge for ${activeProject.name}? Du kan be meg om å bygge en ny nettside (f.eks. for snekker eller bedrift), legge til Vipps, tilpasse priskalkulator eller koble til databasen.`,
+      content: `Hei! Jeg er AI Program Ultra – din autonome fullstack-arkitekt og kodebygger. Hva ønsker du å bygge i dag? Du kan beskrive en idé fra bunnen av (f.eks. en moderne nettside for din bedrift, en SaaS-webapp med innlogging, eller en bookingportal), så genererer jeg kildekoden, designet og databasen umiddelbart.`,
       quickReplies: [
-        { title: "Lag en nettside for en snekker", payload: "carpenter_site" },
-        { title: "Hva kan du?", payload: "capabilities" },
-        { title: "Legg til Vipps hurtigbetaling", payload: "vipps" },
-        { title: "Full webapp + database", payload: "full_app" },
+        { title: "Lag en moderne bedriftsnettside", payload: "company_site" },
+        { title: "Bygg en SaaS-webapp med innlogging", payload: "saas_app" },
+        { title: "Lag en bookingportal med kalender", payload: "booking_portal" },
+        { title: "Nettbutikk med Vipps", payload: "store_vipps" },
       ],
       timestamp: new Date().toISOString(),
     },
@@ -175,29 +175,20 @@ function BuilderContent() {
       const raw = localStorage.getItem("aiprogram_conversations");
       if (raw) {
         try {
-          setSavedConversations(JSON.parse(raw));
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            // Filtrer bort eventuelle gamle legacy-samtaler
+            const clean = parsed.filter(
+              (c: any) =>
+                c &&
+                c.title &&
+                !c.title.toLowerCase().includes("vikingmester") &&
+                !c.projectName?.toLowerCase().includes("vikingmester") &&
+                !c.title.toLowerCase().includes("vikingnet")
+            );
+            setSavedConversations(clean);
+          }
         } catch {}
-      } else {
-        const init = [
-          {
-            id: "conv-1",
-            title: "Bookingportal for VikingMester (TEK17)",
-            projectName: "VikingMester - Håndverkerportal",
-            timestamp: "Nylig",
-            tokens: "6 200 tokens",
-            files: 3,
-          },
-          {
-            id: "conv-2",
-            title: "B2B Medlemsnettverk for Vikingnet",
-            projectName: "VikingNet",
-            timestamp: "Nylig",
-            tokens: "8 400 tokens",
-            files: 3,
-          },
-        ];
-        setSavedConversations(init);
-        localStorage.setItem("aiprogram_conversations", JSON.stringify(init));
       }
     }
   }, []);
@@ -210,35 +201,47 @@ function BuilderContent() {
       const raw = localStorage.getItem("aiprogram_tasks");
       if (raw) {
         try {
-          setScheduledTasks(JSON.parse(raw));
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const clean = parsed.filter(
+              (t: any) =>
+                t &&
+                t.title &&
+                !t.target?.toLowerCase().includes("vikingmester") &&
+                !t.target?.toLowerCase().includes("vikingcode")
+            );
+            if (clean.length > 0) {
+              setScheduledTasks(clean);
+              return;
+            }
+          }
         } catch {}
-      } else {
-        const initTasks = [
-          {
-            id: "task-1",
-            title: "Daglig SEO- og ytelsesoptimalisering",
-            schedule: "Hver natt kl. 03:00",
-            target: "VikingMester & Opplev Horten",
-            active: true,
-          },
-          {
-            id: "task-2",
-            title: "PostgreSQL Database-migrering & Backup",
-            schedule: "Hver 12. time",
-            target: "Railway Production DB",
-            active: true,
-          },
-          {
-            id: "task-3",
-            title: "Railway Nixpacks Helsesjekk & Uptime",
-            schedule: "Hver time",
-            target: "vikingcode-production.up.railway.app",
-            active: true,
-          },
-        ];
-        setScheduledTasks(initTasks);
-        localStorage.setItem("aiprogram_tasks", JSON.stringify(initTasks));
       }
+      const initTasks = [
+        {
+          id: "task-1",
+          title: "Daglig SEO- og ytelsesoptimalisering",
+          schedule: "Hver natt kl. 03:00",
+          target: "Aktive prosjekter",
+          active: true,
+        },
+        {
+          id: "task-2",
+          title: "PostgreSQL Database-migrering & Backup",
+          schedule: "Hver 12. time",
+          target: "Railway Production DB",
+          active: true,
+        },
+        {
+          id: "task-3",
+          title: "Produksjon Helsesjekk & Uptime",
+          schedule: "Hver time",
+          target: "Produksjon Uptime & API",
+          active: true,
+        },
+      ];
+      setScheduledTasks(initTasks);
+      localStorage.setItem("aiprogram_tasks", JSON.stringify(initTasks));
     }
   }, []);
 

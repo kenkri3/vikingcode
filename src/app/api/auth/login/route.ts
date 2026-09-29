@@ -17,11 +17,11 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Sjekk for ADMIN_EMAIL og ADMIN_PASSWORD fra Railway miljøvariabler
-    const adminEmail = (process.env.ADMIN_EMAIL || "admin@aiprogram.no").trim().toLowerCase();
-    const adminPassword = process.env.ADMIN_PASSWORD || "vikingAdmin2026!";
+    // 1. Sjekk for administrator-tilgang via Railway miljøvariabler (kun hvis konfigurert)
+    const adminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim().toLowerCase() : null;
+    const adminPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.trim() : null;
 
-    if (cleanEmail === adminEmail && password === adminPassword) {
+    if (adminEmail && adminPassword && cleanEmail === adminEmail && password === adminPassword) {
       console.log(`🔐 [Auth] Administrator logget inn: ${adminEmail}`);
 
       const adminUser = {

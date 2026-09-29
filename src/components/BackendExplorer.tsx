@@ -314,7 +314,7 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
         method: "POST",
         path: "/api/agent/chat",
         name: "AI Agent Converse",
-        description: "Headless agent REST proxy for Botsify / Gemini flertrinns dialog.",
+        description: "Headless agent REST proxy for AI Program Ultra / Gemini flertrinns dialog.",
         defaultBody: JSON.stringify(
           {
             message: "Hva er arkitekturen til dette prosjektet?",

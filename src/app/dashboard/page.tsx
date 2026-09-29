@@ -174,7 +174,7 @@ export default function DashboardPage() {
             </div>
             <p className="text-xs sm:text-sm text-slate-400">
               {isAdmin
-                ? "Du er logget inn med administratorrettigheter (ADMIN_EMAIL). Her administrerer du systemstatus, brukere og integrasjoner."
+                ? "Du er logget inn med administratorrettigheter. Her administrerer du systemstatus, brukere og integrasjoner."
                 : "Administrer ditt abonnement, overvåk token-kvoten og administrer prosjektene dine."}
             </p>
           </div>
