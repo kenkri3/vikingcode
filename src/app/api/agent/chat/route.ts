@@ -48,13 +48,25 @@ export async function POST(req: NextRequest) {
     // 🎯 SJEKK OM BRUKEREN BRUKER EGEN API-NØKKEL (BYOK)
     const userCustomKey = (customApiKey || apiKey)?.trim();
     if (userCustomKey && userCustomKey.length > 5) {
-      try {
-        const aiResult = await callAiModel(
-          message,
-          projectName || "Mitt Prosjekt",
-          Array.isArray(currentFiles) ? currentFiles : [],
-          userCustomKey
-        );
+      // Sjekk om brukeren er på betalt plan i DB (Modell 1: BYOK krever Starter eller Pro)
+      let isAllowedByok = true;
+      if (userId) {
+        try {
+          const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+          if (dbUser && dbUser.plan === "TRIAL" && dbUser.role !== "ADMIN") {
+            isAllowedByok = false;
+          }
+        } catch {}
+      }
+
+      if (isAllowedByok) {
+        try {
+          const aiResult = await callAiModel(
+            message,
+            projectName || "Mitt Prosjekt",
+            Array.isArray(currentFiles) ? currentFiles : [],
+            userCustomKey
+          );
 
         if (aiResult) {
           // Auto-lagre til DB hvis prosjekt finnes
@@ -108,6 +120,7 @@ export async function POST(req: NextRequest) {
         console.warn("Feil ved kjøring med egen API-nøkkel, faller tilbake til standard agent:", keyErr);
       }
     }
+  }
 
     // 2. Bygg samtalehistorikk
     let historyBlock = "";

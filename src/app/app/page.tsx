@@ -37,6 +37,7 @@ import {
   Sparkles,
   Loader2,
   Server,
+  ArrowRight,
 } from "lucide-react";
 
 function BuilderContent() {
@@ -324,11 +325,14 @@ function BuilderContent() {
         ? `proj_${activeProject.id}`
         : storedSession || "aiprogram_session";
 
-      const keyToUse =
+      // Modell 1: Egen API-nøkkel (BYOK) krever et aktivt betalt abonnement (Starter, Pro eller Mester)
+      const isPaidUser = user.plan !== "TRIAL" || (user as any).role === "ADMIN";
+      const rawKey =
         geminiApiKeyInput.trim() ||
         (typeof window !== "undefined"
           ? (localStorage.getItem("aiprogram_gemini_key") || localStorage.getItem("aiprogram_custom_api_key") || "").trim()
           : "");
+      const keyToUse = isPaidUser ? rawKey : "";
 
       try {
         const chatRes = await fetch("/api/agent/chat", {
@@ -1193,6 +1197,40 @@ function BuilderContent() {
                     Hent gratis Gemini-nøkkel <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 </label>
+
+                {user.plan === "TRIAL" ? (
+                  <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-800/40 space-y-2 mb-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#A78BFA] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Pro-funksjon: BYOK
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-700/50">
+                        Krever abonnement
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Som prøvebruker benytter du dine 50 000 gratis prøvetokens. Oppgrader til <strong>Starter</strong> eller <strong>Pro</strong> for å låse opp egen API-nøkkel og bygge ubegrenset.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSettingsOpen(false);
+                        setIsPricingOpen(true);
+                      }}
+                      className="w-full py-1.5 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] text-white text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-purple-900/40 cursor-pointer"
+                    >
+                      <span>Se planer og oppgrader</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                    <span>Egen API-nøkkel (BYOK) er <strong>aktiv</strong> på ditt {user.plan}-abonnement for ubegrenset bygging.</span>
+                  </div>
+                )}
+
                 <input
                   type="password"
                   value={geminiApiKeyInput}
@@ -1210,7 +1248,7 @@ function BuilderContent() {
                 </div>
 
                 <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                  Som standard benyttes den innebygde <strong>AI Program Ultra</strong>-motoren. Legger du inn din egen nøkkel her, kjører både chat og kodegenerering direkte mot din leverandør med <strong>ubegrenset kvote</strong>.
+                  Som standard benyttes den innebygde <strong>AI Program Ultra</strong>-motoren. Med et aktivt abonnement kjører kodegenereringen direkte mot din egen leverandør med <strong>ubegrenset kvote</strong>.
                 </p>
 
                 {testKeyStatus && (

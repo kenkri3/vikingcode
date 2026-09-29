@@ -577,6 +577,10 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2 text-slate-500">
                   <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>Egen API-nøkkel (BYOK) krever abonnement</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <span>Eksport til GitHub/Railway er låst</span>
                 </li>
               </ul>
@@ -605,11 +609,11 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="font-semibold text-white">250 000 tokens / mnd</span>
+                  <span className="font-semibold text-white">Egen API-nøkkel (BYOK) for ubegrenset bygging</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>~30–50 fullstack genereringer</span>
+                  <span className="font-semibold text-white">250 000 tokens / mnd</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -653,11 +657,11 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-xs text-slate-200">
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
-                  <span className="font-bold text-white">1 000 000 tokens / mnd</span>
+                  <span className="font-bold text-white">Egen API-nøkkel (BYOK) for ubegrenset bygging</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
-                  <span>~150–250 genereringer</span>
+                  <span className="font-bold text-white">1 000 000 tokens / mnd</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
@@ -696,6 +700,10 @@ export default function LandingPage() {
                 Maksimal kapasitet for etablerte byråer med høye produksjonskrav.
               </p>
               <ul className="space-y-2.5 text-xs text-slate-300">
+                <li className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-white">Egen API-nøkkel (BYOK) for ubegrenset bygging</span>
+                </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span className="font-semibold text-white">3 000 000 tokens / mnd</span>

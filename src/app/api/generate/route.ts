@@ -3493,6 +3493,20 @@ export async function POST(req: NextRequest) {
     const clientKey = geminiApiKey || (body as any).apiKey || (body as any).customApiKey;
     const hasOwnApiKey = Boolean(clientKey && typeof clientKey === "string" && clientKey.trim().length > 5);
 
+    // Modell 1: Egen API-nøkkel (BYOK) krever et aktivt betalt abonnement (Starter, Pro eller Mester)
+    const isPaidPlan = userSession.plan !== "TRIAL" || (userSession as any).role === "ADMIN";
+    if (hasOwnApiKey && !isPaidPlan) {
+      return NextResponse.json(
+        {
+          error: "Egen API-nøkkel (BYOK) for ubegrenset bygging krever et aktivt abonnement (Starter eller Pro). Oppgrader for å aktivere direkte API-kvote.",
+          code: "UPGRADE_REQUIRED_FOR_BYOK",
+          tokensRemaining: userSession.tokensRemaining,
+          trialPromptsUsed: userSession.trialPromptsUsed,
+        },
+        { status: 403 }
+      );
+    }
+
     // Sjekk token-kvote før generering KUN dersom brukeren IKKE benytter egen nøkkel
     if (!hasOwnApiKey) {
       const quotaCheck = verifyTokenQuota(userSession);
