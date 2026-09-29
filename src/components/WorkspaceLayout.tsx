@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
+  Menu,
   Box,
   Upload,
   Globe,
@@ -63,6 +64,7 @@ interface WorkspaceLayoutProps {
   onPushGithub?: () => void;
   onOpenSettings?: () => void;
   onNewConversation?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export function WorkspaceLayout({
@@ -84,6 +86,7 @@ export function WorkspaceLayout({
   onPushGithub,
   onOpenSettings,
   onNewConversation,
+  onToggleSidebar,
 }: WorkspaceLayoutProps) {
   const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
   const isPreviewOpen = externalPreviewOpen !== undefined ? externalPreviewOpen : internalPreviewOpen;
@@ -177,68 +180,65 @@ export function WorkspaceLayout({
       >
         {/* Top Chat Header: Model Selector on Left, Three Dots Menu on Right (Exact Qwen layout) */}
         <div className="h-11 bg-[#1a1a20]/90 border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative z-20">
-          {/* Left: Model Selector Dropdown (e.g. Qwen3.8-Max v in Image 1) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-white hover:bg-[#25252e] transition cursor-pointer"
-            >
-              <span>{selectedModel}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {isModelDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setIsModelDropdownOpen(false)}
-                />
-                <div className="absolute top-full left-0 mt-1.5 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
-                  <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
-                    Velg AI Modell
-                  </p>
-                  {models.map((m) => (
-                    <button
-                      key={m.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedModel(m.name);
-                        setIsModelDropdownOpen(false);
-                      }}
-                      className={`w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
-                        selectedModel === m.name
-                          ? "bg-[#2c2c36] text-white font-medium"
-                          : "text-slate-300 hover:bg-[#25252e] hover:text-white"
-                      }`}
-                    >
-                      <span className="font-semibold">{m.name}</span>
-                      <span className="text-[10px] text-slate-400">{m.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Right: Three Dots Menu Corner ("tre prikker oppe i et hjørne for og få ned meny") */}
-          <div className="relative flex items-center gap-1.5">
-            {/* If preview is closed, show a subtle eye button */}
-            {!isPreviewOpen && (
+          {/* Left: Mobile hamburger + Model Selector Dropdown */}
+          <div className="flex items-center gap-2">
+            {onToggleSidebar && (
               <button
                 type="button"
-                onClick={() => {
-                  setIsPreviewOpen(true);
-                  setActiveTab("preview");
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#22222a] hover:bg-[#2c2c36] text-slate-300 hover:text-white border border-[#2f2f3a] text-xs font-medium transition cursor-pointer"
-                title="Åpne forhåndsvisning"
+                onClick={onToggleSidebar}
+                className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#25252e] transition cursor-pointer"
+                title="Åpne meny"
               >
-                <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
-                <span className="hidden sm:inline">Preview</span>
+                <Menu className="w-4 h-4" />
               </button>
             )}
 
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-white hover:bg-[#25252e] transition cursor-pointer"
+              >
+                <span>{selectedModel}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              {isModelDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsModelDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1.5 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
+                    <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
+                      Velg AI Modell
+                    </p>
+                    {models.map((m) => (
+                      <button
+                        key={m.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedModel(m.name);
+                          setIsModelDropdownOpen(false);
+                        }}
+                        className={`w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
+                          selectedModel === m.name
+                            ? "bg-[#2c2c36] text-white font-medium"
+                            : "text-slate-300 hover:bg-[#25252e] hover:text-white"
+                        }`}
+                      >
+                        <span className="font-semibold">{m.name}</span>
+                        <span className="text-[10px] text-slate-400">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Three Dots Menu Corner ("tre prikker oppe i et hjørne for og få ned meny") */}
+          <div className="relative flex items-center">
             {/* Three Dots Button */}
             <button
               type="button"
