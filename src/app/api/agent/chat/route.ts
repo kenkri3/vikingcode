@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { extractFilesFromAgentReply } from "@/lib/code-extractor";
 import { prisma } from "@/lib/prisma";
+import { callAiModel } from "@/app/api/generate/route";
 
 /**
  * 🤖 AI Program Headless Agent Proxy
@@ -29,6 +30,8 @@ export async function POST(req: NextRequest) {
       userId,
       history = [],
       currentFiles = [],
+      apiKey,
+      customApiKey,
     } = body;
 
     if (!message || typeof message !== "string") {
@@ -41,6 +44,70 @@ export async function POST(req: NextRequest) {
       (userId ? `user_${userId}_proj_${projectName || "main"}` : `proj_${projectName || "main"}`);
     const demoHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 12);
     const fbId = `v${demoHash}`;
+
+    // 🎯 SJEKK OM BRUKEREN BRUKER EGEN API-NØKKEL (BYOK)
+    const userCustomKey = (customApiKey || apiKey)?.trim();
+    if (userCustomKey && userCustomKey.length > 5) {
+      try {
+        const aiResult = await callAiModel(
+          message,
+          projectName || "Mitt Prosjekt",
+          Array.isArray(currentFiles) ? currentFiles : [],
+          userCustomKey
+        );
+
+        if (aiResult) {
+          // Auto-lagre til DB hvis prosjekt finnes
+          if (aiResult.files && aiResult.files.length > 0 && projectName) {
+            try {
+              const query = userId
+                ? { userId, name: projectName }
+                : { name: projectName };
+
+              const project = await prisma.project.findFirst({
+                where: query,
+                orderBy: { updatedAt: "desc" },
+              });
+
+              if (project) {
+                const currentFilesFromDb: Array<{ path: string; content: string }> =
+                  (project.filesJson as any) || [];
+                const map = new Map(currentFilesFromDb.map((f) => [f.path, f]));
+                aiResult.files.forEach((f) => map.set(f.path, f));
+
+                await prisma.project.update({
+                  where: { id: project.id },
+                  data: {
+                    filesJson: Array.from(map.values()) as any,
+                    updatedAt: new Date(),
+                  },
+                });
+              }
+            } catch (dbErr) {
+              console.warn("DB save error in agent chat with custom key:", dbErr);
+            }
+          }
+
+          return NextResponse.json({
+            success: true,
+            sessionId: fbId,
+            reply: aiResult.message,
+            rawReply: aiResult.message,
+            files: aiResult.files,
+            actions: aiResult.actions,
+            quickReplies: [
+              { title: "Gjør designet mer moderne", payload: "modern_design" },
+              { title: "Legg til en ny underside", payload: "new_page" },
+              { title: "Tilpass for mobil", payload: "mobile_opt" },
+            ],
+            usedCustomKey: true,
+            provider: userCustomKey.startsWith("AIza") ? "Google Gemini" : "AI Program Ultra",
+          });
+        }
+      } catch (keyErr) {
+        console.warn("Feil ved kjøring med egen API-nøkkel, faller tilbake til standard agent:", keyErr);
+      }
+    }
 
     // 2. Bygg samtalehistorikk
     let historyBlock = "";

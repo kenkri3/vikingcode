@@ -321,6 +321,12 @@ function BuilderContent() {
         ? `proj_${activeProject.id}`
         : storedSession || "aiprogram_session";
 
+      const keyToUse =
+        geminiApiKeyInput.trim() ||
+        (typeof window !== "undefined"
+          ? (localStorage.getItem("aiprogram_gemini_key") || localStorage.getItem("aiprogram_custom_api_key") || "").trim()
+          : "");
+
       try {
         const chatRes = await fetch("/api/agent/chat", {
           method: "POST",
@@ -331,6 +337,8 @@ function BuilderContent() {
             projectName: activeProject.name,
             userName: user.name,
             userId: user.id,
+            customApiKey: keyToUse || undefined,
+            apiKey: keyToUse || undefined,
             history: messages.slice(-6).map((m) => ({
               role: m.role,
               content: m.content.slice(0, 1000),
@@ -427,10 +435,6 @@ function BuilderContent() {
         setMobileTab("preview");
       } else if (isBuildIntent) {
         // Fallback: Kun dersom agenten ikke leverte kodefiler, kjør intern generator
-        const keyToUse =
-          geminiApiKeyInput ||
-          (typeof window !== "undefined" ? localStorage.getItem("aiprogram_gemini_key") : null);
-
         const genRes = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -444,7 +448,9 @@ function BuilderContent() {
             model,
             projectName: activeProject.name,
             currentFiles: activeProject.files,
-            geminiApiKey: keyToUse,
+            geminiApiKey: keyToUse || undefined,
+            customApiKey: keyToUse || undefined,
+            apiKey: keyToUse || undefined,
           }),
         });
 
@@ -748,7 +754,7 @@ function BuilderContent() {
     });
   };
 
-  // Test Gemini tilkobling
+  // Test API-tilkobling via sikker server-proxy (Gemini, DeepSeek, OpenAI, 1min.AI)
   const handleTestApiKey = async () => {
     if (!geminiApiKeyInput.trim()) {
       setTestKeyStatus("Vennligst lim inn en nøkkel først.");
@@ -758,54 +764,20 @@ function BuilderContent() {
     setTestKeyStatus(null);
     try {
       const key = geminiApiKeyInput.trim();
-      let ok = false;
-      let errMsg = "";
-
-      if (key.startsWith("sk-")) {
-        // DeepSeek API test (AI Program Ultra engine)
-        const res = await fetch("https://api.deepseek.com/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${key}`,
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [{ role: "user", content: "Hi" }],
-            max_tokens: 5,
-          }),
-        });
-        if (res.ok) {
-          ok = true;
-        } else {
-          const errData = await res.json().catch(() => ({}));
-          errMsg = errData.error?.message || `Feilkode ${res.status}`;
+      const res = await fetch("/api/agent/test-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestKeyStatus(data.message || `✓ Tilkobling vellykket (${data.provider})!`);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("aiprogram_gemini_key", key);
+          localStorage.setItem("aiprogram_custom_api_key", key);
         }
       } else {
-        // Google Gemini API test
-        const testRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: "Svar med ordet 'OK' på norsk." }] }],
-            }),
-          }
-        );
-        if (testRes.ok) {
-          ok = true;
-        } else {
-          const errData = await testRes.json().catch(() => ({}));
-          errMsg = errData.error?.message || `Feilkode ${testRes.status}`;
-        }
-      }
-
-      if (ok) {
-        setTestKeyStatus("✓ Tilkobling vellykket! AI Program Ultra er koblet til og svarer i sanntid.");
-        localStorage.setItem("aiprogram_gemini_key", key);
-      } else {
-        setTestKeyStatus(`Tilkobling feilet: ${errMsg || "Ugyldig API-nøkkel"}`);
+        setTestKeyStatus(`Tilkobling feilet: ${data.message || "Ugyldig API-nøkkel"}`);
       }
     } catch (e: any) {
       setTestKeyStatus(`Tilkoblingsfeil: ${e.message}`);
@@ -1207,7 +1179,7 @@ function BuilderContent() {
                 <label className="text-slate-300 font-medium block mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Key className="w-3.5 h-3.5 text-[#A78BFA]" />
-                    Valgfri API-nøkkel
+                    Egen API-nøkkel (BYOK)
                   </span>
                   <a
                     href="https://aistudio.google.com/app/apikey"
@@ -1215,23 +1187,32 @@ function BuilderContent() {
                     rel="noreferrer"
                     className="text-[10px] text-[#A78BFA] hover:underline flex items-center gap-1"
                   >
-                    Hent nøkkel <ExternalLink className="w-2.5 h-2.5" />
+                    Hent gratis Gemini-nøkkel <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 </label>
                 <input
                   type="password"
                   value={geminiApiKeyInput}
                   onChange={(e) => setGeminiApiKeyInput(e.target.value)}
-                  placeholder="AIzaSy... (eller konfigurer i Railway Variables)"
-                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition"
+                  placeholder="AIzaSy... (Gemini) eller sk-... (DeepSeek/OpenAI)"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition font-mono"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Som standard benyttes den innebygde AI Program Ultra-motoren. Hvis du har en egen API-nøkkel, kan den benyttes her for direkte kvote.
+                
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-slate-400">Støtter:</span>
+                  <span className="text-[10px] bg-blue-950/60 border border-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded">Google Gemini</span>
+                  <span className="text-[10px] bg-purple-950/60 border border-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded">DeepSeek</span>
+                  <span className="text-[10px] bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">OpenAI</span>
+                  <span className="text-[10px] bg-amber-950/60 border border-amber-800/40 text-amber-300 px-1.5 py-0.5 rounded">1min.AI</span>
+                </div>
+
+                <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                  Som standard benyttes den innebygde <strong>AI Program Ultra</strong>-motoren. Legger du inn din egen nøkkel her, kjører både chat og kodegenerering direkte mot din leverandør med <strong>ubegrenset kvote</strong>.
                 </p>
 
                 {testKeyStatus && (
                   <div
-                    className={`mt-2 p-2 rounded-lg text-[11px] font-mono ${
+                    className={`mt-2 p-2.5 rounded-xl text-[11px] font-mono ${
                       testKeyStatus.startsWith("✓")
                         ? "bg-emerald-950/60 border border-emerald-700/50 text-emerald-300"
                         : "bg-red-950/60 border border-red-700/50 text-red-300"

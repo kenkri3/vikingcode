@@ -292,36 +292,43 @@ Konstruer en komplett, profesjonell løsning og returner KUN det spesifiserte JS
   return null;
 }
 
-async function callAiModel(
+export async function callAiModel(
   prompt: string,
   projectName: string,
   existingFiles: ProjectFile[],
   clientApiKey?: string
 ): Promise<GeminiGenerationResult | null> {
-  const deepseekKey =
-    process.env.DEEPSEEK_API_KEY ||
-    process.env.AI_API_KEY ||
-    (clientApiKey && clientApiKey.startsWith("sk-") ? clientApiKey : null);
+  const trimmedClient = clientApiKey?.trim();
 
-  const geminiKey =
-    process.env.GEMINI_API_KEY ||
-    (clientApiKey && !clientApiKey.startsWith("sk-") ? clientApiKey : null);
+  // 1. PRIORITET 1: Hvis brukeren har med en egen API-nøkkel (BYOK - Bring Your Own Key)
+  if (trimmedClient && trimmedClient.length > 5) {
+    if (trimmedClient.startsWith("AIza")) {
+      // Google Gemini nøkkel
+      const res = await callGeminiApi(prompt, projectName, existingFiles, trimmedClient);
+      if (res) return res;
+    } else if (trimmedClient.startsWith("sk-")) {
+      // DeepSeek eller OpenAI nøkkel
+      const resDs = await callDeepSeekApi(prompt, projectName, existingFiles, trimmedClient);
+      if (resDs) return resDs;
+      const resOai = await callOpenAiApi(prompt, projectName, existingFiles, trimmedClient);
+      if (resOai) return resOai;
+    }
+  }
 
-  const openaiKey = process.env.OPENAI_API_KEY;
-
-  // 1. Try DeepSeek (AI Program Ultra model engine)
+  // 2. PRIORITET 2: Standard innebygde server-miljøvariabler (AI Program Ultra produksjon)
+  const deepseekKey = process.env.DEEPSEEK_API_KEY || process.env.AI_API_KEY;
   if (deepseekKey && deepseekKey.trim() !== "") {
     const res = await callDeepSeekApi(prompt, projectName, existingFiles, deepseekKey.trim());
     if (res) return res;
   }
 
-  // 2. Try Gemini
+  const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey && geminiKey.trim() !== "") {
     const res = await callGeminiApi(prompt, projectName, existingFiles, geminiKey.trim());
     if (res) return res;
   }
 
-  // 3. Try OpenAI
+  const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey && openaiKey.trim() !== "") {
     const res = await callOpenAiApi(prompt, projectName, existingFiles, openaiKey.trim());
     if (res) return res;
@@ -3482,28 +3489,35 @@ export async function POST(req: NextRequest) {
       // Ignorer DB-feil ved offline/dev
     }
 
-    // 1. Sjekk token-kvote før generering
-    const quotaCheck = verifyTokenQuota(userSession);
-    if (!quotaCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: quotaCheck.message,
-          code: quotaCheck.errorCode,
-          tokensRemaining: userSession.tokensRemaining,
-          trialPromptsUsed: userSession.trialPromptsUsed,
-        },
-        { status: 403 }
-      );
+    // 1. Sjekk om brukeren har med egen API-nøkkel (BYOK - Bring Your Own Key)
+    const clientKey = geminiApiKey || (body as any).apiKey || (body as any).customApiKey;
+    const hasOwnApiKey = Boolean(clientKey && typeof clientKey === "string" && clientKey.trim().length > 5);
+
+    // Sjekk token-kvote før generering KUN dersom brukeren IKKE benytter egen nøkkel
+    if (!hasOwnApiKey) {
+      const quotaCheck = verifyTokenQuota(userSession);
+      if (!quotaCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: quotaCheck.message,
+            code: quotaCheck.errorCode,
+            tokensRemaining: userSession.tokensRemaining,
+            trialPromptsUsed: userSession.trialPromptsUsed,
+          },
+          { status: 403 }
+        );
+      }
     }
 
-    const tokensForThisRun = Math.min(
-      userSession.tokensRemaining,
-      Math.floor(estimateTokenCount(prompt) * 8 + 3800)
-    );
+    const tokensForThisRun = hasOwnApiKey
+      ? 0
+      : Math.min(
+          userSession.tokensRemaining,
+          Math.floor(estimateTokenCount(prompt) * 8 + 3800)
+        );
 
     // 2. Generer kildekode via AI Program Ultra (DeepSeek / Gemini / OpenAI) eller autonom motor
     let result: GeminiGenerationResult | null = null;
-    const clientKey = geminiApiKey || (body as any).apiKey;
 
     result = await callAiModel(prompt, projectName, currentFiles, clientKey);
 
@@ -3511,9 +3525,12 @@ export async function POST(req: NextRequest) {
       result = generateAutonomousCode(prompt, projectName, currentFiles);
     }
 
-    const updatedTokensRemaining = Math.max(0, userSession.tokensRemaining - tokensForThisRun);
+    const updatedTokensRemaining = hasOwnApiKey
+      ? userSession.tokensRemaining
+      : Math.max(0, userSession.tokensRemaining - tokensForThisRun);
+
     const updatedTrialPromptsUsed =
-      userSession.plan === "TRIAL"
+      !hasOwnApiKey && userSession.plan === "TRIAL"
         ? userSession.trialPromptsUsed + 1
         : userSession.trialPromptsUsed;
 
