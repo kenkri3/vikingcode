@@ -705,85 +705,69 @@ function BuilderContent() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#181818]">
-      {/* 1. Header (alltid synlig med sanntids token-måler) */}
-      <Header
+    <div className="flex h-screen w-screen overflow-hidden bg-[#141416]">
+      {/* 1. Antigravity-style Sidebar (Full-height left panel matching Qwen) */}
+      <Sidebar
         user={user}
         activeProject={activeProject}
-        onOpenPricing={() => setIsPricingOpen(true)}
-        onDeployRailway={handleDeployRailway}
-        onDownloadZip={handleDownloadZip}
-        onPushGithub={handlePushGithub}
-        isDeploying={isDeploying}
-        isPreviewOpen={isPreviewOpen}
-        onTogglePreview={() => setIsPreviewOpen((prev) => !prev)}
-        onResetToStart={() => setViewMode("start")}
-        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        projects={projects}
+        onSelectProject={(name) => {
+          const found = projects.find(
+            (p) =>
+              p.name.toLowerCase().includes(name.toLowerCase()) ||
+              name.toLowerCase().includes(p.name.toLowerCase())
+          );
+          if (found) {
+            setActiveProject(found);
+          } else {
+            setActiveProject((prev) => ({ ...prev, name }));
+          }
+          setIsPreviewOpen(false);
+          setViewMode("workspace");
+        }}
+        onNewConversation={handleNewConversation}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenTasks={() => setIsTasksOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenPricing={() => setIsPricingOpen(true)}
+        onNewProject={() => setIsNewProjectModalOpen(true)}
+        onDeleteProject={handleDeleteProject}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      {/* Deploy & Export Notification Banner */}
-      {deployNotification && (
-        <div className="bg-gradient-to-r from-purple-950/90 to-slate-900 border-b border-[#7C3AED]/40 px-4 py-2.5 flex items-center justify-between text-xs z-30 animate-in fade-in duration-200">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="font-bold text-white">{deployNotification.title}</span>
-            <span className="text-slate-300 hidden sm:inline">{deployNotification.message}</span>
-          </div>
+      {/* 2. Main Canvas (StartScreen or WorkspaceLayout) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Deploy & Export Notification Banner */}
+        {deployNotification && (
+          <div className="bg-gradient-to-r from-purple-950/90 to-slate-900 border-b border-[#7C3AED]/40 px-4 py-2 flex items-center justify-between text-xs z-30 animate-in fade-in duration-200 shrink-0">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-bold text-white">{deployNotification.title}</span>
+              <span className="text-slate-300 hidden sm:inline">{deployNotification.message}</span>
+            </div>
 
-          <div className="flex items-center gap-3">
-            {deployNotification.url && (
-              <a
-                href={deployNotification.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-md transition"
+            <div className="flex items-center gap-3">
+              {deployNotification.url && (
+                <a
+                  href={deployNotification.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-md transition"
+                >
+                  <span>{deployNotification.buttonText || "Åpne"}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              <button
+                onClick={() => setDeployNotification(null)}
+                className="p-1 text-slate-400 hover:text-white cursor-pointer"
               >
-                <span>{deployNotification.buttonText || "Åpne"}</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-            <button
-              onClick={() => setDeployNotification(null)}
-              className="p-1 text-slate-400 hover:text-white cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* 2. Main Body with Sidebar and Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Antigravity-style Sidebar */}
-        <Sidebar
-          user={user}
-          activeProject={activeProject}
-          projects={projects}
-          onSelectProject={(name) => {
-            const found = projects.find(
-              (p) =>
-                p.name.toLowerCase().includes(name.toLowerCase()) ||
-                name.toLowerCase().includes(p.name.toLowerCase())
-            );
-            if (found) {
-              setActiveProject(found);
-            } else {
-              setActiveProject((prev) => ({ ...prev, name }));
-            }
-            setIsPreviewOpen(false);
-            setViewMode("workspace");
-          }}
-          onNewConversation={handleNewConversation}
-          onOpenHistory={() => setIsHistoryOpen(true)}
-          onOpenTasks={() => setIsTasksOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenPricing={() => setIsPricingOpen(true)}
-          onNewProject={() => setIsNewProjectModalOpen(true)}
-          onDeleteProject={handleDeleteProject}
-          isOpen={isSidebarOpen}
-          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
+        )}
 
         {/* Dynamic Center: Start Screen OR Split-View Workspace */}
         {viewMode === "start" ? (
@@ -810,6 +794,7 @@ function BuilderContent() {
             onPushGithub={handlePushGithub}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onNewConversation={handleNewConversation}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
         )}
       </div>
