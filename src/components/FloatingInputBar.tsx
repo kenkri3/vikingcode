@@ -135,14 +135,14 @@ export function FloatingInputBar({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Model Mode Pill: AI Program Ultra */}
+            {/* Model Mode Pill: AI Program Ultra (Sleek single-line badge) */}
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#2a2a34] hover:bg-[#343442] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-[#2a2a34] hover:bg-[#343442] border border-[#383846] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 select-none shadow-sm"
             >
-              <span>{selectedModel}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <span className="whitespace-nowrap font-medium text-[11px]">{selectedModel}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
 
             {/* Voice microphone */}

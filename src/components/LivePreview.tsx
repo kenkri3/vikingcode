@@ -35,7 +35,59 @@ function prepareComponentCode(rawCode: string) {
     importedIcons.push(...names);
   }
 
-  let code = rawCode;
+  let code = rawCode.replace(/\r\n/g, "\n");
+
+  // 1.4 Strip stray markdown fences
+  code = code.replace(/^```[a-zA-Z0-9_-]*\s*$/gm, '');
+  code = code.replace(/```\s*$/g, '');
+
+  // 1.5 Auto-fix JSX curly braces wrapping plain text with spaces: {Verdensledende frisørkunst...}
+  code = code.replace(
+    /\{([A-Za-zæøåÆØÅ0-9_+\-–—•·/\\:.,!?#&%()@\s]{10,})\}/g,
+    (match, inner) => {
+      const trimmed = inner.trim();
+      if (
+        trimmed.startsWith('"') ||
+        trimmed.startsWith("'") ||
+        trimmed.startsWith('`') ||
+        trimmed.startsWith('{') ||
+        trimmed.includes('?') ||
+        trimmed.includes('&&') ||
+        trimmed.includes('||') ||
+        trimmed.includes('=>') ||
+        trimmed.includes('(') ||
+        !trimmed.includes(' ')
+      ) {
+        return match;
+      }
+      return `{"${trimmed.replace(/"/g, '\\"')}"}`;
+    }
+  );
+
+  // 1.6 Auto-fix unquoted string property values in objects/arrays:
+  code = code.replace(
+    /^(\s*[a-zA-Z0-9_$]+:\s*)([A-Za-zæøåÆØÅ][^,;\n{}()[\]]*)(,?)$/gm,
+    (match, prop, val, term) => {
+      const trimmedVal = val.trim();
+      if (
+        trimmedVal.startsWith('"') ||
+        trimmedVal.startsWith("'") ||
+        trimmedVal.startsWith('`') ||
+        trimmedVal.startsWith('[') ||
+        trimmedVal.startsWith('{') ||
+        trimmedVal.includes('(') ||
+        trimmedVal === 'true' ||
+        trimmedVal === 'false' ||
+        trimmedVal === 'null' ||
+        trimmedVal === 'undefined' ||
+        !isNaN(Number(trimmedVal))
+      ) {
+        return match;
+      }
+      return `${prop}"${trimmedVal.replace(/"/g, '\\"')}"${term || ','}`;
+    }
+  );
+
   // 2. Strip "use client"
   code = code.replace(/['"]use client['"];?/g, "");
 
@@ -278,10 +330,65 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
             throw new Error('Babel Standalone er ikke lastet inn.');
           }
 
-          const transpiled = Babel.transform(rawSource, {
-            presets: ['react', 'typescript'],
-            filename: 'preview.tsx'
-          }).code;
+          let transpiled = null;
+          let currentSource = rawSource;
+          let lastCompileErr = null;
+
+          // Forsøk transpilation med auto-reparasjon av kjente syntaksfeil (f.eks uinnrammede strenger i JSX/objekter)
+          for (let attempt = 0; attempt < 5; attempt++) {
+            try {
+              transpiled = Babel.transform(currentSource, {
+                presets: ['react', 'typescript'],
+                filename: 'preview.tsx'
+              }).code;
+              break;
+            } catch (bErr) {
+              lastCompileErr = bErr;
+              var lineNum = 0;
+              if (bErr && bErr.loc && bErr.loc.line) {
+                lineNum = bErr.loc.line;
+              } else if (bErr && bErr.message) {
+                var m = bErr.message.match(/\\((\\d+):/);
+                if (m && m[1]) lineNum = parseInt(m[1], 10);
+              }
+              if (!lineNum || isNaN(lineNum)) {
+                break;
+              }
+              var lines = currentSource.split('\\n');
+              if (lineNum < 1 || lineNum > lines.length) {
+                break;
+              }
+              var badLine = lines[lineNum - 1];
+              // 1. Objekt-egenskap med uinnrammet streng: key: Noe tekst her
+              var isObjProp = /^[ \t]*[a-zA-Z0-9_$]+:[ \t]*[^"'{}[\]0-9 \t\r\n]/.test(badLine);
+              if (isObjProp) {
+                lines[lineNum - 1] = badLine.replace(/^([ \t]*[a-zA-Z0-9_$]+:[ \t]*)(.*?)(,?)$/, function(m, p1, p2, p3) {
+                  return p1 + JSON.stringify(p2.trim()) + (p3 || ',');
+                });
+              } else if (badLine.indexOf('{') !== -1 && badLine.indexOf('}') !== -1) {
+                // 2. Ren tekst i krøllparentes: {Tekst her} -> {"Tekst her"}
+                lines[lineNum - 1] = badLine.replace(/\\{([^{}]+)\\}/g, function(m, inner) {
+                  var t = inner.trim();
+                  var first = t.charAt(0);
+                  if (first === '"' || first === "'" || first === String.fromCharCode(96)) return m;
+                  return '{"' + t.replace(/"/g, '\\\\"') + '"}';
+                });
+              } else {
+                // 3. Fallback: nøytraliser linjen trygt så resten av siden kan rendre
+                var trimmed = badLine.trim();
+                if (trimmed.charAt(0) === '<' && trimmed.charAt(trimmed.length - 1) === '>') {
+                  lines[lineNum - 1] = '{/* ' + trimmed.replace(/[{}]/g, '') + ' */}';
+                } else {
+                  lines[lineNum - 1] = '// [Auto-reparert]: ' + badLine.replace(/[\\r\\n]/g, '');
+                }
+              }
+              currentSource = lines.join('\\n');
+            }
+          }
+
+          if (!transpiled) {
+            throw lastCompileErr || new Error('Kompilering mislyktes');
+          }
 
           const execFn = new Function(
             'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image',

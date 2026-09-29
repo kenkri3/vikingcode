@@ -350,6 +350,12 @@ export function generateAutonomousCode(
     pLower.includes("skjønnhet") ||
     pLower.includes("beauty") ||
     pLower.includes("negler");
+  const isRedTheme =
+    pLower.includes("rød") ||
+    pLower.includes("red") ||
+    pLower.includes("burgund") ||
+    pLower.includes("crimson") ||
+    pLower.includes("rose");
   const isStore =
     !isSalon && (
       pLower.includes("butikk") ||
@@ -2402,6 +2408,18 @@ export default function NordicSalonApp() {
   );
 }
 `;
+    if (isRedTheme) {
+      pageContent = pageContent
+        .replace(/#7C3AED/g, '#E11D48')
+        .replace(/#EC4899/g, '#BE123C')
+        .replace(/#A78BFA/g, '#FB7185')
+        .replace(/#C4B5FD/g, '#FDA4AF')
+        .replace(/text-purple-300/g, 'text-rose-300')
+        .replace(/purple-950/g, 'rose-950')
+        .replace(/purple-900/g, 'rose-900')
+        .replace(/purple-800/g, 'rose-800')
+        .replace(/#6D28D9/g, '#9F1239');
+    }
   } else if (isStore) {
     pageContent = `'use client';
 

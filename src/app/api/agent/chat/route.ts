@@ -84,13 +84,17 @@ export async function POST(req: NextRequest) {
           `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne siden.\n` +
           `2. Ta direkte utgangspunkt i kildekoden over. Ikke start fra bunnen av med mindre kunden eksplisitt ber om et helt nytt prosjekt.\n` +
           `3. Bevar eksisterende design og seksjoner, men utfør den forespurte endringen presist.\n` +
-          `4. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.`
+          `4. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.\n` +
+          `5. SYNTAKS-KRAV: Alle strenger i JavaScript-objekter MÅ ha anførselstegn (f.eks. desc: "Tekst her", IKKE desc: Tekst her). All ren tekst i JSX må skrives direkte i JSX-tagger (<p>Tekst</p>), ALDRI pakket i nakne krøllparenteser som {Tekst}.`
       );
     }
 
     contextSections.push(
       `--- 🎯 BRUKERENS NYE FORESPØRSEL ---\n${message}\n\n` +
-        `Lever ferdig oppdatert Next.js-kode i en \`\`\`tsx // app/page.tsx kodeblokk, og avslutt alltid med JSON-formatet:\n` +
+        `KRAV TIL KILDEKODEN:\n` +
+        `- Skriv 100% syntaktisk gyldig TypeScript/React JSX.\n` +
+        `- Alle egenskaper i objekter/arrays med tekst må være gyldige strenger med hermetegn.\n` +
+        `- Lever ferdig oppdatert Next.js-kode i en \`\`\`tsx // app/page.tsx kodeblokk, og avslutt alltid med JSON-formatet:\n` +
         `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" }\n  ]\n}`
     );
 
