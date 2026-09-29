@@ -1,18 +1,27 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Monitor,
   Tablet,
   Smartphone,
   RotateCw,
   ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
+  Code,
+  Terminal,
+  Zap,
+  Clock,
 } from "lucide-react";
 import { ProjectFile } from "@/lib/types";
 
 interface LivePreviewProps {
   files: ProjectFile[];
   projectName: string;
+  isGenerating?: boolean;
+  onSwitchToCode?: () => void;
 }
 
 type DeviceMode = "desktop" | "tablet" | "mobile";
@@ -187,7 +196,267 @@ const ICON_SVGS: Record<string, string> = {
   Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
 };
 
-export function LivePreview({ files, projectName }: LivePreviewProps) {
+function AgentWorkingHUD({
+  projectName,
+  onSwitchToCode,
+}: {
+  projectName: string;
+  onSwitchToCode?: () => void;
+}) {
+  const [seconds, setSeconds] = useState(0);
+  const [activeTab, setActiveTab] = useState<"flow" | "terminal">("flow");
+
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const progressPercent = Math.min(12 + seconds * 8, 95);
+
+  const steps = [
+    {
+      id: 1,
+      title: "Tolker arkitektur & krav",
+      status: seconds >= 2 ? ("done" as const) : ("active" as const),
+      detail: "Next.js 15 App Router struktur og datamodell definert",
+    },
+    {
+      id: 2,
+      title: "Responsivt UI & Tailwind-design",
+      status: seconds >= 5 ? ("done" as const) : seconds >= 2 ? ("active" as const) : ("pending" as const),
+      detail: "Mørkt tema, mobilvennlig navigasjon og kontrast-aksenter",
+    },
+    {
+      id: 3,
+      title: "React-komponenter & forretningslogikk",
+      status: seconds >= 9 ? ("done" as const) : seconds >= 5 ? ("active" as const) : ("pending" as const),
+      detail: "Tidsvelger, modal-dialoger og interaktive handlinger",
+    },
+    {
+      id: 4,
+      title: "Syntakskontroll & sanntids-sandkasse",
+      status: seconds >= 9 ? ("active" as const) : ("pending" as const),
+      detail: "Klargjør for umiddelbar interaktiv testing",
+    },
+  ];
+
+  const terminalLogs = [
+    `> Initialiserer AI Program Ultra autonom kodebygger...`,
+    `> Målprosjekt: "${projectName || "Web-applikasjon"}"`,
+    `> Analyserer krav og konstruerer komponenttre...`,
+    `> Genererer Tailwind CSS styling og design tokens...`,
+    `> Bygger app/page.tsx med fullstack state og Lucide-ikoner...`,
+    `> Klargjør API-ruter og database-skjemaer...`,
+    `> Utfører automatisk AST syntakskontroll...`,
+    `> Klargjør sanntids React-sandkasse for interaktiv visning...`,
+  ].slice(0, Math.max(2, Math.min(8, 2 + Math.floor(seconds / 1.5))));
+
+  return (
+    <div className="h-full w-full bg-[#0d0d12] flex flex-col justify-between p-6 sm:p-10 select-none overflow-y-auto">
+      {/* Top Header Card */}
+      <div className="space-y-6 max-w-2xl mx-auto w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#22222e]">
+          <div className="flex items-center gap-3.5">
+            <div className="relative flex items-center justify-center">
+              <span className="animate-ping absolute inline-flex h-12 w-12 rounded-full bg-purple-500/25"></span>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-950/60 z-10">
+                <Sparkles className="w-6 h-6 animate-pulse" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono uppercase tracking-wider text-purple-400 font-bold">
+                  AI Program Ultra
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-800/40 text-[10px] text-emerald-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Bygger løsning
+                </span>
+              </div>
+              <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">
+                {projectName || "Ny Applikasjon"}
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="px-3 py-1.5 rounded-xl bg-[#171720] border border-[#2a2a38] text-xs font-mono text-slate-300 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-purple-400" />
+              <span>
+                {String(Math.floor(seconds / 60)).padStart(2, "0")}:
+                {String(seconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+            {onSwitchToCode && (
+              <button
+                type="button"
+                onClick={onSwitchToCode}
+                className="px-3 py-1.5 rounded-xl bg-[#22222e] hover:bg-[#2c2c3c] border border-[#353548] text-xs font-medium text-slate-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="Se koden som genereres"
+              >
+                <Code className="w-3.5 h-3.5 text-slate-400" />
+                <span>Se kode</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Progress Bar with dynamic percentage */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-medium flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
+              <span>Autonom kodebygging pågår</span>
+            </span>
+            <span className="font-mono font-bold text-purple-300">
+              {progressPercent}%
+            </span>
+          </div>
+          <div className="w-full h-2.5 rounded-full bg-[#181822] overflow-hidden border border-[#282836] p-0.5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] via-pink-500 to-emerald-400 transition-all duration-700 ease-out shadow-sm"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* View Switcher: Steg vs Terminal */}
+        <div className="flex items-center gap-2 bg-[#14141c] p-1 rounded-xl border border-[#232330] w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveTab("flow")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "flow"
+                ? "bg-[#252534] text-white shadow-sm font-semibold"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
+            <span>Arbeidsflyt</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("terminal")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "terminal"
+                ? "bg-[#252534] text-white shadow-sm font-semibold"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Sanntids Terminal</span>
+          </button>
+        </div>
+
+        {/* Tab 1: Stegvis prosess */}
+        {activeTab === "flow" && (
+          <div className="grid grid-cols-1 gap-2.5 pt-1">
+            {steps.map((st) => (
+              <div
+                key={st.id}
+                className={`p-3.5 rounded-xl border transition flex items-start gap-3.5 ${
+                  st.status === "done"
+                    ? "bg-[#14141c]/90 border-emerald-900/40 text-slate-200"
+                    : st.status === "active"
+                    ? "bg-[#1a1728] border-purple-600/50 text-white ring-1 ring-purple-500/30 shadow-lg shadow-purple-950/30"
+                    : "bg-[#111116] border-[#1e1e28] text-slate-500 opacity-60"
+                }`}
+              >
+                <div className="mt-0.5">
+                  {st.status === "done" ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  ) : st.status === "active" ? (
+                    <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-slate-600" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3
+                      className={`text-xs font-bold ${
+                        st.status === "active"
+                          ? "text-white"
+                          : st.status === "done"
+                          ? "text-slate-200"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {st.title}
+                    </h3>
+                    <span
+                      className={`text-[10px] font-mono ${
+                        st.status === "done"
+                          ? "text-emerald-400"
+                          : st.status === "active"
+                          ? "text-purple-300 font-bold"
+                          : "text-slate-600"
+                      }`}
+                    >
+                      {st.status === "done"
+                        ? "Fullført ✓"
+                        : st.status === "active"
+                        ? "Arbeider..."
+                        : "Venter"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                    {st.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 2: Sanntids Terminal Logg */}
+        {activeTab === "terminal" && (
+          <div className="bg-[#08080c] border border-[#22222e] rounded-xl p-4 font-mono text-xs shadow-2xl space-y-2">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1c1c28]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+                <span className="ml-2 text-[10px] text-slate-400">
+                  aiprogram-kernel --build --live
+                </span>
+              </div>
+              <span className="text-[10px] text-emerald-400 animate-pulse font-mono">
+                ● ACTIVE
+              </span>
+            </div>
+            <div className="space-y-1.5 py-1 text-slate-300">
+              {terminalLogs.map((log, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <span className="text-purple-400 select-none">&gt;</span>
+                  <span className="text-slate-300">{log.replace(/^>\s*/, "")}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1 text-purple-400 font-bold">
+                <span>&gt;</span>
+                <span className="w-2 h-4 bg-purple-400 animate-pulse inline-block"></span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Info */}
+      <div className="max-w-2xl mx-auto w-full pt-6 border-t border-[#1c1c26] text-center">
+        <p className="text-[11px] text-slate-500">
+          Forhåndsvisningen starter automatisk så snart koden er ferdig kompilert.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function LivePreview({
+  files,
+  projectName,
+  isGenerating = false,
+  onSwitchToCode,
+}: LivePreviewProps) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -319,7 +588,7 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
       }
 
       function runSandbox() {
-        const rootEl = document.getElementById('root');
+        var rootEl = document.getElementById('root');
         if (!rawSource || !rawSource.trim()) {
           rootEl.innerHTML = '<div class="p-8 text-center text-slate-500 font-mono text-xs">Venter på kildekode...</div>';
           return;
@@ -330,12 +599,11 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
             throw new Error('Babel Standalone er ikke lastet inn.');
           }
 
-          let transpiled = null;
-          let currentSource = rawSource;
-          let lastCompileErr = null;
+          var transpiled = null;
+          var currentSource = rawSource;
+          var lastCompileErr = null;
 
-          // Forsøk transpilation med auto-reparasjon av kjente syntaksfeil (f.eks uinnrammede strenger i JSX/objekter)
-          for (let attempt = 0; attempt < 5; attempt++) {
+          for (var attempt = 0; attempt < 5; attempt++) {
             try {
               transpiled = Babel.transform(currentSource, {
                 presets: ['react', 'typescript'],
@@ -347,42 +615,36 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
               var lineNum = 0;
               if (bErr && bErr.loc && bErr.loc.line) {
                 lineNum = bErr.loc.line;
-              } else if (bErr && bErr.message) {
-                var m = bErr.message.match(/\\((\\d+):/);
-                if (m && m[1]) lineNum = parseInt(m[1], 10);
+              } else if (bErr && bErr.message && bErr.message.indexOf('(') !== -1) {
+                var p1 = bErr.message.split('(')[1];
+                if (p1 && p1.indexOf(':') !== -1) {
+                  lineNum = parseInt(p1.split(':')[0], 10);
+                }
               }
               if (!lineNum || isNaN(lineNum)) {
                 break;
               }
-              var lines = currentSource.split('\\n');
+              var lines = currentSource.split(String.fromCharCode(10));
               if (lineNum < 1 || lineNum > lines.length) {
                 break;
               }
               var badLine = lines[lineNum - 1];
-              // 1. Objekt-egenskap med uinnrammet streng: key: Noe tekst her
-              var isObjProp = /^[ \t]*[a-zA-Z0-9_$]+:[ \t]*[^"'{}[\]0-9 \t\r\n]/.test(badLine);
-              if (isObjProp) {
-                lines[lineNum - 1] = badLine.replace(/^([ \t]*[a-zA-Z0-9_$]+:[ \t]*)(.*?)(,?)$/, function(m, p1, p2, p3) {
-                  return p1 + JSON.stringify(p2.trim()) + (p3 || ',');
-                });
-              } else if (badLine.indexOf('{') !== -1 && badLine.indexOf('}') !== -1) {
-                // 2. Ren tekst i krøllparentes: {Tekst her} -> {"Tekst her"}
-                lines[lineNum - 1] = badLine.replace(/\\{([^{}]+)\\}/g, function(m, inner) {
-                  var t = inner.trim();
-                  var first = t.charAt(0);
-                  if (first === '"' || first === "'" || first === String.fromCharCode(96)) return m;
-                  return '{"' + t.replace(/"/g, '\\\\"') + '"}';
-                });
+              if (badLine.indexOf(':') !== -1 && badLine.indexOf('"') === -1 && badLine.indexOf("'") === -1) {
+                var colonIdx = badLine.indexOf(':');
+                var propPart = badLine.slice(0, colonIdx + 1);
+                var valPart = badLine.slice(colonIdx + 1).trim();
+                var hasComma = valPart.endsWith(',');
+                if (hasComma) valPart = valPart.slice(0, -1).trim();
+                lines[lineNum - 1] = propPart + ' ' + JSON.stringify(valPart) + (hasComma ? ',' : '');
+              } else if (badLine.indexOf('{') !== -1 && badLine.indexOf('}') !== -1 && badLine.indexOf('"') === -1) {
+                var openBrace = badLine.indexOf('{');
+                var closeBrace = badLine.lastIndexOf('}');
+                var innerText = badLine.slice(openBrace + 1, closeBrace).trim();
+                lines[lineNum - 1] = badLine.slice(0, openBrace) + '{"' + innerText.replace(/"/g, '\\"') + '"}' + badLine.slice(closeBrace + 1);
               } else {
-                // 3. Fallback: nøytraliser linjen trygt så resten av siden kan rendre
-                var trimmed = badLine.trim();
-                if (trimmed.charAt(0) === '<' && trimmed.charAt(trimmed.length - 1) === '>') {
-                  lines[lineNum - 1] = '{/* ' + trimmed.replace(/[{}]/g, '') + ' */}';
-                } else {
-                  lines[lineNum - 1] = '// [Auto-reparert]: ' + badLine.replace(/[\\r\\n]/g, '');
-                }
+                lines[lineNum - 1] = '// [Auto-reparert]: ' + badLine.trim();
               }
-              currentSource = lines.join('\\n');
+              currentSource = lines.join(String.fromCharCode(10));
             }
           }
 
@@ -390,12 +652,12 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
             throw lastCompileErr || new Error('Kompilering mislyktes');
           }
 
-          const execFn = new Function(
+          var execFn = new Function(
             'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image',
-            transpiled + '\\nreturn typeof ' + compName + ' !== "undefined" ? ' + compName + ' : (typeof App !== "undefined" ? App : null);'
+            transpiled + String.fromCharCode(10) + 'return typeof ' + compName + ' !== "undefined" ? ' + compName + ' : (typeof App !== "undefined" ? App : null);'
           );
 
-          const Component = execFn(
+          var Component = execFn(
             React,
             React.useState,
             React.useEffect,
@@ -413,11 +675,11 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
           }
 
           rootEl.innerHTML = '';
-          const root = ReactDOM.createRoot(rootEl);
+          var root = ReactDOM.createRoot(rootEl);
           root.render(React.createElement(ErrorBoundary, null, React.createElement(Component)));
         } catch (err) {
           console.error('[Sandbox Compiler Error]:', err);
-          const errMsg = err && err.message ? err.message : String(err);
+          var errMsg = err && err.message ? err.message : String(err);
           rootEl.innerHTML = '<div class="p-6 max-w-2xl mx-auto my-8 bg-[#1f1f1f] border border-amber-500/40 rounded-2xl shadow-2xl space-y-4">' +
             '<div class="flex items-center gap-3 text-amber-400">' +
               '<span class="text-xl">⚡</span>' +
@@ -438,16 +700,21 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
       }
 
       function initSandbox() {
-        if (typeof Babel !== 'undefined' && typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
-          runSandbox();
-        } else {
-          let attempts = 0;
-          const interval = setInterval(() => {
+        var attempts = 0;
+        function checkAndRun() {
+          if (typeof Babel !== 'undefined' && typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+            runSandbox();
+            return true;
+          }
+          return false;
+        }
+
+        if (!checkAndRun()) {
+          var interval = setInterval(function() {
             attempts++;
-            if (typeof Babel !== 'undefined' && typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+            if (checkAndRun()) {
               clearInterval(interval);
-              runSandbox();
-            } else if (attempts >= 30) {
+            } else if (attempts >= 100) {
               clearInterval(interval);
               runSandbox();
             }
@@ -479,57 +746,66 @@ export function LivePreview({ files, projectName }: LivePreviewProps) {
       <div className="flex-1 p-2 sm:p-3 flex items-start justify-center overflow-auto bg-[#121215]">
         <div
           className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#16161c]"
-          style={{ width: deviceWidths[device], maxWidth: "100%" }}
+          style={{ width: isGenerating ? "100%" : deviceWidths[device], maxWidth: "100%" }}
         >
-          <iframe
-            key={`${reloadKey}-${contentHash}`}
-            srcDoc={iframeHtml}
-            title="AI Program Live Sandbox Preview"
-            className="w-full h-full border-none min-h-[550px]"
-            sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
-          />
+          {isGenerating ? (
+            <AgentWorkingHUD
+              projectName={projectName}
+              onSwitchToCode={onSwitchToCode}
+            />
+          ) : (
+            <iframe
+              key={`${reloadKey}-${contentHash}`}
+              srcDoc={iframeHtml}
+              title="AI Program Live Sandbox Preview"
+              className="w-full h-full border-none min-h-[550px]"
+              sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+            />
+          )}
         </div>
       </div>
 
-      {/* Floating Device Switcher at bottom left (Exact Image 2) */}
-      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-[#1c1c22]/90 backdrop-blur-md p-1 rounded-xl border border-[#2e2e38] shadow-xl select-none">
-        <button
-          type="button"
-          onClick={() => setDevice("desktop")}
-          className={`p-1.5 rounded-lg transition cursor-pointer ${
-            device === "desktop"
-              ? "bg-[#2c2c36] text-white shadow-sm"
-              : "text-slate-400 hover:text-white"
-          }`}
-          title="Desktop (100%)"
-        >
-          <Monitor className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDevice("tablet")}
-          className={`p-1.5 rounded-lg transition cursor-pointer ${
-            device === "tablet"
-              ? "bg-[#2c2c36] text-white shadow-sm"
-              : "text-slate-400 hover:text-white"
-          }`}
-          title="Nettbrett (768px)"
-        >
-          <Tablet className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDevice("mobile")}
-          className={`p-1.5 rounded-lg transition cursor-pointer ${
-            device === "mobile"
-              ? "bg-[#2c2c36] text-white shadow-sm"
-              : "text-slate-400 hover:text-white"
-          }`}
-          title="Mobil (375px)"
-        >
-          <Smartphone className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      {/* Floating Device Switcher at bottom left (Active only when preview is live) */}
+      {!isGenerating && (
+        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-[#1c1c22]/90 backdrop-blur-md p-1 rounded-xl border border-[#2e2e38] shadow-xl select-none">
+          <button
+            type="button"
+            onClick={() => setDevice("desktop")}
+            className={`p-1.5 rounded-lg transition cursor-pointer ${
+              device === "desktop"
+                ? "bg-[#2c2c36] text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
+            }`}
+            title="Desktop (100%)"
+          >
+            <Monitor className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDevice("tablet")}
+            className={`p-1.5 rounded-lg transition cursor-pointer ${
+              device === "tablet"
+                ? "bg-[#2c2c36] text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
+            }`}
+            title="Nettbrett (768px)"
+          >
+            <Tablet className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDevice("mobile")}
+            className={`p-1.5 rounded-lg transition cursor-pointer ${
+              device === "mobile"
+                ? "bg-[#2c2c36] text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
+            }`}
+            title="Mobil (375px)"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -673,6 +673,11 @@ export function WorkspaceLayout({
             <LivePreview
               files={activeProject.files}
               projectName={activeProject.name}
+              isGenerating={isLoading}
+              onSwitchToCode={() => {
+                setActiveTab("editor");
+                if (onSetMobileTab) onSetMobileTab("code");
+              }}
             />
           )}
 
