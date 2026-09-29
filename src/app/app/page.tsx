@@ -88,21 +88,29 @@ function BuilderContent() {
     }
   }, []);
 
-  // Hent prosjekter fra /api/projects eller localStorage
+  // Hent prosjekter fra localStorage først, deretter synkroniser med /api/projects
   useEffect(() => {
+    const stored = getStoredProjects();
+    if (stored && stored.length > 0) {
+      setProjects(stored);
+      setActiveProject(stored[0]);
+    }
+
     fetch("/api/projects")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.projects) && data.projects.length > 0) {
-          setProjects(data.projects);
-          setActiveProject(data.projects[0]);
+          const isUserOwned = data.projects.some(
+            (p: Project) => p.userId && p.userId !== "user-demo-1" && p.userId !== "user-current"
+          );
+          if (isUserOwned) {
+            setProjects(data.projects);
+            setActiveProject(data.projects[0]);
+            saveStoredProjects(data.projects);
+          }
         }
       })
-      .catch(() => {
-        const stored = getStoredProjects();
-        setProjects(stored);
-        setActiveProject(stored[0]);
-      });
+      .catch(() => {});
   }, []);
 
   const [isPricingOpen, setIsPricingOpen] = useState(false);
@@ -386,7 +394,10 @@ function BuilderContent() {
 
               // Oppdater i prosjektlisten og lagre
               setProjects((all) => {
-                const nextAll = all.map((p) => (p.id === updatedProj.id ? updatedProj : p));
+                const exists = all.some((p) => p.id === updatedProj.id);
+                const nextAll = exists
+                  ? all.map((p) => (p.id === updatedProj.id ? updatedProj : p))
+                  : [updatedProj, ...all];
                 saveStoredProjects(nextAll);
                 return nextAll;
               });
@@ -400,6 +411,7 @@ function BuilderContent() {
 
               return updatedProj;
             });
+            setMobileTab("preview");
           }
         }
       } else {
@@ -475,7 +487,11 @@ function BuilderContent() {
         ...prev,
         files: prev.files.map((f) => (f.path === path ? { ...f, content: newContent } : f)),
       };
-      saveStoredProjects(projects.map((p) => (p.id === updated.id ? updated : p)));
+      setProjects((all) => {
+        const nextAll = all.map((p) => (p.id === updated.id ? updated : p));
+        saveStoredProjects(nextAll);
+        return nextAll;
+      });
       return updated;
     });
   };
@@ -591,6 +607,28 @@ function BuilderContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "create", project: newProj }),
     }).catch(() => {});
+  };
+
+  // Slett et prosjekt
+  const handleDeleteProject = (projectId: string, projectName: string) => {
+    if (typeof window !== "undefined") {
+      const ok = window.confirm(`Er du sikker på at du vil slette prosjektet "${projectName}"? Dette kan ikke angres.`);
+      if (!ok) return;
+    }
+
+    const updated = projects.filter((p) => p.id !== projectId && p.name !== projectName);
+    const finalProjects = updated.length > 0 ? updated : [createNewProject("Nytt Prosjekt")];
+
+    setProjects(finalProjects);
+    saveStoredProjects(finalProjects);
+
+    if (activeProject.id === projectId || activeProject.name === projectName) {
+      setActiveProject(finalProjects[0]);
+    }
+
+    fetch(`/api/projects?id=${encodeURIComponent(projectId)}`, {
+      method: "DELETE",
+    }).catch((err) => console.warn("Sletting på server feilet:", err));
   };
 
   // Hent lagret samtale fra historikk
@@ -735,6 +773,7 @@ function BuilderContent() {
           onOpenTasks={() => setIsTasksOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onNewProject={() => setIsNewProjectModalOpen(true)}
+          onDeleteProject={handleDeleteProject}
           isOpen={isSidebarOpen}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />

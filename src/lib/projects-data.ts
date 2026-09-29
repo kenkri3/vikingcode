@@ -1084,7 +1084,10 @@ export function getStoredProjects(): Project[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return INITIAL_PROJECTS;
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    if (Array.isArray(parsed)) {
+      if (parsed.length > 0) return parsed;
+      return [createNewProject("Nytt Prosjekt")];
+    }
   } catch {
     // fallback
   }

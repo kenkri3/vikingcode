@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   X,
+  Trash2,
 } from "lucide-react";
 import { UserSession, Project } from "@/lib/types";
 
@@ -27,6 +28,7 @@ interface SidebarProps {
   onOpenTasks?: () => void;
   onOpenSettings?: () => void;
   onNewProject?: () => void;
+  onDeleteProject?: (id: string, name: string) => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -41,6 +43,7 @@ export function Sidebar({
   onOpenTasks,
   onOpenSettings,
   onNewProject,
+  onDeleteProject,
   isOpen,
   onToggle,
 }: SidebarProps) {
@@ -58,8 +61,8 @@ export function Sidebar({
 
   const projectsList =
     projects && projects.length > 0
-      ? projects.map((p) => ({ name: p.name, desc: p.description || "" }))
-      : defaultProjects;
+      ? projects.map((p) => ({ id: p.id, name: p.name, desc: p.description || "" }))
+      : defaultProjects.map((p, i) => ({ id: `default-${i}`, name: p.name, desc: p.desc }));
 
   const handleAction = (cb?: () => void) => {
     if (cb) cb();
@@ -137,25 +140,43 @@ export function Sidebar({
               {projectsList.map((p) => {
                 const isActive = activeProject.name.toLowerCase().includes(p.name.toLowerCase());
                 return (
-                  <button
-                    key={p.name}
-                    onClick={() => handleAction(() => onSelectProject(p.name))}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer text-left ${
+                  <div
+                    key={p.id || p.name}
+                    className={`group flex items-center justify-between w-full px-2 py-1 rounded-lg text-xs transition ${
                       isActive
                         ? "bg-[#161B26] text-white font-medium border border-purple-800/40"
                         : "text-slate-400 hover:text-slate-200 hover:bg-[#12161F]"
                     }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      {isActive ? (
-                        <FolderOpen className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
-                      ) : (
-                        <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      )}
-                      <span className="truncate">{p.name}</span>
-                    </div>
-                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAction(() => onSelectProject(p.name))}
+                      className="flex-1 flex items-center justify-between min-w-0 pr-1 text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        {isActive ? (
+                          <FolderOpen className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
+                        ) : (
+                          <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        )}
+                        <span className="truncate">{p.name}</span>
+                      </div>
+                      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0 ml-1.5" />}
+                    </button>
+                    {onDeleteProject && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteProject(p.id, p.name);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-950/60 hover:text-rose-400 text-slate-500 transition cursor-pointer shrink-0"
+                        title={`Slett prosjekt: ${p.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>

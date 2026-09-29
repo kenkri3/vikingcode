@@ -160,8 +160,39 @@ function generateAutonomousCode(
   const isCarpenter = !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("snekring"));
   const isCraftsman = !isHealth && !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester"));
   const isVipps = pLower.includes("vipp") || pLower.includes("betaling");
-  const isCRM = !isHealth && (pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg"));
-  const isNetwork = !isHealth && (pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b"));
+  const isSalon =
+    pLower.includes("frisør") ||
+    pLower.includes("hår") ||
+    pLower.includes("salong") ||
+    pLower.includes("klipp") ||
+    pLower.includes("barber") ||
+    pLower.includes("styling") ||
+    pLower.includes("skjønnhet") ||
+    pLower.includes("beauty") ||
+    pLower.includes("negler");
+  const isStore =
+    !isSalon && (
+      pLower.includes("butikk") ||
+      pLower.includes("nettbutikk") ||
+      pLower.includes("shop") ||
+      pLower.includes("handlekurv") ||
+      pLower.includes("produkter") ||
+      pLower.includes("klær") ||
+      pLower.includes("sko")
+    );
+  const isRestaurant =
+    !isSalon && !isStore && (
+      pLower.includes("restaurant") ||
+      pLower.includes("kafe") ||
+      pLower.includes("cafe") ||
+      pLower.includes("mat") ||
+      pLower.includes("pizza") ||
+      pLower.includes("meny") ||
+      pLower.includes("bordbestilling") ||
+      pLower.includes("catering")
+    );
+  const isCRM = !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg"));
+  const isNetwork = !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b"));
   const isContact = pLower.includes("kontakt") || pLower.includes("skjema") || pLower.includes("sms");
 
   // Undersøk om brukeren spesifikt ba om å opprette en ny fil
@@ -1227,6 +1258,851 @@ export default function CRMApp() {
   );
 }
 `;
+  } else if (isSalon) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import {
+  Scissors,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  Sparkles,
+  ChevronRight,
+  Star,
+  CheckCircle2,
+  MapPin,
+  Award,
+  CreditCard,
+  HeartPulse
+} from 'lucide-react';
+
+export default function NordicSalonApp() {
+  const [selectedCategory, setSelectedCategory] = useState<'klipp' | 'farge' | 'styling'>('klipp');
+  const [selectedService, setSelectedService] = useState('dame');
+  const [selectedStylist, setSelectedStylist] = useState('silje');
+  const [selectedSlot, setSelectedSlot] = useState('I dag kl. 14:15');
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const services: Record<string, { title: string; category: string; duration: string; price: number; desc: string }> = {
+    dame: { title: 'Dameklipp, Vask & Føn', category: 'klipp', duration: '60 min', price: 820, desc: 'Konsultasjon, skreddersydd klipp, beroligende hodebunnsmassasje og volumstyling.' },
+    herre: { title: 'Herreklipp & Skjeggtrim', category: 'klipp', duration: '45 min', price: 620, desc: 'Presisjonsfade med saks og maskin, skjeggoljebehandling og varmt håndkle.' },
+    barne: { title: 'Barneklipp (0-12 år)', category: 'klipp', duration: '30 min', price: 420, desc: 'Trygg og tålmodig klipp for de minste med diplom.' },
+    farge: { title: 'Helfarge & Glossing', category: 'farge', duration: '90 min', price: 1450, desc: 'Glansfull og skånsom fargebehandling med organisk fargepigment.' },
+    striper: { title: 'Foliestriper / Balayage', category: 'farge', duration: '120 min', price: 1950, desc: 'Håndmalt naturlig solkysset effekt med Olaplex bonding-kur.' },
+    keratin: { title: 'Keratinbehandling & Antifrizz', category: 'styling', duration: '150 min', price: 2100, desc: 'Dypvirkende glattende kur som gir silkemykt hår i opptil 4 måneder.' },
+    kur: { title: 'Luksuskur m/ Dyp Hodebunnsmassasje', category: 'styling', duration: '40 min', price: 550, desc: 'Intensiv fuktighetstilførsel og 15 minutter avstressende massasje.' },
+  };
+
+  const stylists: Record<string, { name: string; role: string; exp: string; rating: string }> = {
+    silje: { name: 'Silje K. Hansen', role: 'Senior Stylist & Salongleder', exp: '12 års erfaring', rating: '5.0 (148 vurderinger)' },
+    jonas: { name: 'Jonas Dahl Moe', role: 'Fade & Barber Master', exp: '7 års erfaring', rating: '4.9 (94 vurderinger)' },
+    camilla: { name: 'Camilla Vang', role: 'Farge- & Balayagespesialist', exp: '9 års erfaring', rating: '5.0 (112 vurderinger)' },
+  };
+
+  const availableSlots = [
+    'I dag kl. 12:30',
+    'I dag kl. 14:15',
+    'I dag kl. 16:00',
+    'I morgen kl. 10:00',
+    'I morgen kl. 13:30',
+    'I morgen kl. 15:45',
+  ];
+
+  const currentService = services[selectedService] || services.dame;
+  const currentStylist = stylists[selectedStylist] || stylists.silje;
+
+  const handleBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientName.trim() || !clientPhone.trim()) {
+      alert('Vennligst fyll ut navn og mobilnummer for timebekreftelse.');
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
+      {/* Salong Toppbanner */}
+      <header className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#1F2937] mb-8 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#EC4899] flex items-center justify-center font-bold text-white shadow-lg shadow-purple-900/40">
+            <Scissors className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              Nordic Klipp & Barbersalong AS
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40 flex items-center gap-1 font-mono">
+                <Award className="w-3 h-3 text-[#A78BFA]" />
+                Mesterbedrift
+              </span>
+            </h1>
+            <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+              <MapPin className="w-3.5 h-3.5 text-[#EC4899]" />
+              <span>Sentrumsgata 14, Oslo • Tlf: 22 11 40 00</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <p className="text-[11px] text-slate-400">Åpningstider denne uken</p>
+            <p className="text-xs font-semibold text-emerald-400">Man - Lør: 09:00 - 19:00</p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-700/40 text-xs text-emerald-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Ledig i dag
+          </span>
+        </div>
+      </header>
+
+      {/* Booking Layout */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Venstre kolonner: Behandlingsvalg, Stylist & Tid */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* 1. Kategori-faner */}
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Scissors className="w-4 h-4 text-[#A78BFA]" />
+                <span>1. Velg Behandling</span>
+              </h2>
+              <div className="flex gap-1.5 bg-[#0A0D12] p-1 rounded-xl border border-[#1F2937]">
+                {(['klipp', 'farge', 'styling'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      const firstInCat = Object.keys(services).find((k) => services[k].category === cat);
+                      if (firstInCat) setSelectedService(firstInCat);
+                    }}
+                    className={"px-3 py-1 rounded-lg text-xs font-medium capitalize transition cursor-pointer " + (
+                      selectedCategory === cat
+                        ? "bg-[#7C3AED] text-white"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tjenesteliste for valgt kategori */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(services)
+                .filter(([_, s]) => s.category === selectedCategory)
+                .map(([id, s]) => {
+                  const active = selectedService === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedService(id)}
+                      className={"p-4 rounded-xl text-left border transition cursor-pointer flex flex-col justify-between " + (
+                        active
+                          ? "bg-purple-950/40 border-[#7C3AED] ring-1 ring-[#7C3AED] shadow-lg shadow-purple-950/40"
+                          : "bg-[#0E121A] border-[#1F2937] hover:border-slate-600"
+                      )}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-xs font-bold text-white">{s.title}</h3>
+                          <span className="text-xs font-bold text-[#A78BFA] font-mono">{s.price} kr</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mb-2">{s.desc}</p>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-[#1F2937]/60 text-[10px] text-slate-500 font-mono">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {s.duration}
+                        </span>
+                        {active && <span className="text-emerald-400 font-bold">Valgt</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* 2. Stylist-velger */}
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <User className="w-4 h-4 text-[#A78BFA]" />
+              <span>2. Velg Stylist / Frisør</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {Object.entries(stylists).map(([id, st]) => {
+                const active = selectedStylist === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setSelectedStylist(id)}
+                    className={"p-3.5 rounded-xl text-left border transition cursor-pointer " + (
+                      active
+                        ? "bg-purple-950/40 border-[#7C3AED] ring-1 ring-[#7C3AED]"
+                        : "bg-[#0E121A] border-[#1F2937] hover:border-slate-600"
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white text-xs mb-2">
+                      {st.name.charAt(0)}
+                    </div>
+                    <h3 className="text-xs font-bold text-white truncate">{st.name}</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{st.role}</p>
+                    <div className="flex items-center gap-1 text-[10px] text-amber-400 mt-1.5 font-medium">
+                      <Star className="w-3 h-3 fill-amber-400" />
+                      <span>{st.rating}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Ledig Tidspunkt */}
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-3">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#A78BFA]" />
+              <span>3. Velg Tidspunkt</span>
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {availableSlots.map((slot) => {
+                const active = selectedSlot === slot;
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot)}
+                    className={"px-3 py-2.5 rounded-xl text-xs font-mono transition cursor-pointer border text-center " + (
+                      active
+                        ? "bg-[#7C3AED] border-[#7C3AED] text-white font-bold shadow-lg shadow-purple-900/40"
+                        : "bg-[#0E121A] border-[#1F2937] text-slate-300 hover:text-white hover:border-slate-600"
+                    )}
+                  >
+                    {slot}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Høyre kolonne: Bestillingsskjema & Oppsummering */}
+        <div className="space-y-6">
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#A78BFA]" />
+              <span>Bestillingssammendrag</span>
+            </h2>
+
+            <div className="p-3.5 rounded-xl bg-[#0E121A] border border-[#1F2937] space-y-2.5 text-xs">
+              <div className="flex justify-between pb-2 border-b border-[#1F2937]">
+                <span className="text-slate-400">Behandling:</span>
+                <span className="font-bold text-white text-right">{currentService.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Frisør:</span>
+                <span className="font-medium text-purple-300">{currentStylist.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Tidspunkt:</span>
+                <span className="font-bold text-[#A78BFA]">{selectedSlot}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Varighet:</span>
+                <span className="text-slate-300 font-mono">{currentService.duration}</span>
+              </div>
+              <div className="pt-2 border-t border-[#1F2937] flex justify-between items-baseline">
+                <span className="font-bold text-white">Totalt å betale:</span>
+                <span className="text-base font-extrabold text-emerald-400 font-mono">
+                  {currentService.price} kr
+                </span>
+              </div>
+            </div>
+
+            {/* Skjema */}
+            <form onSubmit={handleBooking} className="space-y-3 pt-2">
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Ditt fulle navn:</label>
+                <input
+                  type="text"
+                  required
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="f.eks. Astrid Lind"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Mobilnummer (for SMS-varsel):</label>
+                <input
+                  type="tel"
+                  required
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="f.eks. 912 34 567"
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1">Spesielle ønsker / kommentar (valgfritt):</label>
+                <textarea
+                  rows={2}
+                  value={clientNotes}
+                  onChange={(e) => setClientNotes(e.target.value)}
+                  placeholder="Allergier, tidligere fargebehandling..."
+                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className={"w-full py-3 px-4 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer " + (
+                  submitted
+                    ? "bg-emerald-600 text-white"
+                    : "bg-gradient-to-r from-[#7C3AED] to-[#EC4899] hover:from-[#6D28D9] text-white shadow-purple-900/40"
+                )}
+              >
+                {submitted ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Time bestilt! SMS sendt til {clientPhone}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Bekreft Timebestilling ({currentService.price} kr)</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="pt-2 border-t border-[#1F2937] space-y-1.5 text-[11px] text-slate-400">
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Gratis avbestilling inntil 24t før</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Betaling med Vipps eller kort i salongen</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+`;
+  } else if (isStore) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import {
+  ShoppingBag,
+  ShoppingCart,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
+  Star,
+  ShieldCheck,
+  CreditCard,
+  X
+} from 'lucide-react';
+
+interface CartItem {
+  id: string;
+  title: string;
+  price: number;
+  qty: number;
+}
+
+export default function StoreApp() {
+  const [selectedCat, setSelectedCat] = useState('alle');
+  const [cart, setCart] = useState<CartItem[]>([
+    { id: 'p1', title: 'Rondane Fjellanorakk (Vanntett)', price: 1890, qty: 1 }
+  ]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [checkoutComplete, setCheckoutComplete] = useState(false);
+
+  const products = [
+    { id: 'p1', title: 'Rondane Fjellanorakk', cat: 'jakker', price: 1890, desc: '3-lags pustende membran, tapede sømmer og stormhette.', rating: '4.9 (120)' },
+    { id: 'p2', title: 'Hardanger Merinoull Genser', cat: 'ull', price: 1290, desc: '100% ren norsk merinoull. Ekstra varm og kløfri.', rating: '5.0 (88)' },
+    { id: 'p3', title: 'Fjordane Vinterstøvel GTX', cat: 'sko', price: 2190, desc: 'Gore-Tex fôr, pigget Vibram yttersåle for nordisk vinter.', rating: '4.8 (64)' },
+    { id: 'p4', title: 'Jotunheimen 45L Ryggsekk', cat: 'tilbehor', price: 1650, desc: 'Ergonomisk bæresystem, integrert regntrekk og PC-lomme.', rating: '4.9 (95)' },
+    { id: 'p5', title: 'Preikestolen Termos 1.0L', cat: 'tilbehor', price: 390, desc: 'Dobbeltvegget rustfritt stål. Holder drikken varm i 24t.', rating: '4.7 (210)' },
+    { id: 'p6', title: 'Senja Vind- & Regnbukse', cat: 'jakker', price: 1190, desc: 'Lettvekt turbukse med 4-veis stretch og ventilasjonsglidelås.', rating: '4.8 (52)' },
+  ];
+
+  const filteredProducts = selectedCat === 'alle' ? products : products.filter((p) => p.cat === selectedCat);
+
+  const addToCart = (p: typeof products[0]) => {
+    setCart((prev) => {
+      const exists = prev.find((item) => item.id === p.id);
+      if (exists) {
+        return prev.map((item) => (item.id === p.id ? { ...item, qty: item.qty + 1 } : item));
+      }
+      return [...prev, { id: p.id, title: p.title, price: p.price, qty: 1 }];
+    });
+    setIsCartOpen(true);
+  };
+
+  const updateQty = (id: string, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === id) {
+            const nextQty = item.qty + delta;
+            return nextQty > 0 ? { ...item, qty: nextQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean) as CartItem[]
+    );
+  };
+
+  const totalItems = cart.reduce((acc, it) => acc + it.qty, 0);
+  const subtotal = cart.reduce((acc, it) => acc + it.price * it.qty, 0);
+  const shipping = subtotal > 1000 ? 0 : 79;
+  const grandTotal = subtotal + shipping;
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
+      {/* Header */}
+      <header className="max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-[#1F2937] mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#38BDF8] flex items-center justify-center font-bold text-white shadow-lg shadow-purple-900/40">
+            <ShoppingBag className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              NordicGear AS
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40">
+                Offisiell Nettbutikk
+              </span>
+            </h1>
+            <p className="text-xs text-slate-400">Norsk friluftsutstyr & kvalitet for krevende vær</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="relative px-4 py-2 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-semibold text-white transition flex items-center gap-2 cursor-pointer shadow-lg"
+        >
+          <ShoppingCart className="w-4 h-4 text-[#A78BFA]" />
+          <span>Handlekurv</span>
+          {totalItems > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-[#7C3AED] text-white text-[10px] font-bold font-mono">
+              {totalItems}
+            </span>
+          )}
+        </button>
+      </header>
+
+      {/* Categories Bar */}
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2">
+          {[
+            { id: 'alle', label: 'Alle Produkter' },
+            { id: 'jakker', label: 'Jakker & Bukser' },
+            { id: 'ull', label: 'Ulltøy' },
+            { id: 'sko', label: 'Fjellsko' },
+            { id: 'tilbehor', label: 'Sekker & Utstyr' },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCat(cat.id)}
+              className={"px-3.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer border " + (
+                selectedCat === cat.id
+                  ? "bg-[#7C3AED] border-[#7C3AED] text-white font-bold"
+                  : "bg-[#12161F] border-[#1F2937] text-slate-400 hover:text-white"
+              )}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-slate-400 hidden sm:block font-mono">
+          Fri frakt over 1 000 kr
+        </span>
+      </div>
+
+      {/* Product Grid */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((p) => (
+          <div
+            key={p.id}
+            className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl flex flex-col justify-between hover:border-slate-700 transition"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#A78BFA] bg-purple-950/60 px-2.5 py-0.5 rounded-md border border-purple-800/40">
+                  {p.cat}
+                </span>
+                <div className="flex items-center gap-1 text-[11px] text-amber-400 font-mono">
+                  <Star className="w-3 h-3 fill-amber-400" />
+                  <span>{p.rating}</span>
+                </div>
+              </div>
+              <h3 className="text-sm font-bold text-white">{p.title}</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{p.desc}</p>
+            </div>
+
+            <div className="pt-4 mt-4 border-t border-[#1F2937] flex items-center justify-between">
+              <span className="text-base font-extrabold text-white font-mono">{p.price} kr</span>
+              <button
+                onClick={() => addToCart(p)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-purple-900/40 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Legg i kurv</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Cart Modal / Drawer */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#1F2937]">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-[#A78BFA]" />
+                <span>Din Handlekurv ({totalItems} varer)</span>
+              </h2>
+              <button
+                onClick={() => setIsCartOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {cart.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">Handlekurven er tom.</p>
+            ) : (
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                {cart.map((it) => (
+                  <div key={it.id} className="p-3 rounded-xl bg-[#0E121A] border border-[#1F2937] flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{it.title}</h4>
+                      <p className="text-[11px] text-[#A78BFA] font-mono mt-0.5">{it.price} kr / stk</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQty(it.id, -1)}
+                        className="w-6 h-6 rounded bg-[#1F2937] text-white flex items-center justify-center font-bold text-xs"
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-mono font-bold text-white">{it.qty}</span>
+                      <button
+                        onClick={() => updateQty(it.id, 1)}
+                        className="w-6 h-6 rounded bg-[#1F2937] text-white flex items-center justify-center font-bold text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-[#1F2937] space-y-2 text-xs">
+              <div className="flex justify-between text-slate-400">
+                <span>Delsum (inkl. 25% MVA):</span>
+                <span className="font-mono text-white">{subtotal} kr</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Frakt (Posten / Bring):</span>
+                <span className="font-mono text-white">{shipping === 0 ? 'Gratis' : shipping + ' kr'}</span>
+              </div>
+              <div className="flex justify-between font-bold text-sm text-white pt-2 border-t border-[#1F2937]">
+                <span>Total:</span>
+                <span className="font-mono text-emerald-400">{grandTotal} kr</span>
+              </div>
+            </div>
+
+            {checkoutComplete ? (
+              <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>Ordre bekreftet! Kvittering sendt til Vipps / E-post.</span>
+              </div>
+            ) : (
+              <button
+                disabled={cart.length === 0}
+                onClick={() => setCheckoutComplete(true)}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF5B00] to-[#E04B00] hover:opacity-95 text-white font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <span>Fullfør med Vipps Hurtigkasse</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+`;
+  } else if (isRestaurant) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import {
+  Utensils,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  Sparkles,
+  CheckCircle2,
+  ChevronRight,
+  MapPin,
+  Star
+} from 'lucide-react';
+
+export default function RestaurantApp() {
+  const [guests, setGuests] = useState(2);
+  const [selectedSlot, setSelectedSlot] = useState('19:00');
+  const [seatingArea, setSeatingArea] = useState('inne');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [activeMenuTab, setActiveMenuTab] = useState<'hovedretter' | 'forretter' | 'dessert'>('hovedretter');
+  const [booked, setBooked] = useState(false);
+
+  const menu = [
+    { cat: 'forretter', title: 'Kremet Kongekrabbesuppe', price: 185, desc: 'Fersk krabbe fra Finnmark, fennikel og ristet surdeigsbrød.', badge: 'Populær' },
+    { cat: 'forretter', title: 'Gravet Hjort m/ Tyttebærkrem', price: 165, desc: 'Lokal hjort, ristet rugbrød og einebærglaze.', badge: 'Tradisjon' },
+    { cat: 'hovedretter', title: 'Pannestekt Skrei fra Lofoten', price: 345, desc: 'Ertepuré, baconfett fra Svartskog og ovnsbakte morenepoteter.', badge: 'Sesong' },
+    { cat: 'hovedretter', title: 'Reinsdyr Indrefilet', price: 395, desc: 'Pastinakkrem, skogsopp, rosenkål og rødvinssaus.', badge: 'Signatur' },
+    { cat: 'hovedretter', title: 'Kremet Trøffelpasta (Vegetar)', price: 265, desc: 'Håndlaget tagliatelle, fersk trøffel og 24mnd parmesan.', badge: 'Vegetar' },
+    { cat: 'dessert', title: 'Lune Molter m/ Rørosrømme-is', price: 155, desc: 'Gull fra myra servert med hjemmelaget is.', badge: 'Klassiker' },
+    { cat: 'dessert', title: 'Sjokoladefondant & Pasjonsfrukt', price: 145, desc: 'Valrhona sjokolade og frisk coulis.', badge: 'Søtt' },
+  ];
+
+  const handleBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      alert('Vennligst fyll ut navn og telefonnummer for bordreservasjon.');
+      return;
+    }
+    setBooked(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
+      {/* Header */}
+      <header className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#1F2937] mb-8 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#F59E0B] flex items-center justify-center font-bold text-white shadow-lg shadow-purple-900/40">
+            <Utensils className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              Restaurant Fjord & Smak
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40">
+                Gourmet & Trattoria
+              </span>
+            </h1>
+            <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+              <MapPin className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span>Havnegata 8, Tønsberg • Tlf: 33 00 22 11</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-700/40 text-xs text-emerald-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Ledige bord i kveld
+          </span>
+        </div>
+      </header>
+
+      {/* Main Grid: Reservation Form + Interactive Menu */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Bordreservasjon */}
+        <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#A78BFA]" />
+            <span>Reserver Bord</span>
+          </h2>
+
+          <form onSubmit={handleBooking} className="space-y-3.5">
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Antall gjester:</label>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[1, 2, 4, 6, 8].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setGuests(num)}
+                    className={"py-2 rounded-xl text-xs font-mono font-bold transition border " + (
+                      guests === num
+                        ? "bg-[#7C3AED] border-[#7C3AED] text-white shadow-md"
+                        : "bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white"
+                    )}
+                  >
+                    {num}p
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Ønsket tidspunkt:</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['17:30', '19:00', '20:30'].map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot)}
+                    className={"py-2 rounded-xl text-xs font-mono transition border " + (
+                      selectedSlot === slot
+                        ? "bg-[#7C3AED] border-[#7C3AED] text-white font-bold"
+                        : "bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white"
+                    )}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Plassering:</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'inne', label: 'Inne i spisesalen' },
+                  { id: 'uteservering', label: 'Vinterhage / Ute' },
+                ].map((pos) => (
+                  <button
+                    key={pos.id}
+                    type="button"
+                    onClick={() => setSeatingArea(pos.id)}
+                    className={"p-2 rounded-xl text-[11px] transition border text-left " + (
+                      seatingArea === pos.id
+                        ? "bg-purple-950/60 border-[#7C3AED] text-white font-bold"
+                        : "bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white"
+                    )}
+                  >
+                    {pos.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Ditt navn:</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="f.eks. Henrik Holm"
+                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Mobilnummer for bekreftelse:</label>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="f.eks. 900 12 345"
+                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className={"w-full py-3 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer " + (
+                booked
+                  ? "bg-emerald-600 text-white"
+                  : "bg-gradient-to-r from-[#7C3AED] to-[#F59E0B] hover:opacity-95 text-white shadow-purple-900/40"
+              )}
+            >
+              {booked ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Bord bekreftet for {guests} pers! SMS sendt.</span>
+                </>
+              ) : (
+                <>
+                  <span>Bekreft Bordreservasjon</span>
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Right: Menyoversikt */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Utensils className="w-4 h-4 text-[#A78BFA]" />
+                <span>Sesongens Á la Carte Meny</span>
+              </h2>
+              <div className="flex gap-1.5 bg-[#0A0D12] p-1 rounded-xl border border-[#1F2937]">
+                {(['forretter', 'hovedretter', 'dessert'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveMenuTab(tab)}
+                    className={"px-3 py-1 rounded-lg text-xs capitalize transition cursor-pointer " + (
+                      activeMenuTab === tab
+                        ? "bg-[#7C3AED] text-white font-bold"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {menu
+                .filter((m) => m.cat === activeMenuTab)
+                .map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-[#0E121A] border border-[#1F2937] flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-bold text-white">{item.title}</h3>
+                        <span className="text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/40 px-2 py-0.5 rounded-full font-mono">
+                          {item.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1">{item.desc}</p>
+                    </div>
+                    <span className="text-xs font-bold text-white font-mono shrink-0 ml-4">
+                      {item.price} kr
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+`;
   } else {
     // Generisk moderne norsk SaaS / Webapp
     pageContent = `'use client';
@@ -1423,6 +2299,107 @@ export async function POST(req: Request) {
 }
 `,
     });
+  } else if (isSalon) {
+    createdFiles.push({
+      path: "app/api/salon/booking/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      bookingId: 'salong-' + Date.now().toString(36),
+      service: body.serviceTitle || 'Dameklipp, Vask & Føn',
+      stylist: body.stylistName || 'Silje K. Hansen',
+      slot: body.appointmentSlot || 'I dag kl. 14:15',
+      clientName: body.clientName,
+      status: 'CONFIRMED',
+      message: 'Timeavtale er bekreftet og registrert i salongsystemet.'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig bookingdata' }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    salon: 'Nordic Klipp & Barbersalong AS',
+    status: 'open',
+    availableSlots: [
+      'I dag kl. 12:30',
+      'I dag kl. 14:15',
+      'I dag kl. 16:00',
+      'I morgen kl. 10:00'
+    ]
+  });
+}
+`,
+    });
+  } else if (isStore) {
+    createdFiles.push({
+      path: "app/api/store/order/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      orderNumber: 'ORD-' + Date.now().toString().slice(-6),
+      itemsCount: body.items?.length || 1,
+      totalAmount: body.totalAmount || 1890,
+      paymentMethod: 'VIPPS',
+      status: 'PAID',
+      message: 'Ordre opprettet og Vipps-betaling registrert.'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig ordredata' }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    store: 'NordicGear AS',
+    currency: 'NOK',
+    inStockCount: 42,
+    freeShippingThreshold: 1000
+  });
+}
+`,
+    });
+  } else if (isRestaurant) {
+    createdFiles.push({
+      path: "app/api/restaurant/booking/route.ts",
+      content: `import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({
+      success: true,
+      reservationId: 'bord-' + Date.now().toString(36),
+      guests: body.guests || 2,
+      timeSlot: body.timeSlot || '19:00',
+      seating: body.seating || 'inne',
+      clientName: body.name,
+      status: 'CONFIRMED',
+      message: 'Bordreservasjon bekreftet. SMS er sendt.'
+    });
+  } catch {
+    return NextResponse.json({ error: 'Ugyldig reservasjonsdata' }, { status: 400 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    restaurant: 'Restaurant Fjord & Smak',
+    openToday: true,
+    availableSlots: ['17:30', '19:00', '20:30']
+  });
+}
+`,
+    });
   } else {
     createdFiles.push({
       path: "app/api/data/route.ts",
@@ -1478,6 +2455,39 @@ model Booking {
   contactInfo  String
   status       String   @default("PENDING")
   createdAt    DateTime @default(now())
+}
+
+model SalonBooking {
+  id              String   @id @default(uuid())
+  clientName      String
+  clientPhone     String
+  serviceTitle    String
+  stylistName     String
+  appointmentSlot String
+  price           Int
+  status          String   @default("CONFIRMED")
+  createdAt       DateTime @default(now())
+}
+
+model StoreOrder {
+  id            String   @id @default(uuid())
+  customerEmail String?
+  itemsCount    Int
+  totalAmount   Int
+  paymentMethod String   @default("VIPPS")
+  status        String   @default("PAID")
+  createdAt     DateTime @default(now())
+}
+
+model RestaurantReservation {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  guests    Int
+  timeSlot  String
+  seating   String   @default("inne")
+  status    String   @default("CONFIRMED")
+  createdAt DateTime @default(now())
 }
 
 model PatientConsultation {
