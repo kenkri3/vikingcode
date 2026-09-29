@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { StartScreen } from "@/components/StartScreen";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { PricingModal } from "@/components/PricingModal";
+import { IntegrationsModal, AiProviderId } from "@/components/IntegrationsModal";
 import {
   INITIAL_PROJECTS,
   getStoredProjects,
@@ -119,6 +120,7 @@ function BuilderContent() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isTasksOpen, setIsTasksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeProvider, setActiveProvider] = useState<AiProviderId>("gemini");
   const [isRailwayGuideOpen, setIsRailwayGuideOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -325,14 +327,20 @@ function BuilderContent() {
         ? `proj_${activeProject.id}`
         : storedSession || "aiprogram_session";
 
-      // Modell 1: Egen API-nøkkel (BYOK) krever et aktivt betalt abonnement (Starter, Pro eller Mester)
+      // Modell 1: Egen API-nøkkel (BYOK) for en av de 6 integrasjonene
       const isPaidUser = user.plan !== "TRIAL" || (user as any).role === "ADMIN";
-      const rawKey =
-        geminiApiKeyInput.trim() ||
-        (typeof window !== "undefined"
-          ? (localStorage.getItem("aiprogram_gemini_key") || localStorage.getItem("aiprogram_custom_api_key") || "").trim()
-          : "");
-      const keyToUse = isPaidUser ? rawKey : "";
+      const activeProv = (typeof window !== "undefined" ? (localStorage.getItem("aiprogram_active_provider") as AiProviderId) : "gemini") || "gemini";
+      let activeKey = "";
+      if (typeof window !== "undefined") {
+        try {
+          const keysMap = JSON.parse(localStorage.getItem("aiprogram_api_keys") || "{}");
+          activeKey = keysMap[activeProv] || keysMap.gemini || keysMap.anthropic || keysMap.openai || keysMap.deepseek || keysMap.xai || keysMap.mistral || "";
+        } catch {}
+        if (!activeKey) {
+          activeKey = localStorage.getItem("aiprogram_gemini_key") || geminiApiKeyInput || "";
+        }
+      }
+      const keyToUse = isPaidUser ? activeKey : "";
 
       try {
         const chatRes = await fetch("/api/agent/chat", {
@@ -344,6 +352,7 @@ function BuilderContent() {
             projectName: activeProject.name,
             userName: user.name,
             userId: user.id,
+            provider: activeProv,
             customApiKey: keyToUse || undefined,
             apiKey: keyToUse || undefined,
             history: messages.slice(-6).map((m) => ({
@@ -455,6 +464,7 @@ function BuilderContent() {
             model,
             projectName: activeProject.name,
             currentFiles: activeProject.files,
+            provider: activeProv,
             geminiApiKey: keyToUse || undefined,
             customApiKey: keyToUse || undefined,
             apiKey: keyToUse || undefined,
@@ -1154,167 +1164,15 @@ function BuilderContent() {
         </div>
       )}
 
-      {/* 6. Innstillinger & API-nøkler Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
-              <div className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Innstillinger & API-nøkler</h3>
-              </div>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="text-slate-400 font-medium block mb-1">Bruker / Organisasjon</label>
-                <input
-                  type="text"
-                  disabled
-                  value={user.name}
-                  className="w-full bg-[#12161F] border border-[#1F2937] rounded-xl px-3 py-2 text-white text-xs opacity-80"
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-300 font-medium block mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-[#A78BFA]" />
-                    Egen API-nøkkel (BYOK)
-                  </span>
-                  <a
-                    href="https://aistudio.google.com/app/apikey"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[10px] text-[#A78BFA] hover:underline flex items-center gap-1"
-                  >
-                    Hent gratis Gemini-nøkkel <ExternalLink className="w-2.5 h-2.5" />
-                  </a>
-                </label>
-
-                {user.plan === "TRIAL" ? (
-                  <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-800/40 space-y-2 mb-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#A78BFA] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        Pro-funksjon: BYOK
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-700/50">
-                        Krever abonnement
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
-                      Som prøvebruker benytter du dine 50 000 gratis prøvetokens. Oppgrader til <strong>Starter</strong> eller <strong>Pro</strong> for å låse opp egen API-nøkkel og bygge ubegrenset.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSettingsOpen(false);
-                        setIsPricingOpen(true);
-                      }}
-                      className="w-full py-1.5 rounded-lg bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] text-white text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-purple-900/40 cursor-pointer"
-                    >
-                      <span>Se planer og oppgrader</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                    <span>Egen API-nøkkel (BYOK) er <strong>aktiv</strong> på ditt {user.plan}-abonnement for ubegrenset bygging.</span>
-                  </div>
-                )}
-
-                <input
-                  type="password"
-                  value={geminiApiKeyInput}
-                  onChange={(e) => setGeminiApiKeyInput(e.target.value)}
-                  placeholder="AIzaSy... (Gemini) eller sk-... (DeepSeek/OpenAI)"
-                  className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition font-mono"
-                />
-                
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className="text-[10px] text-slate-400">Støtter:</span>
-                  <span className="text-[10px] bg-blue-950/60 border border-blue-800/40 text-blue-300 px-1.5 py-0.5 rounded">Google Gemini</span>
-                  <span className="text-[10px] bg-purple-950/60 border border-purple-800/40 text-purple-300 px-1.5 py-0.5 rounded">DeepSeek</span>
-                  <span className="text-[10px] bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 px-1.5 py-0.5 rounded">OpenAI</span>
-                  <span className="text-[10px] bg-amber-950/60 border border-amber-800/40 text-amber-300 px-1.5 py-0.5 rounded">1min.AI</span>
-                </div>
-
-                <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                  Som standard benyttes den innebygde <strong>AI Program Ultra</strong>-motoren. Med et aktivt abonnement kjører kodegenereringen direkte mot din egen leverandør med <strong>ubegrenset kvote</strong>.
-                </p>
-
-                {testKeyStatus && (
-                  <div
-                    className={`mt-2 p-2.5 rounded-xl text-[11px] font-mono ${
-                      testKeyStatus.startsWith("✓")
-                        ? "bg-emerald-950/60 border border-emerald-700/50 text-emerald-300"
-                        : "bg-red-950/60 border border-red-700/50 text-red-300"
-                    }`}
-                  >
-                    {testKeyStatus}
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#12161F] border border-[#1F2937] space-y-1">
-                <p className="font-semibold text-white">Railway Status</p>
-                <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Produksjonstilkobling aktiv (Nixpacks + PostgreSQL)
-                </p>
-              </div>
-            </div>
-
-            {savedKeyNotification && (
-              <p className="text-xs text-emerald-400 font-semibold text-center animate-in fade-in">
-                ✓ Innstillinger lagret!
-              </p>
-            )}
-
-            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
-              <button
-                type="button"
-                onClick={handleTestApiKey}
-                disabled={isTestingApiKey || !geminiApiKeyInput.trim()}
-                className="px-3 py-1.5 rounded-xl bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
-              >
-                {isTestingApiKey ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Tester...</span>
-                  </>
-                ) : (
-                  <span>Test tilkobling</span>
-                )}
-              </button>
-
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("aiprogram_gemini_key", geminiApiKeyInput.trim());
-                  }
-                  setSavedKeyNotification(true);
-                  setTimeout(() => {
-                    setSavedKeyNotification(false);
-                    setIsSettingsOpen(false);
-                  }, 1000);
-                }}
-                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer transition shadow-md shadow-purple-900/30"
-              >
-                Lagre innstillinger
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 6. Integrations & API-nøkler Modal (Exact match to user screenshot) */}
+      <IntegrationsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        user={user}
+        onOpenPricing={() => setIsPricingOpen(true)}
+        activeProvider={activeProvider}
+        onSelectProvider={(p) => setActiveProvider(p)}
+      />
 
       {/* 7. Opprett Nytt Prosjekt Modal */}
       {isNewProjectModalOpen && (

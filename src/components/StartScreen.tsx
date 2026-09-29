@@ -1,7 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Sparkles, ArrowUp, Plus, Brain, LayoutDashboard, Calendar, Globe, ShoppingBag } from "lucide-react";
+import React, { useState, useRef } from "react";
+import {
+  Sparkles,
+  ArrowUp,
+  Brain,
+  LayoutDashboard,
+  Calendar,
+  Globe,
+  ShoppingBag,
+  Image as ImageIcon,
+  Loader2,
+  X,
+  Link as LinkIcon,
+  Check,
+} from "lucide-react";
 import { VikingLogo } from "./VikingLogo";
 
 interface StartScreenProps {
@@ -12,6 +25,17 @@ interface StartScreenProps {
 export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState("AI Program Ultra");
+
+  // Re-imagine from URL state
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
+  const [inputUrl, setInputUrl] = useState("");
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+  const [urlError, setUrlError] = useState("");
+  const [attachedUrl, setAttachedUrl] = useState<string | null>(null);
+
+  // Add Image state
+  const [attachedImage, setAttachedImage] = useState<{ name: string; dataUrl: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const starterTemplates = [
     {
@@ -44,10 +68,69 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
     },
   ];
 
+  // Handle URL Scrape & Re-imagine
+  const handleScrapeUrlSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputUrl.trim() || isScrapingUrl) return;
+
+    setIsScrapingUrl(true);
+    setUrlError("");
+
+    try {
+      const res = await fetch("/api/scrape-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: inputUrl.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Kunne ikke hente nettsiden");
+      }
+
+      setAttachedUrl(data.url);
+      setPrompt(data.suggestedPrompt || `Gjenskap og moderniser nettsiden for ${data.brandName || data.title} (${data.url}).`);
+      setIsUrlModalOpen(false);
+      setInputUrl("");
+    } catch (err: any) {
+      setUrlError(err.message || "Kunne ikke analysere URL-en. Vennligst sjekk adressen.");
+    } finally {
+      setIsScrapingUrl(false);
+    }
+  };
+
+  // Handle Image Upload
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachedImage({
+        name: file.name,
+        dataUrl: reader.result as string,
+      });
+      if (!prompt.trim()) {
+        setPrompt("Gjenskap designet og oppsettet fra det vedlagte skjermbildet som en responsiv, moderne webapplikasjon.");
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!prompt.trim() || isLoading) return;
-    onStartBuilding(prompt);
+
+    let finalPrompt = prompt.trim();
+    if (attachedUrl && !finalPrompt.includes(attachedUrl)) {
+      finalPrompt += `\n[Mål-URL for gjenskaping: ${attachedUrl}]`;
+    }
+    if (attachedImage) {
+      finalPrompt += `\n[Skjermbilde vedlagt: Gjenskap det visuelle uttrykket fra ${attachedImage.name}]`;
+    }
+
+    onStartBuilding(finalPrompt);
   };
 
   return (
@@ -61,15 +144,60 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
           Hva vil du bygge i dag?
         </h1>
         <p className="text-xs sm:text-base text-slate-400 max-w-lg mx-auto">
-          Beskriv programvaren eller nettsiden på valgfritt språk. AIProgram.no genererer produksjonsklar kildekode, live forhåndsvisning og distribusjon på sekunder.
+          Beskriv hva du vil bygge med ren tekst, gjenskap fra en eksisterende URL, eller last opp et skjermbilde.
         </p>
       </div>
 
-      {/* Spacious Central Prompt Box (Gemini & ChatGPT style) */}
+      {/* Hidden File Input for Add Image */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageFileChange}
+        className="hidden"
+      />
+
+      {/* Spacious Central Prompt Box (Gemini & ChatGPT style with Image 1 Buttons) */}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl bg-[#12161F] border border-[#1F2937] focus-within:border-[#7C3AED] focus-within:shadow-[0_0_30px_-5px_rgba(124,58,237,0.35)] rounded-2xl p-3 sm:p-4 mb-8 transition-all"
+        className="w-full max-w-2xl bg-[#12161F] border border-[#1F2937] focus-within:border-[#7C3AED] focus-within:shadow-[0_0_30px_-5px_rgba(124,58,237,0.35)] rounded-2xl p-3.5 sm:p-4 mb-8 transition-all space-y-3"
       >
+        {/* Attached context badges (URL / Image) */}
+        {(attachedUrl || attachedImage) && (
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+            {attachedUrl && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-800/50 text-purple-300 text-xs font-mono">
+                <Globe className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="truncate max-w-[200px]">{attachedUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachedUrl(null)}
+                  className="p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
+                  title="Fjern URL"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {attachedImage && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/50 text-emerald-300 text-xs font-medium">
+                <ImageIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate max-w-[160px]">{attachedImage.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachedImage(null)}
+                  className="p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
+                  title="Fjern bilde"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Prompt Input Textarea */}
         <textarea
           rows={3}
           value={prompt}
@@ -80,45 +208,128 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
               handleSubmit();
             }
           }}
-          placeholder="Spør om hva som helst... f.eks. 'Lag en bookingportal for rørleggere med priskalkulator og SMS-varsling'"
-          className="w-full bg-transparent text-sm text-white placeholder-slate-500 outline-none resize-none"
+          placeholder="Describe the page you want to build... (f.eks. 'Lag en luksuriøs nettside for et arkitektkontor med prosjektgalleri og kontaktskjema')"
+          className="w-full bg-transparent text-sm text-white placeholder-slate-400 outline-none resize-none leading-relaxed font-sans"
         />
 
+        {/* Action Toolbar Inside Box: [ Re-imagine from URL ] [ Add Image ] (Exact Image 1) */}
         <div className="flex items-center justify-between pt-2 border-t border-[#1F2937]/70">
           <div className="flex items-center gap-2">
+            {/* Pill 1: Re-imagine from URL (Exact Image 1) */}
             <button
               type="button"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1A212E] transition"
-              title="Legg til vedlegg"
+              onClick={() => setIsUrlModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1b202c] hover:bg-[#252c3c] border border-[#2d3748] text-xs font-medium text-slate-200 hover:text-white transition shadow-sm cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span>Re-imagine from URL</span>
             </button>
 
-            {/* Reasoning Pill (ChatGPT "Tenk" style) */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0A0D12] border border-[#1F2937] text-[11px] text-slate-300 font-medium">
-              <Brain className="w-3 h-3 text-[#A78BFA]" />
-              <span>Autonom Agent</span>
-            </div>
+            {/* Pill 2: Add Image (Exact Image 1) */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1b202c] hover:bg-[#252c3c] border border-[#2d3748] text-xs font-medium text-slate-200 hover:text-white transition shadow-sm cursor-pointer"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span>Add Image</span>
+            </button>
+          </div>
 
-            {/* Model picker */}
+          <div className="flex items-center gap-2">
             <span className="text-[11px] text-slate-500 hidden sm:inline">
               {selectedModel}
             </span>
-          </div>
 
-          <button
-            type="submit"
-            disabled={!prompt.trim() || isLoading}
-            className={`p-2 rounded-xl transition flex items-center justify-center ${
-              prompt.trim() && !isLoading
-                ? "bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-lg shadow-purple-900/40 cursor-pointer"
-                : "bg-slate-800 text-slate-500 cursor-not-allowed"
-            }`}
-          >
-            <ArrowUp className="w-4 h-4" />
-          </button>
+            <button
+              type="submit"
+              disabled={!prompt.trim() || isLoading}
+              className={`p-2 rounded-xl transition flex items-center justify-center ${
+                prompt.trim() && !isLoading
+                  ? "bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-lg shadow-purple-900/40 cursor-pointer"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              <ArrowUp className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* Modal: Re-imagine from URL */}
+      {isUrlModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#161822] border border-[#2b3348] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#242b3d]">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-purple-400" />
+                <h3 className="text-sm font-bold text-white">Re-imagine from URL</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUrlModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#242b3d] transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Lim inn URL-en til en eksisterende nettside. AI-agenten henter merkevaren, tjenestene og innholdet automatisk, og gjenskaper en moderne, luksuriøs versjon for deg.
+            </p>
+
+            <form onSubmit={handleScrapeUrlSubmit} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Nettadresse (URL):
+                </label>
+                <div className="flex items-center gap-2 bg-[#0e1017] border border-[#2d3748] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
+                  <LinkIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    type="text"
+                    required
+                    value={inputUrl}
+                    onChange={(e) => setInputUrl(e.target.value)}
+                    placeholder="https://bedrift.no eller blomsterbutikk.no"
+                    className="bg-transparent text-white outline-none w-full font-sans"
+                    autoFocus
+                  />
+                </div>
+                {urlError && (
+                  <p className="text-[11px] text-rose-400 mt-1">{urlError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsUrlModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-[#202534] hover:bg-[#283042] text-xs text-slate-300 hover:text-white transition"
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="submit"
+                  disabled={!inputUrl.trim() || isScrapingUrl}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-lg shadow-purple-950/50"
+                >
+                  {isScrapingUrl ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Analyserer nettside...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Hent og Gjenskap</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Quick starter templates */}
       <div className="w-full max-w-2xl">
@@ -136,7 +347,7 @@ export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
               <button
                 key={tmpl.title}
                 onClick={() => onStartBuilding(tmpl.prompt)}
-                className="p-4 rounded-xl bg-[#12161F]/70 hover:bg-[#161C27] border border-[#1F2937] hover:border-[#7C3AED]/60 text-left transition group shadow-sm"
+                className="p-4 rounded-xl bg-[#12161F]/70 hover:bg-[#161C27] border border-[#1F2937] hover:border-[#7C3AED]/60 text-left transition group shadow-sm cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-1.5">
                   <div className="flex items-center gap-2">

@@ -177,131 +177,171 @@ Brukerens forespørsel: "${prompt}"
 Konstruer eller oppdater kildekoden med maksimal profesjonalitet og returner KUN det spesifiserte JSON-objektet.`;
 }
 
-async function callDeepSeekApi(
+function parseAiResponseJson(rawText: string | undefined | null, projectName: string): GeminiGenerationResult | null {
+  if (!rawText) return null;
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch {
+    const jsonBlock = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonBlock) {
+      try {
+        parsed = JSON.parse(jsonBlock[1]);
+      } catch {}
+    }
+    if (!parsed) {
+      const firstBrace = rawText.indexOf('{');
+      const lastBrace = rawText.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          parsed = JSON.parse(rawText.slice(firstBrace, lastBrace + 1));
+        } catch {}
+      }
+    }
+  }
+
+  if (parsed && (parsed.message || parsed.files)) {
+    const files = Array.isArray(parsed.files) ? parsed.files : [];
+    ensureFullstackFiles(files, projectName);
+    const actions: AgentAction[] = Array.isArray(parsed.actions)
+      ? parsed.actions.map((a: any, i: number) => ({
+          id: a.id || `act-${Date.now()}-${i}`,
+          type: (["thought", "analyze", "search", "code", "system"].includes(a.type)
+            ? a.type
+            : "code") as AgentAction["type"],
+          title: a.title || "Fullstack kodegenerering",
+          timestamp: a.timestamp || new Date().toISOString(),
+          fileName: a.fileName,
+          content: a.content,
+        }))
+      : [];
+
+    return {
+      message: parsed.message || "Konstruerte løsningen med AI Program Ultra.",
+      thought: parsed.thought || "Genererte produksjonsklar fullstack Next.js kode.",
+      actions,
+      files,
+    };
+  }
+
+  // Fallback: If model returned raw code block without JSON envelope
+  const codeBlock = rawText.match(/```(?:tsx|jsx|html|javascript)?\s*([\s\S]*?)\s*```/);
+  if (codeBlock && codeBlock[1].length > 100) {
+    const files: ProjectFile[] = [
+      { path: "app/page.tsx", content: codeBlock[1] }
+    ];
+    ensureFullstackFiles(files, projectName);
+    return {
+      message: "Genererte kildekode for prosjektet.",
+      thought: "Ekstraherte fullstack-kode fra modellrespons.",
+      actions: [{
+        id: `act-${Date.now()}`,
+        type: "code",
+        fileName: "app/page.tsx",
+        title: "Genererte forside",
+        timestamp: new Date().toISOString()
+      }],
+      files,
+    };
+  }
+
+  return null;
+}
+
+// 1. Anthropic (Claude 3.5 Sonnet)
+async function callAnthropicApi(
   prompt: string,
   projectName: string,
   existingFiles: ProjectFile[],
-  apiKey: string
+  apiKey: string,
+  model = "claude-3-5-sonnet-20241022"
 ): Promise<GeminiGenerationResult | null> {
   try {
-    const url = "https://api.deepseek.com/chat/completions";
     const userMessage = buildPromptContext(prompt, projectName, existingFiles);
-
-    const res = await fetch(url, {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION },
-          { role: "user", content: userMessage },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3,
+        model,
         max_tokens: 8192,
+        system: SYSTEM_INSTRUCTION,
+        messages: [{ role: "user", content: userMessage }],
       }),
     });
 
     if (res.ok) {
       const data = await res.json();
-      const rawText = data.choices?.[0]?.message?.content;
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
-        if (parsed.message && Array.isArray(parsed.files)) {
-          ensureFullstackFiles(parsed.files, projectName);
-          return {
-            message: parsed.message,
-            thought: parsed.thought || "Konstruerte arkitektur og kildekode med AI Program Ultra.",
-            actions: Array.isArray(parsed.actions) ? parsed.actions : [],
-            files: parsed.files,
-          };
-        }
-      }
+      const rawText = data.content?.[0]?.text;
+      return parseAiResponseJson(rawText, projectName);
     } else {
-      const errText = await res.text();
-      console.warn("DeepSeek API error:", res.status, errText);
+      const err = await res.text();
+      console.warn("Anthropic API error:", res.status, err);
     }
   } catch (err) {
-    console.warn("DeepSeek API call failed:", err);
+    console.warn("Anthropic call failed:", err);
   }
   return null;
 }
 
+// 2. Google Gemini (Gemini 2.0 Flash)
 async function callGeminiApi(
   prompt: string,
   projectName: string,
   existingFiles: ProjectFile[],
-  apiKey: string
+  apiKey: string,
+  model = "gemini-2.0-flash"
 ): Promise<GeminiGenerationResult | null> {
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const userMessage = buildPromptContext(prompt, projectName, existingFiles);
-
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: `${SYSTEM_INSTRUCTION}\n\n${userMessage}` }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json",
-        },
+        contents: [{ parts: [{ text: `${SYSTEM_INSTRUCTION}\n\n${userMessage}` }] }],
+        generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
       }),
     });
 
     if (res.ok) {
       const data = await res.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
-        if (parsed.message && Array.isArray(parsed.files)) {
-          ensureFullstackFiles(parsed.files, projectName);
-          return {
-            message: parsed.message,
-            thought: parsed.thought || "Konstruerte arkitektur og kildekode.",
-            actions: Array.isArray(parsed.actions) ? parsed.actions : [],
-            files: parsed.files,
-          };
-        }
-      }
+      return parseAiResponseJson(rawText, projectName);
     }
   } catch (err) {
-    console.warn("Gemini API call failed:", err);
+    console.warn("Gemini call failed:", err);
   }
   return null;
 }
 
+// 3. OpenAI (GPT-4o)
 async function callOpenAiApi(
   prompt: string,
   projectName: string,
   existingFiles: ProjectFile[],
-  apiKey: string
+  apiKey: string,
+  model = "gpt-4o"
 ): Promise<GeminiGenerationResult | null> {
   try {
-    const url = "https://api.openai.com/v1/chat/completions";
     const userMessage = buildPromptContext(prompt, projectName, existingFiles);
-
-    const res = await fetch(url, {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         messages: [
           { role: "system", content: SYSTEM_INSTRUCTION },
           { role: "user", content: userMessage },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 8192,
       }),
     });
@@ -309,21 +349,126 @@ async function callOpenAiApi(
     if (res.ok) {
       const data = await res.json();
       const rawText = data.choices?.[0]?.message?.content;
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
-        if (parsed.message && Array.isArray(parsed.files)) {
-          ensureFullstackFiles(parsed.files, projectName);
-          return {
-            message: parsed.message,
-            thought: parsed.thought || "Konstruerte arkitektur og kildekode.",
-            actions: Array.isArray(parsed.actions) ? parsed.actions : [],
-            files: parsed.files,
-          };
-        }
-      }
+      return parseAiResponseJson(rawText, projectName);
     }
   } catch (err) {
-    console.warn("OpenAI API call failed:", err);
+    console.warn("OpenAI call failed:", err);
+  }
+  return null;
+}
+
+// 4. DeepSeek (DeepSeek V3 Chat)
+async function callDeepSeekApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string,
+  model = "deepseek-chat"
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userMessage },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        max_tokens: 8192,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      return parseAiResponseJson(rawText, projectName);
+    }
+  } catch (err) {
+    console.warn("DeepSeek call failed:", err);
+  }
+  return null;
+}
+
+// 5. xAI (Grok-2)
+async function callXaiApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string,
+  model = "grok-2-latest"
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
+    const res = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.2,
+        max_tokens: 8192,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      return parseAiResponseJson(rawText, projectName);
+    }
+  } catch (err) {
+    console.warn("xAI call failed:", err);
+  }
+  return null;
+}
+
+// 6. Mistral (Mistral Large)
+async function callMistralApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string,
+  model = "mistral-large-latest"
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
+    const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userMessage },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        max_tokens: 8192,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      return parseAiResponseJson(rawText, projectName);
+    }
+  } catch (err) {
+    console.warn("Mistral call failed:", err);
   }
   return null;
 }
@@ -332,41 +477,91 @@ export async function callAiModel(
   prompt: string,
   projectName: string,
   existingFiles: ProjectFile[],
-  clientApiKey?: string
+  clientApiKey?: string,
+  clientProvider?: string
 ): Promise<GeminiGenerationResult | null> {
-  const trimmedClient = clientApiKey?.trim();
+  const trimmedKey = clientApiKey?.trim();
+  const provider = (clientProvider || "").toLowerCase().trim();
 
-  // 1. PRIORITET 1: Hvis brukeren har med en egen API-nøkkel (BYOK - Bring Your Own Key)
-  if (trimmedClient && trimmedClient.length > 5) {
-    if (trimmedClient.startsWith("AIza")) {
-      // Google Gemini nøkkel
-      const res = await callGeminiApi(prompt, projectName, existingFiles, trimmedClient);
+  // 1. PRIORITET 1: Hvis brukeren har konfigurert en egen API-nøkkel (BYOK - Bring Your Own Key)
+  if (trimmedKey && trimmedKey.length > 5) {
+    if (provider === "anthropic" || trimmedKey.startsWith("sk-ant-")) {
+      const res = await callAnthropicApi(prompt, projectName, existingFiles, trimmedKey);
       if (res) return res;
-    } else if (trimmedClient.startsWith("sk-")) {
-      // DeepSeek eller OpenAI nøkkel
-      const resDs = await callDeepSeekApi(prompt, projectName, existingFiles, trimmedClient);
-      if (resDs) return resDs;
-      const resOai = await callOpenAiApi(prompt, projectName, existingFiles, trimmedClient);
-      if (resOai) return resOai;
     }
+    if (provider === "gemini" || trimmedKey.startsWith("AIza")) {
+      const res = await callGeminiApi(prompt, projectName, existingFiles, trimmedKey);
+      if (res) return res;
+    }
+    if (provider === "xai" || trimmedKey.startsWith("xai-")) {
+      const res = await callXaiApi(prompt, projectName, existingFiles, trimmedKey);
+      if (res) return res;
+    }
+    if (provider === "mistral") {
+      const res = await callMistralApi(prompt, projectName, existingFiles, trimmedKey);
+      if (res) return res;
+    }
+    if (provider === "deepseek") {
+      const res = await callDeepSeekApi(prompt, projectName, existingFiles, trimmedKey);
+      if (res) return res;
+    }
+    if (provider === "openai") {
+      const res = await callOpenAiApi(prompt, projectName, existingFiles, trimmedKey);
+      if (res) return res;
+    }
+
+    // Auto-detekter basert på prefiks hvis provider ikke var satt
+    if (trimmedKey.startsWith("AIza")) {
+      return callGeminiApi(prompt, projectName, existingFiles, trimmedKey);
+    }
+    if (trimmedKey.startsWith("sk-ant-")) {
+      return callAnthropicApi(prompt, projectName, existingFiles, trimmedKey);
+    }
+    if (trimmedKey.startsWith("xai-")) {
+      return callXaiApi(prompt, projectName, existingFiles, trimmedKey);
+    }
+
+    // Standard fallback for sk- (DeepSeek / OpenAI)
+    const resDs = await callDeepSeekApi(prompt, projectName, existingFiles, trimmedKey);
+    if (resDs) return resDs;
+    const resOai = await callOpenAiApi(prompt, projectName, existingFiles, trimmedKey);
+    if (resOai) return resOai;
   }
 
   // 2. PRIORITET 2: Standard innebygde server-miljøvariabler (AI Program Ultra produksjon)
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey && anthropicKey.trim()) {
+    const res = await callAnthropicApi(prompt, projectName, existingFiles, anthropicKey.trim());
+    if (res) return res;
+  }
+
   const deepseekKey = process.env.DEEPSEEK_API_KEY || process.env.AI_API_KEY;
-  if (deepseekKey && deepseekKey.trim() !== "") {
+  if (deepseekKey && deepseekKey.trim()) {
     const res = await callDeepSeekApi(prompt, projectName, existingFiles, deepseekKey.trim());
     if (res) return res;
   }
 
   const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey && geminiKey.trim() !== "") {
+  if (geminiKey && geminiKey.trim()) {
     const res = await callGeminiApi(prompt, projectName, existingFiles, geminiKey.trim());
     if (res) return res;
   }
 
   const openaiKey = process.env.OPENAI_API_KEY;
-  if (openaiKey && openaiKey.trim() !== "") {
+  if (openaiKey && openaiKey.trim()) {
     const res = await callOpenAiApi(prompt, projectName, existingFiles, openaiKey.trim());
+    if (res) return res;
+  }
+
+  const xaiKey = process.env.XAI_API_KEY;
+  if (xaiKey && xaiKey.trim()) {
+    const res = await callXaiApi(prompt, projectName, existingFiles, xaiKey.trim());
+    if (res) return res;
+  }
+
+  const mistralKey = process.env.MISTRAL_API_KEY;
+  if (mistralKey && mistralKey.trim()) {
+    const res = await callMistralApi(prompt, projectName, existingFiles, mistralKey.trim());
     if (res) return res;
   }
 
@@ -3593,6 +3788,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Sjekk om brukeren har med egen API-nøkkel (BYOK - Bring Your Own Key)
     const clientKey = geminiApiKey || (body as any).apiKey || (body as any).customApiKey;
+    const clientProvider = (body as any).provider || (body as any).aiProvider;
     const hasOwnApiKey = Boolean(clientKey && typeof clientKey === "string" && clientKey.trim().length > 5);
 
     // Modell 1: Egen API-nøkkel (BYOK) krever et aktivt betalt abonnement (Starter, Pro eller Mester)
@@ -3635,7 +3831,7 @@ export async function POST(req: NextRequest) {
     // 2. Generer kildekode via AI Program Ultra (DeepSeek / Gemini / OpenAI) eller autonom motor
     let result: GeminiGenerationResult | null = null;
 
-    result = await callAiModel(prompt, projectName, currentFiles, clientKey);
+    result = await callAiModel(prompt, projectName, currentFiles, clientKey, clientProvider);
 
     if (!result) {
       result = generateAutonomousCode(prompt, projectName, currentFiles);

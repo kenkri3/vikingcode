@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ProjectFile } from "@/lib/types";
 import { getProjectPageRoutes, generatePageTemplate } from "@/lib/page-routes";
+import { AgentWorkingHUD } from "./AgentWorkingHUD";
 
 interface LivePreviewProps {
   files: ProjectFile[];
@@ -187,240 +188,6 @@ const ICON_SVGS: Record<string, string> = {
   Truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18.5" r="2.5"/><circle cx="7" cy="18.5" r="2.5"/>',
 };
 
-function AgentWorkingHUD({
-  projectName,
-  onSwitchToCode,
-}: {
-  projectName: string;
-  onSwitchToCode?: () => void;
-}) {
-  const [seconds, setSeconds] = useState(0);
-  const [activeTab, setActiveTab] = useState<"flow" | "terminal">("flow");
-
-  useEffect(() => {
-    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const steps = [
-    {
-      id: 1,
-      title: "Tolker arkitektur & krav",
-      status: seconds >= 2 ? ("done" as const) : ("active" as const),
-      detail: "Next.js 15 App Router struktur og datamodell definert",
-    },
-    {
-      id: 2,
-      title: "Responsivt UI & Tailwind-design",
-      status: seconds >= 5 ? ("done" as const) : seconds >= 2 ? ("active" as const) : ("pending" as const),
-      detail: "Mørkt tema, mobilvennlig navigasjon og kontrast-aksenter",
-    },
-    {
-      id: 3,
-      title: "React-komponenter & forretningslogikk",
-      status: seconds >= 9 ? ("done" as const) : seconds >= 5 ? ("active" as const) : ("pending" as const),
-      detail: "Tidsvelger, modal-dialoger og interaktive handlinger",
-    },
-    {
-      id: 4,
-      title: "Syntakskontroll & sanntids-sandkasse",
-      status: seconds >= 9 ? ("active" as const) : ("pending" as const),
-      detail: "Klargjør for umiddelbar interaktiv testing",
-    },
-  ];
-
-  const terminalLogs = [
-    `> Initialiserer AI Program Ultra autonom kodebygger...`,
-    `> Målprosjekt: "${projectName || "Web-applikasjon"}"`,
-    `> Analyserer krav og konstruerer komponenttre...`,
-    `> Genererer Tailwind CSS styling og design tokens...`,
-    `> Bygger Next.js ruter med fullstack state og Lucide-ikoner...`,
-    `> Klargjør API-ruter og database-skjemaer...`,
-    `> Utfører automatisk AST syntakskontroll...`,
-    `> Klargjør sanntids React-sandkasse for interaktiv flersidig visning...`,
-  ].slice(0, Math.max(2, Math.min(8, 2 + Math.floor(seconds / 1.5))));
-
-  return (
-    <div className="h-full w-full bg-[#0d0d12] flex flex-col justify-between p-6 sm:p-10 select-none overflow-y-auto">
-      {/* Top Header Card */}
-      <div className="space-y-6 max-w-2xl mx-auto w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#22222e]">
-          <div className="flex items-center gap-3.5">
-            <div className="relative flex items-center justify-center">
-              <span className="animate-ping absolute inline-flex h-12 w-12 rounded-full bg-purple-500/25"></span>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-950/60 z-10">
-                <Sparkles className="w-6 h-6 animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono uppercase tracking-wider text-purple-400 font-bold">
-                  AI Program Ultra
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-800/40 text-[10px] text-emerald-400 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Bygger løsning
-                </span>
-              </div>
-              <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">
-                {projectName || "Ny Applikasjon"}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <div className="px-3 py-1.5 rounded-xl bg-[#171720] border border-[#2a2a38] text-xs font-mono text-slate-300 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-purple-400" />
-              <span>
-                {String(Math.floor(seconds / 60)).padStart(2, "0")}:
-                {String(seconds % 60).padStart(2, "0")}
-              </span>
-            </div>
-            {onSwitchToCode && (
-              <button
-                type="button"
-                onClick={onSwitchToCode}
-                className="px-3 py-1.5 rounded-xl bg-[#22222e] hover:bg-[#2c2c3c] border border-[#353548] text-xs font-medium text-slate-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                title="Se koden som genereres"
-              >
-                <Code className="w-3.5 h-3.5 text-slate-400" />
-                <span>Kildekode</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Tab switcher */}
-        <div className="flex items-center gap-2 bg-[#14141c] p-1 rounded-xl border border-[#22222e]">
-          <button
-            type="button"
-            onClick={() => setActiveTab("flow")}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === "flow"
-                ? "bg-[#22222e] text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5 text-purple-400" />
-            <span>Fremdriftsplan</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("terminal")}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === "terminal"
-                ? "bg-[#22222e] text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Sanntids Terminal</span>
-          </button>
-        </div>
-
-        {/* Tab 1: Stegvis prosess */}
-        {activeTab === "flow" && (
-          <div className="grid grid-cols-1 gap-2.5 pt-1">
-            {steps.map((st) => (
-              <div
-                key={st.id}
-                className={`p-3.5 rounded-xl border transition flex items-start gap-3.5 ${
-                  st.status === "done"
-                    ? "bg-[#14141c]/90 border-emerald-900/40 text-slate-200"
-                    : st.status === "active"
-                    ? "bg-[#1a1728] border-purple-600/50 text-white ring-1 ring-purple-500/30 shadow-lg shadow-purple-950/30"
-                    : "bg-[#111116] border-[#1e1e28] text-slate-500 opacity-60"
-                }`}
-              >
-                <div className="mt-0.5">
-                  {st.status === "done" ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  ) : st.status === "active" ? (
-                    <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-                  ) : (
-                    <Clock className="w-4 h-4 text-slate-600" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3
-                      className={`text-xs font-bold ${
-                        st.status === "active"
-                          ? "text-white"
-                          : st.status === "done"
-                          ? "text-slate-200"
-                          : "text-slate-500"
-                      }`}
-                    >
-                      {st.title}
-                    </h3>
-                    <span
-                      className={`text-[10px] font-mono ${
-                        st.status === "done"
-                          ? "text-emerald-400"
-                          : st.status === "active"
-                          ? "text-purple-300 font-bold"
-                          : "text-slate-600"
-                      }`}
-                    >
-                      {st.status === "done"
-                        ? "Fullført ✓"
-                        : st.status === "active"
-                        ? "Arbeider..."
-                        : "Venter"}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                    {st.detail}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Tab 2: Sanntids Terminal Logg */}
-        {activeTab === "terminal" && (
-          <div className="bg-[#08080c] border border-[#22222e] rounded-xl p-4 font-mono text-xs shadow-2xl space-y-2">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1c1c28]">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
-                <span className="ml-2 text-[10px] text-slate-400">
-                  aiprogram-kernel --build --live
-                </span>
-              </div>
-              <span className="text-[10px] text-emerald-400 animate-pulse font-mono">
-                ● ACTIVE
-              </span>
-            </div>
-            <div className="space-y-1.5 py-1 text-slate-300">
-              {terminalLogs.map((log, idx) => (
-                <div key={idx} className="flex items-start gap-2">
-                  <span className="text-purple-400 select-none">&gt;</span>
-                  <span className="text-slate-300">{log.replace(/^>\s*/, "")}</span>
-                </div>
-              ))}
-              <div className="flex items-center gap-1 text-purple-400 font-bold">
-                <span>&gt;</span>
-                <span className="w-2 h-4 bg-purple-400 animate-pulse inline-block"></span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer Info */}
-      <div className="max-w-2xl mx-auto w-full pt-6 border-t border-[#1c1c26] text-center">
-        <p className="text-[11px] text-slate-500">
-          Forhåndsvisningen starter automatisk så snart koden er ferdig kompilert.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function LivePreview({
   files,
   projectName,
@@ -430,6 +197,11 @@ export function LivePreview({
   onSelectFile,
 }: LivePreviewProps) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
+  const [isHudActive, setIsHudActive] = useState(isGenerating);
+
+  useEffect(() => {
+    if (isGenerating) setIsHudActive(true);
+  }, [isGenerating]);
   const [reloadKey, setReloadKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -958,9 +730,12 @@ export function LivePreview({
           className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#16161c] flex flex-col"
           style={{ width: isGenerating ? "100%" : deviceWidths[device], maxWidth: "100%" }}
         >
-          {isGenerating ? (
+          {isHudActive ? (
             <AgentWorkingHUD
               projectName={projectName}
+              files={files}
+              isGenerating={isGenerating}
+              onComplete={() => setIsHudActive(false)}
               onSwitchToCode={onSwitchToCode}
             />
           ) : (

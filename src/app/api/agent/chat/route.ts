@@ -65,7 +65,8 @@ export async function POST(req: NextRequest) {
             message,
             projectName || "Mitt Prosjekt",
             Array.isArray(currentFiles) ? currentFiles : [],
-            userCustomKey
+            userCustomKey,
+            body.provider || body.aiProvider
           );
 
         if (aiResult) {

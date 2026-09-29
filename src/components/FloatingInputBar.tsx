@@ -1,7 +1,20 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Plus, Mic, ArrowUp, Square, ChevronDown, Code2, X } from "lucide-react";
+import {
+  Plus,
+  Mic,
+  ArrowUp,
+  Square,
+  ChevronDown,
+  Code2,
+  X,
+  Sparkles,
+  Image as ImageIcon,
+  Globe,
+  Loader2,
+  Link as LinkIcon,
+} from "lucide-react";
 
 interface FloatingInputBarProps {
   onSendMessage: (text: string, model: string) => void;
@@ -23,20 +36,36 @@ export function FloatingInputBar({
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [hasContextPill, setHasContextPill] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const models = [
-    {
-      name: "AI Program Ultra",
-      desc: "Autonom kodebygger og avansert resonnering",
-      badge: "Standard",
-    },
-  ];
+  // URL Scraping state
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
+  const [inputUrl, setInputUrl] = useState("");
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+  const [urlError, setUrlError] = useState("");
+  const [attachedUrl, setAttachedUrl] = useState<string | null>(null);
+
+  // Image attachment state
+  const [attachedImage, setAttachedImage] = useState<{ name: string; dataUrl: string } | null>(null);
 
   const handleSend = () => {
-    if (!text.trim() || isLoading || disabled) return;
+    if (!text.trim() && !attachedUrl && !attachedImage) return;
+    if (isLoading || disabled) return;
+
+    let messageToSend = text.trim();
+    if (attachedUrl && !messageToSend.includes(attachedUrl)) {
+      messageToSend += `\n[Gjenskap fra URL: ${attachedUrl}]`;
+    }
+    if (attachedImage) {
+      messageToSend += `\n[Vedlagt designskjermbilde: ${attachedImage.name}]`;
+    }
+
     const effectiveModel = selectedModel || "AI Program Ultra";
-    onSendMessage(text, effectiveModel);
+    onSendMessage(messageToSend, effectiveModel);
+
     setText("");
+    setAttachedUrl(null);
+    setAttachedImage(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -55,8 +84,69 @@ export function FloatingInputBar({
     e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
   };
 
+  const handleScrapeUrlSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputUrl.trim() || isScrapingUrl) return;
+
+    setIsScrapingUrl(true);
+    setUrlError("");
+
+    try {
+      const res = await fetch("/api/scrape-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: inputUrl.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Kunne ikke hente nettsiden");
+      }
+
+      setAttachedUrl(data.url);
+      setText((prev) =>
+        prev.trim()
+          ? `${prev}\n\n${data.suggestedPrompt}`
+          : data.suggestedPrompt || `Gjenskap og moderniser nettsiden for ${data.brandName || data.title} (${data.url}).`
+      );
+      setIsUrlModalOpen(false);
+      setInputUrl("");
+    } catch (err: any) {
+      setUrlError(err.message || "Kunne ikke analysere URL-en. Vennligst sjekk adressen.");
+    } finally {
+      setIsScrapingUrl(false);
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachedImage({
+        name: file.name,
+        dataUrl: reader.result as string,
+      });
+      if (!text.trim()) {
+        setText("Gjenskap designet og oppsettet fra det vedlagte skjermbildet.");
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   return (
     <div className="p-3 sm:p-4 bg-[#18181c]/95 border-t border-[#26262e] backdrop-blur-md">
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageFileChange}
+        className="hidden"
+      />
+
       <div className="relative max-w-3xl mx-auto bg-[#212128] border border-[#2e2e38] focus-within:border-[#424250] rounded-2xl p-2.5 sm:p-3 transition-all shadow-xl">
         {/* Model dropdown overlay */}
         {modelDropdownOpen && (
@@ -84,6 +174,40 @@ export function FloatingInputBar({
           </>
         )}
 
+        {/* Attached Badges (URL or Image) */}
+        {(attachedUrl || attachedImage) && (
+          <div className="flex flex-wrap items-center gap-1.5 pb-2 px-1">
+            {attachedUrl && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-800/50 text-purple-300 text-[11px] font-mono">
+                <Globe className="w-3 h-3 text-purple-400 shrink-0" />
+                <span className="truncate max-w-[180px]">{attachedUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachedUrl(null)}
+                  className="p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
+                  title="Fjern URL"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            {attachedImage && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-800/50 text-emerald-300 text-[11px] font-medium">
+                <ImageIcon className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="truncate max-w-[140px]">{attachedImage.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachedImage(null)}
+                  className="p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
+                  title="Fjern bilde"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Text input area */}
         <textarea
           ref={textareaRef}
@@ -92,27 +216,40 @@ export function FloatingInputBar({
           onChange={adjustHeight}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder="Beskriv hva du vil endre, legge til eller bygge..."
+          placeholder="Describe the page you want to build... / Beskriv hva du vil bygge eller endre..."
           className="w-full bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-400 outline-none resize-none px-2 py-1 max-h-36 font-sans leading-relaxed"
         />
 
-        {/* Action bar inside input box (Exact Image 1 & 2) */}
+        {/* Action bar inside input box */}
         <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-[#2a2a34] text-xs">
-          <div className="flex items-center gap-1.5">
-            {/* Attachment Button */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Pill 1: Re-imagine from URL (Exact Image 1) */}
             <button
               type="button"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#2a2a34] transition cursor-pointer"
-              title="Legg til kontekst"
+              onClick={() => setIsUrlModalOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              title="Gjenskap nettside fra URL"
             >
-              <Plus className="w-4 h-4" />
+              <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+              <span>Re-imagine from URL</span>
             </button>
 
-            {/* Context Tag Pill: [ </> Web Dev  ✕ ] (Image 1 & 2) */}
+            {/* Pill 2: Add Image (Exact Image 1) */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              title="Legg til skjermbilde / bilde"
+            >
+              <ImageIcon className="w-3 h-3 text-sky-400 shrink-0" />
+              <span>Add Image</span>
+            </button>
+
+            {/* Context Tag Pill: [ </> Web Dev  ✕ ] */}
             {hasContextPill && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1b2536] border border-[#2b3a54] text-purple-300 text-[11px] font-medium transition select-none">
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1b2536] border border-[#2b3a54] text-purple-300 text-[11px] font-medium transition select-none">
                 <Code2 className="w-3 h-3 text-[#A78BFA]" />
-                <span className="max-w-[120px] truncate">{projectName || "Web Dev"}</span>
+                <span className="max-w-[100px] truncate">{projectName || "Web Dev"}</span>
                 <button
                   type="button"
                   onClick={() => setHasContextPill(false)}
@@ -123,19 +260,10 @@ export function FloatingInputBar({
                 </button>
               </div>
             )}
-            {!hasContextPill && (
-              <button
-                type="button"
-                onClick={() => setHasContextPill(true)}
-                className="text-[11px] text-slate-500 hover:text-slate-300 font-medium px-1.5 py-0.5"
-              >
-                + Legg til {projectName || "Web Dev"}
-              </button>
-            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Model Mode Pill: AI Program Ultra (Sleek single-line badge) */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Model Mode Pill: AI Program Ultra */}
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
@@ -145,16 +273,7 @@ export function FloatingInputBar({
               <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
 
-            {/* Voice microphone */}
-            <button
-              type="button"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#2a2a34] transition cursor-pointer"
-              title="Taleopptak"
-            >
-              <Mic className="w-4 h-4" />
-            </button>
-
-            {/* Send or Stop Button (Arrow in rounded circle) */}
+            {/* Send or Stop Button */}
             {isLoading ? (
               <button
                 type="button"
@@ -168,25 +287,95 @@ export function FloatingInputBar({
               <button
                 type="button"
                 onClick={handleSend}
-                disabled={!text.trim() || disabled}
-                className={`w-7 h-7 rounded-full transition flex items-center justify-center ${
-                  text.trim() && !disabled
-                    ? "bg-white hover:bg-slate-200 text-slate-950 shadow-md cursor-pointer"
-                    : "bg-[#2d2d38] text-slate-500 cursor-not-allowed"
+                disabled={!text.trim() && !attachedUrl && !attachedImage}
+                className={`w-7 h-7 rounded-full transition flex items-center justify-center shadow-md ${
+                  text.trim() || attachedUrl || attachedImage
+                    ? "bg-[#7C3AED] hover:bg-[#6D28D9] text-white cursor-pointer"
+                    : "bg-[#2a2a34] text-slate-500 cursor-not-allowed"
                 }`}
-                title="Send melding"
+                title="Send instruks"
               >
-                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Subtle Centered Disclaimer (Exact Qwen layout) */}
-      <p className="text-center text-[10px] text-slate-500 mt-2 select-none">
-        AI-generated content may not be accurate.
-      </p>
+      {/* Modal: Re-imagine from URL */}
+      {isUrlModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#161822] border border-[#2b3348] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#242b3d]">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-purple-400" />
+                <h3 className="text-sm font-bold text-white">Re-imagine from URL</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUrlModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#242b3d] transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Lim inn URL-en til en nettside. AI-agenten henter merkevaren, tjenestene og strukturen automatisk, og gjenskaper en moderne, luksuriøs versjon.
+            </p>
+
+            <form onSubmit={handleScrapeUrlSubmit} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Nettadresse (URL):
+                </label>
+                <div className="flex items-center gap-2 bg-[#0e1017] border border-[#2d3748] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
+                  <LinkIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    type="text"
+                    required
+                    value={inputUrl}
+                    onChange={(e) => setInputUrl(e.target.value)}
+                    placeholder="https://bedrift.no eller blomsterbutikk.no"
+                    className="bg-transparent text-white outline-none w-full font-sans"
+                    autoFocus
+                  />
+                </div>
+                {urlError && (
+                  <p className="text-[11px] text-rose-400 mt-1">{urlError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsUrlModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-[#202534] hover:bg-[#283042] text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="submit"
+                  disabled={!inputUrl.trim() || isScrapingUrl}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-lg shadow-purple-950/50 cursor-pointer"
+                >
+                  {isScrapingUrl ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Analyserer nettside...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Hent og Gjenskap</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
