@@ -266,7 +266,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded bg-purple-950/80 text-[#C4B5FD] text-[10px] font-semibold border border-purple-800/40">
-                Gemini 3.8 Flash High
+                AI Program Ultra
               </span>
               <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -424,7 +424,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-[#1F2937] text-[11px] text-purple-300 font-mono">
-              → Gemini 3.8 Flash High & Autonom AI
+              → AI Program Ultra & Autonom AI
             </div>
           </div>
 
@@ -480,7 +480,7 @@ export default function LandingPage() {
             <Cpu className="w-6 h-6 text-[#A78BFA] mb-3" />
             <h3 className="text-base font-bold text-white mb-1.5">Autonom AI-Agent</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Drevet av Gemini 3.8 Flash High med dyp forståelse for moderne TypeScript, Next.js App Router, Tailwind CSS og
+              Drevet av AI Program Ultra med dyp forståelse for moderne TypeScript, Next.js App Router, Tailwind CSS og
               Prisma ORM.
             </p>
           </div>

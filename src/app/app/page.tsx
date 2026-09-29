@@ -477,7 +477,7 @@ function BuilderContent() {
   // Hvis prompt sendes fra landingssiden via query param
   useEffect(() => {
     if (initialPromptFromUrl && initialPromptFromUrl.trim().length > 0) {
-      handleSendMessage(initialPromptFromUrl, "Gemini 3.8 Flash High");
+      handleSendMessage(initialPromptFromUrl, "AI Program Ultra");
     }
   }, [initialPromptFromUrl]);
 
@@ -691,7 +691,7 @@ function BuilderContent() {
         }
       );
       if (testRes.ok) {
-        setTestKeyStatus("✓ Tilkobling vellykket! Google Gemini 2.0 Flash svarer i sanntid.");
+        setTestKeyStatus("✓ Tilkobling vellykket! API svarer i sanntid.");
         localStorage.setItem("aiprogram_gemini_key", geminiApiKeyInput.trim());
       } else {
         const errData = await testRes.json();
@@ -772,7 +772,7 @@ function BuilderContent() {
         {/* Dynamic Center: Start Screen OR Split-View Workspace */}
         {viewMode === "start" ? (
           <StartScreen
-            onStartBuilding={(prompt) => handleSendMessage(prompt, "Gemini 3.8 Flash High")}
+            onStartBuilding={(prompt) => handleSendMessage(prompt, "AI Program Ultra")}
             isLoading={isLoading}
           />
         ) : (
@@ -1097,7 +1097,7 @@ function BuilderContent() {
                 <label className="text-slate-300 font-medium block mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Key className="w-3.5 h-3.5 text-[#A78BFA]" />
-                    Google Gemini API-nøkkel
+                    Valgfri API-nøkkel
                   </span>
                   <a
                     href="https://aistudio.google.com/app/apikey"
@@ -1105,7 +1105,7 @@ function BuilderContent() {
                     rel="noreferrer"
                     className="text-[10px] text-[#A78BFA] hover:underline flex items-center gap-1"
                   >
-                    Hent gratis nøkkel <ExternalLink className="w-2.5 h-2.5" />
+                    Hent nøkkel <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 </label>
                 <input
@@ -1116,7 +1116,7 @@ function BuilderContent() {
                   className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3 py-2 text-white text-xs outline-none transition"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Agenten kobler seg direkte til Google Gemini 2.0 Flash. Hvis nøkkel ikke er oppgitt, benyttes den innebygde autonome motoren.
+                  Som standard benyttes den innebygde AI Program Ultra-motoren. Hvis du har en egen API-nøkkel, kan den benyttes her for direkte kvote.
                 </p>
 
                 {testKeyStatus && (

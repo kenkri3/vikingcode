@@ -2605,7 +2605,7 @@ export async function POST(req: NextRequest) {
       currentPlan = "TRIAL",
       tokensRemaining = 50000,
       trialPromptsUsed = 0,
-      model = "Gemini 3.8 Flash High",
+      model = "AI Program Ultra",
       projectName = "AI Program Prosjekt",
       currentFiles = [],
       geminiApiKey,

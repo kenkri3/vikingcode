@@ -11,7 +11,7 @@ interface StartScreenProps {
 
 export function StartScreen({ onStartBuilding, isLoading }: StartScreenProps) {
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState("Gemini 3.8 Flash High");
+  const [selectedModel, setSelectedModel] = useState("AI Program Ultra");
 
   const starterTemplates = [
     {

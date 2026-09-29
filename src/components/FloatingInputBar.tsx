@@ -19,21 +19,22 @@ export function FloatingInputBar({
   projectName = "Web Dev",
 }: FloatingInputBarProps) {
   const [text, setText] = useState("");
-  const [selectedModel, setSelectedModel] = useState("Auto");
+  const [selectedModel, setSelectedModel] = useState("AI Program Ultra");
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [hasContextPill, setHasContextPill] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const models = [
-    { name: "Auto", desc: "Velger automatisk raskeste modell" },
-    { name: "Gemini 3.8 Flash High", desc: "Superrask kodebygger" },
-    { name: "Claude 3.7 Sonnet", desc: "Dyp arkitektur og feilsøking" },
-    { name: "AI Program Ultra", desc: "Spesialisert for norske bedrifter" },
+    {
+      name: "AI Program Ultra",
+      desc: "Autonom kodebygger og avansert resonnering",
+      badge: "Standard",
+    },
   ];
 
   const handleSend = () => {
     if (!text.trim() || isLoading || disabled) return;
-    const effectiveModel = selectedModel === "Auto" ? "Gemini 3.8 Flash High" : selectedModel;
+    const effectiveModel = selectedModel || "AI Program Ultra";
     onSendMessage(text, effectiveModel);
     setText("");
     if (textareaRef.current) {
@@ -64,28 +65,21 @@ export function FloatingInputBar({
               className="fixed inset-0 z-40"
               onClick={() => setModelDropdownOpen(false)}
             />
-            <div className="absolute bottom-full right-3 mb-2 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
-              <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
-                Velg Kjøremodus
+            <div className="absolute bottom-full right-3 mb-2 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-2 z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
+              <p className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400">
+                Aktiv AI Modell
               </p>
-              {models.map((m) => (
-                <button
-                  key={m.name}
-                  type="button"
-                  onClick={() => {
-                    setSelectedModel(m.name);
-                    setModelDropdownOpen(false);
-                  }}
-                  className={`w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
-                    selectedModel === m.name
-                      ? "bg-[#2c2c36] text-white font-medium"
-                      : "text-slate-300 hover:bg-[#25252e] hover:text-white"
-                  }`}
-                >
-                  <span className="font-semibold">{m.name}</span>
-                  <span className="text-[10px] text-slate-400">{m.desc}</span>
-                </button>
-              ))}
+              <div className="w-full flex flex-col items-start px-2.5 py-2 rounded-lg bg-[#2c2c36] text-white">
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-semibold text-xs text-white">AI Program Ultra</span>
+                  <span className="text-[10px] font-medium text-emerald-400 bg-emerald-950/80 border border-emerald-800/40 px-1.5 py-0.5 rounded-full">
+                    Aktiv
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1">
+                  Autonom kodebygger og avansert resonnering
+                </span>
+              </div>
             </div>
           </>
         )}
@@ -141,11 +135,11 @@ export function FloatingInputBar({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Model Mode Pill: Auto v */}
+            {/* Model Mode Pill: AI Program Ultra */}
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#2a2a34] hover:bg-[#343442] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#2a2a34] hover:bg-[#343442] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
             >
               <span>{selectedModel}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />

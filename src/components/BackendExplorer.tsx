@@ -296,7 +296,7 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
           {
             prompt: "Legg til en ny kalkulator med Vipps-betaling",
             projectName: projectName,
-            model: "Gemini 3.8 Flash High",
+            model: "AI Program Ultra",
           },
           null,
           2

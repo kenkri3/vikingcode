@@ -119,7 +119,7 @@ export default function PersonvernPage() {
               <li><strong>Stripe Payments Europe, Ltd:</strong> Betalingsformidling, abonnementshåndtering og MVA-kvitteringer.</li>
               <li><strong>Railway Corp:</strong> Skylagring, databasehosting (PostgreSQL) og container-infrastruktur.</li>
               <li><strong>GitHub Inc:</strong> Distribusjon og kildekode-versjonering ved direkte eksport fra brukeren.</li>
-              <li><strong>Google Gemini / OpenAI / AI Cloud:</strong> Ledende språkmodeller for autonom kodesyntese og feilsøking.</li>
+              <li><strong>Sikker AI Skyinfrastruktur:</strong> Ledende skymodeller og inferensinfrastruktur for autonom kodesyntese og feilsøking.</li>
             </ul>
           </section>
 

@@ -103,12 +103,14 @@ export function WorkspaceLayout({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Model Selection
-  const [selectedModel, setSelectedModel] = useState("Gemini 3.8 Flash High");
+  const [selectedModel, setSelectedModel] = useState("AI Program Ultra");
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const models = [
-    { name: "Gemini 3.8 Flash High", desc: "Superrask resonnering og live koding" },
-    { name: "Claude 3.7 Sonnet", desc: "Avansert logikk og arkitektur" },
-    { name: "AI Program Ultra", desc: "Optimalisert norsk forretningsmodell" },
+    {
+      name: "AI Program Ultra",
+      desc: "Autonom kodebygger og avansert resonnering",
+      badge: "Standard",
+    },
   ];
 
   // Corner Three-Dots Menu state
@@ -209,28 +211,21 @@ export function WorkspaceLayout({
                     className="fixed inset-0 z-30"
                     onClick={() => setIsModelDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1.5 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
-                    <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
-                      Velg AI Modell
+                  <div className="absolute top-full left-0 mt-1.5 w-64 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-2 z-40 text-xs animate-in fade-in duration-100">
+                    <p className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400">
+                      Aktiv AI Modell
                     </p>
-                    {models.map((m) => (
-                      <button
-                        key={m.name}
-                        type="button"
-                        onClick={() => {
-                          setSelectedModel(m.name);
-                          setIsModelDropdownOpen(false);
-                        }}
-                        className={`w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
-                          selectedModel === m.name
-                            ? "bg-[#2c2c36] text-white font-medium"
-                            : "text-slate-300 hover:bg-[#25252e] hover:text-white"
-                        }`}
-                      >
-                        <span className="font-semibold">{m.name}</span>
-                        <span className="text-[10px] text-slate-400">{m.desc}</span>
-                      </button>
-                    ))}
+                    <div className="w-full flex flex-col items-start px-2.5 py-2 rounded-lg bg-[#2c2c36] text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-semibold text-xs text-white">AI Program Ultra</span>
+                        <span className="text-[10px] font-medium text-emerald-400 bg-emerald-950/80 border border-emerald-800/40 px-1.5 py-0.5 rounded-full">
+                          Aktiv
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1">
+                        Autonom kodebygger og avansert resonnering
+                      </span>
+                    </div>
                   </div>
                 </>
               )}
@@ -338,7 +333,7 @@ export function WorkspaceLayout({
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-200 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
                   >
                     <Settings className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Innstillinger & Gemini-nøkkel</span>
+                    <span>Innstillinger & API-nøkkel</span>
                   </button>
 
                   <button
