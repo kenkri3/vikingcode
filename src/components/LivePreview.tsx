@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Monitor,
   Tablet,
@@ -14,14 +14,25 @@ import {
   Terminal,
   Zap,
   Clock,
+  ArrowLeft,
+  ArrowRight,
+  Lock,
+  ChevronDown,
+  Check,
+  Plus,
+  X,
+  FilePlus,
 } from "lucide-react";
 import { ProjectFile } from "@/lib/types";
+import { getProjectPageRoutes, generatePageTemplate } from "@/lib/page-routes";
 
 interface LivePreviewProps {
   files: ProjectFile[];
   projectName: string;
   isGenerating?: boolean;
   onSwitchToCode?: () => void;
+  onCreateNewPage?: (path: string, content: string) => void;
+  onSelectFile?: (path: string) => void;
 }
 
 type DeviceMode = "desktop" | "tablet" | "mobile";
@@ -47,8 +58,8 @@ function prepareComponentCode(rawCode: string) {
   let code = rawCode.replace(/\r\n/g, "\n");
 
   // 1.4 Strip stray markdown fences
-  code = code.replace(/^```[a-zA-Z0-9_-]*\s*$/gm, '');
-  code = code.replace(/```\s*$/g, '');
+  code = code.replace(/^```[a-zA-Z0-9_-]*\s*$/gm, "");
+  code = code.replace(/```\s*$/g, "");
 
   // 2. Strip "use client"
   code = code.replace(/['"]use client['"];?/g, "");
@@ -59,7 +70,7 @@ function prepareComponentCode(rawCode: string) {
   // 4. Strip lucide-react imports
   code = code.replace(/import[\s\S]*?from\s*['"]lucide-react['"];?/g, "");
 
-  // 5. Strip next/link, next/image, and other next imports
+  // 5. Strip next/link, next/image, next/navigation and other next imports
   code = code.replace(/import[\s\S]*?from\s*['"]next\/[^'"]+['"];?/g, "");
 
   // 6. Strip any other external imports
@@ -138,15 +149,8 @@ const ICON_SVGS: Record<string, string> = {
   ArrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
   ExternalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
   Copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
-  Layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
-  Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>',
-  Server: '<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>',
-  Play: '<polygon points="6 3 20 12 6 21 6 3"/>',
-  RotateCw: '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
-  CheckCheck: '<path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>',
-  X: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-  Menu: '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>',
-  Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  Send: '<line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  Mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
 };
 
 function AgentWorkingHUD({
@@ -163,8 +167,6 @@ function AgentWorkingHUD({
     const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const progressPercent = Math.min(12 + seconds * 8, 95);
 
   const steps = [
     {
@@ -198,10 +200,10 @@ function AgentWorkingHUD({
     `> Målprosjekt: "${projectName || "Web-applikasjon"}"`,
     `> Analyserer krav og konstruerer komponenttre...`,
     `> Genererer Tailwind CSS styling og design tokens...`,
-    `> Bygger app/page.tsx med fullstack state og Lucide-ikoner...`,
+    `> Bygger Next.js ruter med fullstack state og Lucide-ikoner...`,
     `> Klargjør API-ruter og database-skjemaer...`,
     `> Utfører automatisk AST syntakskontroll...`,
-    `> Klargjør sanntids React-sandkasse for interaktiv visning...`,
+    `> Klargjør sanntids React-sandkasse for interaktiv flersidig visning...`,
   ].slice(0, Math.max(2, Math.min(8, 2 + Math.floor(seconds / 1.5))));
 
   return (
@@ -248,51 +250,32 @@ function AgentWorkingHUD({
                 title="Se koden som genereres"
               >
                 <Code className="w-3.5 h-3.5 text-slate-400" />
-                <span>Se kode</span>
+                <span>Kildekode</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Progress Bar with dynamic percentage */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-medium flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-              <span>Autonom kodebygging pågår</span>
-            </span>
-            <span className="font-mono font-bold text-purple-300">
-              {progressPercent}%
-            </span>
-          </div>
-          <div className="w-full h-2.5 rounded-full bg-[#181822] overflow-hidden border border-[#282836] p-0.5">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] via-pink-500 to-emerald-400 transition-all duration-700 ease-out shadow-sm"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* View Switcher: Steg vs Terminal */}
-        <div className="flex items-center gap-2 bg-[#14141c] p-1 rounded-xl border border-[#232330] w-fit">
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2 bg-[#14141c] p-1 rounded-xl border border-[#22222e]">
           <button
             type="button"
             onClick={() => setActiveTab("flow")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "flow"
-                ? "bg-[#252534] text-white shadow-sm font-semibold"
+                ? "bg-[#22222e] text-white shadow-sm"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
-            <span>Arbeidsflyt</span>
+            <Zap className="w-3.5 h-3.5 text-purple-400" />
+            <span>Fremdriftsplan</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("terminal")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "terminal"
-                ? "bg-[#252534] text-white shadow-sm font-semibold"
+                ? "bg-[#22222e] text-white shadow-sm"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -409,31 +392,122 @@ export function LivePreview({
   projectName,
   isGenerating = false,
   onSwitchToCode,
+  onCreateNewPage,
+  onSelectFile,
 }: LivePreviewProps) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Finn kildekoden for app/page.tsx eller første fil
-  const pageFile = files.find((f) => f.path.includes("page.tsx")) || files[0];
-  const rawCode = pageFile ? pageFile.content : "";
+  // 1. Kartlegg alle sider og ruter i prosjektet
+  const pageRoutes = useMemo(() => getProjectPageRoutes(files), [files]);
 
-  // Pre-process code safely
-  const { code: cleanedCode, compName } = useMemo(
-    () => prepareComponentCode(rawCode),
-    [rawCode]
-  );
+  // 2. Rutehistorikk og navigasjonstilstand
+  const [currentRoute, setCurrentRoute] = useState<string>("/");
+  const [routeHistory, setRouteHistory] = useState<string[]>(["/"]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const [isRouteDropdownOpen, setIsRouteDropdownOpen] = useState(false);
+  const [isNewPageModalOpen, setIsNewPageModalOpen] = useState(false);
+  const [newPageInput, setNewPageInput] = useState("");
 
-  // Beregn hash for kildekoden for å garantere fresh remount av sandkassen ved enhver kodeendring
+  // Klargjør kode for ALLE sider i prosjektet
+  const preparedPages = useMemo(() => {
+    return pageRoutes.map((p) => {
+      const { code, compName } = prepareComponentCode(p.rawCode);
+      return {
+        route: p.route,
+        title: p.title,
+        path: p.path,
+        code,
+        compName,
+      };
+    });
+  }, [pageRoutes]);
+
+  // Beregn hash for kildekoden for å garantere fresh remount av sandkassen ved kodeendring
   const contentHash = useMemo(() => {
     let hash = 0;
-    for (let i = 0; i < rawCode.length; i++) {
-      hash = (hash << 5) - hash + rawCode.charCodeAt(i);
+    const combined = preparedPages.map((p) => p.route + p.code).join("::");
+    for (let i = 0; i < combined.length; i++) {
+      hash = (hash << 5) - hash + combined.charCodeAt(i);
       hash |= 0;
     }
     return Math.abs(hash).toString(36);
-  }, [rawCode]);
+  }, [preparedPages]);
 
-  // Bygg 100% dynamisk, interaktiv sandkasse-HTML basert på faktisk kildekode (Bolt.new style)
+  // Lytt etter navigasjonsmeldinger fra sandkasse-iframen (f.eks. ved klikk på <Link href="/booking">)
+  useEffect(() => {
+    const handleWindowMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === "PREVIEW_ROUTE_CHANGED" && typeof event.data.route === "string") {
+        const newRoute = event.data.route;
+        setCurrentRoute(newRoute);
+        setRouteHistory((prev) => {
+          if (prev[prev.length - 1] === newRoute) return prev;
+          const next = [...prev.slice(0, historyIndex + 1), newRoute];
+          setHistoryIndex(next.length - 1);
+          return next;
+        });
+      }
+    };
+
+    window.addEventListener("message", handleWindowMessage);
+    return () => window.removeEventListener("message", handleWindowMessage);
+  }, [historyIndex]);
+
+  // Navigasjonshåndterere for adressebaren
+  const handleNavigateToRoute = (targetRoute: string) => {
+    setCurrentRoute(targetRoute);
+    setRouteHistory((prev) => {
+      const next = [...prev.slice(0, historyIndex + 1), targetRoute];
+      setHistoryIndex(next.length - 1);
+      return next;
+    });
+    setIsRouteDropdownOpen(false);
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: "NAVIGATE_TO_ROUTE", route: targetRoute },
+      "*"
+    );
+  };
+
+  const handleGoBack = () => {
+    if (historyIndex > 0) {
+      const prevRoute = routeHistory[historyIndex - 1];
+      setHistoryIndex(historyIndex - 1);
+      setCurrentRoute(prevRoute);
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "NAVIGATE_TO_ROUTE", route: prevRoute },
+        "*"
+      );
+    }
+  };
+
+  const handleGoForward = () => {
+    if (historyIndex < routeHistory.length - 1) {
+      const nextRoute = routeHistory[historyIndex + 1];
+      setHistoryIndex(historyIndex + 1);
+      setCurrentRoute(nextRoute);
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "NAVIGATE_TO_ROUTE", route: nextRoute },
+        "*"
+      );
+    }
+  };
+
+  const handleCreateNewPageSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = newPageInput.trim().replace(/^\/+/, "").toLowerCase();
+    if (!clean) return;
+
+    const { path, content } = generatePageTemplate(clean, projectName);
+    if (onCreateNewPage) {
+      onCreateNewPage(path, content);
+    }
+    setIsNewPageModalOpen(false);
+    setNewPageInput("");
+    handleNavigateToRoute("/" + clean);
+  };
+
+  // Bygg 100% dynamisk, interaktiv multi-page sandkasse-HTML basert på faktisk kildekode
   const iframeHtml = useMemo(() => {
     return `<!DOCTYPE html>
 <html lang="no" class="dark">
@@ -467,7 +541,7 @@ export function LivePreview({
     <div id="root">
       <div class="flex flex-col items-center justify-center min-h-[380px] p-6 text-slate-400 gap-3">
         <div class="w-8 h-8 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
-        <p class="text-xs font-mono text-slate-400">Kompilerer og starter React-sandkasse...</p>
+        <p class="text-xs font-mono text-slate-400">Kompilerer flersidig applikasjon...</p>
       </div>
     </div>
 
@@ -526,7 +600,7 @@ export function LivePreview({
         }, 2200);
       }
 
-      // Universal click interceptor: Forhindrer at iframe navigerer til verts-applikasjonen
+      // Universal click interceptor: Håndterer interne ruter og forhindrer at iframe navigerer bort
       document.addEventListener('click', function(e) {
         var el = e.target;
         while (el && el !== document.body) {
@@ -542,7 +616,9 @@ export function LivePreview({
             } else if (href.startsWith('http://') || href.startsWith('https://')) {
               window.open(href, '_blank', 'noopener,noreferrer');
             } else if (href) {
-              showSandboxToast('Simulert side: ' + href);
+              if (window.__SANDBOX_NAVIGATE) {
+                window.__SANDBOX_NAVIGATE(href);
+              }
             }
             return;
           }
@@ -565,13 +641,16 @@ export function LivePreview({
           onClick: (e) => {
             e.preventDefault();
             if (onClick) onClick(e);
-            if (href && href.startsWith('#')) {
+            if (!href) return;
+            if (href.startsWith('#')) {
               const target = document.querySelector(href);
               if (target) target.scrollIntoView({ behavior: 'smooth' });
-            } else if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+            } else if (href.startsWith('http://') || href.startsWith('https://')) {
               window.open(href, '_blank', 'noopener,noreferrer');
-            } else if (href) {
-              showSandboxToast('Simulert side: ' + href);
+            } else {
+              if (window.__SANDBOX_NAVIGATE) {
+                window.__SANDBOX_NAVIGATE(href);
+              }
             }
           },
           ...rest
@@ -581,19 +660,18 @@ export function LivePreview({
       const Image = (props) => React.createElement('img', { ...props, alt: props.alt || '' });
 
       const useRouter = () => ({
-        push: (url) => showSandboxToast('Navigasjon: ' + url),
-        replace: (url) => showSandboxToast('Erstatter: ' + url),
+        push: (url) => { if (window.__SANDBOX_NAVIGATE) window.__SANDBOX_NAVIGATE(url); },
+        replace: (url) => { if (window.__SANDBOX_NAVIGATE) window.__SANDBOX_NAVIGATE(url); },
         prefetch: () => {},
-        back: () => showSandboxToast('Går tilbake'),
-        pathname: '/',
+        back: () => { window.history.back(); },
+        pathname: window.__CURRENT_ROUTE__ || '/',
         query: {}
       });
-      const usePathname = () => '/';
+      const usePathname = () => window.__CURRENT_ROUTE__ || '/';
       const useSearchParams = () => new URLSearchParams();
-      const redirect = (url) => showSandboxToast('Omdirigert til: ' + url);
+      const redirect = (url) => { if (window.__SANDBOX_NAVIGATE) window.__SANDBOX_NAVIGATE(url); };
 
-      const rawSource = ${JSON.stringify(cleanedCode)};
-      const compName = ${JSON.stringify(compName)};
+      const PAGES_DATA = ${JSON.stringify(preparedPages)};
 
       class ErrorBoundary extends React.Component {
         constructor(props) {
@@ -620,7 +698,7 @@ export function LivePreview({
 
       function runSandbox() {
         var rootEl = document.getElementById('root');
-        if (!rawSource || !rawSource.trim()) {
+        if (!PAGES_DATA || PAGES_DATA.length === 0) {
           rootEl.innerHTML = '<div class="p-8 text-center text-slate-500 font-mono text-xs">Venter på kildekode...</div>';
           return;
         }
@@ -630,75 +708,142 @@ export function LivePreview({
             throw new Error('Babel Standalone er ikke lastet inn.');
           }
 
-          var transpiled = null;
-          try {
-            transpiled = Babel.transform(rawSource, {
-              presets: ['react', 'typescript'],
-              filename: 'preview.tsx'
-            }).code;
-          } catch (firstErr) {
-            console.warn('[Babel Sandbox parse error]:', firstErr);
-            var errLine = (firstErr && firstErr.loc && firstErr.loc.line) || 0;
-            if (errLine > 0) {
-              var lines = rawSource.split(String.fromCharCode(10));
-              if (errLine <= lines.length) {
-                var bad = lines[errLine - 1];
-                if (bad.indexOf('<') !== -1 || bad.indexOf('>') !== -1) {
-                  lines[errLine - 1] = '{/* ' + bad.replace(/[{}]/g, '') + ' */}';
-                } else {
-                  lines[errLine - 1] = '// ' + bad;
-                }
-                transpiled = Babel.transform(lines.join(String.fromCharCode(10)), {
+          var PAGES_MAP = {};
+
+          for (var i = 0; i < PAGES_DATA.length; i++) {
+            var page = PAGES_DATA[i];
+            try {
+              var transpiled = null;
+              try {
+                transpiled = Babel.transform(page.code, {
                   presets: ['react', 'typescript'],
-                  filename: 'preview.tsx'
+                  filename: page.path
                 }).code;
-              } else {
-                throw firstErr;
+              } catch (firstErr) {
+                console.warn('[Babel Sandbox parse error in ' + page.path + ']:', firstErr);
+                var errLine = (firstErr && firstErr.loc && firstErr.loc.line) || 0;
+                if (errLine > 0) {
+                  var lines = page.code.split(String.fromCharCode(10));
+                  if (errLine <= lines.length) {
+                    var bad = lines[errLine - 1];
+                    if (bad.indexOf('<') !== -1 || bad.indexOf('>') !== -1) {
+                      lines[errLine - 1] = '{/* ' + bad.replace(/[{}]/g, '') + ' */}';
+                    } else {
+                      lines[errLine - 1] = '// ' + bad;
+                    }
+                    transpiled = Babel.transform(lines.join(String.fromCharCode(10)), {
+                      presets: ['react', 'typescript'],
+                      filename: page.path
+                    }).code;
+                  } else {
+                    throw firstErr;
+                  }
+                } else {
+                  throw firstErr;
+                }
               }
-            } else {
-              throw firstErr;
+
+              var execFn = new Function(
+                'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams', 'redirect',
+                transpiled + String.fromCharCode(10) + 'return typeof ' + page.compName + ' !== "undefined" ? ' + page.compName + ' : (typeof App !== "undefined" ? App : null);'
+              );
+
+              PAGES_MAP[page.route] = execFn(
+                React,
+                React.useState,
+                React.useEffect,
+                React.useMemo,
+                React.useCallback,
+                React.useRef,
+                React.useId,
+                React.Fragment,
+                Link,
+                Image,
+                useRouter,
+                usePathname,
+                useSearchParams,
+                redirect
+              );
+            } catch (pageErr) {
+              console.warn('[Kompileringsfeil for ' + page.path + ']:', pageErr);
+              (function(p, err) {
+                PAGES_MAP[p.route] = function ErrorPage() {
+                  return React.createElement('div', { className: 'p-6 max-w-xl mx-auto my-8 bg-[#1f1f1f] border border-amber-500/50 rounded-2xl text-slate-200' },
+                    React.createElement('h3', { className: 'text-sm font-bold text-amber-400 mb-2' }, '⚡ Feil under kompilering av ' + p.path),
+                    React.createElement('pre', { className: 'p-3 bg-[#141414] text-amber-300 font-mono text-[11px] rounded-xl overflow-x-auto whitespace-pre-wrap' }, String(err && (err.message || err)))
+                  );
+                };
+              })(page, pageErr);
             }
           }
 
-          var execFn = new Function(
-            'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams', 'redirect',
-            transpiled + String.fromCharCode(10) + 'return typeof ' + compName + ' !== "undefined" ? ' + compName + ' : (typeof App !== "undefined" ? App : null);'
-          );
+          // Flersidig Sandkasse-Router
+          function SandboxRouter() {
+            var initialRoute = ${JSON.stringify(currentRoute)} || '/';
+            var [route, setRoute] = React.useState(initialRoute);
+            window.__CURRENT_ROUTE__ = route;
 
-          var Component = execFn(
-            React,
-            React.useState,
-            React.useEffect,
-            React.useMemo,
-            React.useCallback,
-            React.useRef,
-            React.useId,
-            React.Fragment,
-            Link,
-            Image,
-            useRouter,
-            usePathname,
-            useSearchParams,
-            redirect
-          );
+            React.useEffect(function() {
+              function onParentMessage(e) {
+                if (e.data && e.data.type === 'NAVIGATE_TO_ROUTE' && typeof e.data.route === 'string') {
+                  setRoute(e.data.route);
+                  window.__CURRENT_ROUTE__ = e.data.route;
+                  window.scrollTo(0, 0);
+                }
+              }
+              window.addEventListener('message', onParentMessage);
+              return function() {
+                window.removeEventListener('message', onParentMessage);
+              };
+            }, []);
 
-          if (!Component) {
-            throw new Error('Fant ingen gyldig React-komponent å rendre i ' + compName);
+            window.__SANDBOX_NAVIGATE = function(targetUrl) {
+              if (!targetUrl) return;
+              var norm = targetUrl.trim();
+              if (norm.indexOf('?') !== -1) norm = norm.split('?')[0];
+              if (!norm.startsWith('/')) norm = '/' + norm;
+              if (norm.length > 1 && norm.endsWith('/')) norm = norm.slice(0, -1);
+
+              setRoute(norm);
+              window.__CURRENT_ROUTE__ = norm;
+              window.scrollTo(0, 0);
+              try {
+                window.parent.postMessage({ type: 'PREVIEW_ROUTE_CHANGED', route: norm }, '*');
+              } catch(e) {}
+            };
+
+            var PageComponent = PAGES_MAP[route] || PAGES_MAP[route.toLowerCase()];
+
+            if (!PageComponent) {
+              return React.createElement('div', { className: 'min-h-[480px] flex flex-col items-center justify-center p-8 text-center text-slate-300 space-y-4' },
+                React.createElement('div', { className: 'w-14 h-14 rounded-2xl bg-purple-950/80 border border-purple-800/50 flex items-center justify-center text-purple-400 font-bold text-2xl shadow-xl' }, '404'),
+                React.createElement('h2', { className: 'text-xl font-bold text-white tracking-tight' }, 'Siden finnes ikke ennå'),
+                React.createElement('p', { className: 'text-xs text-slate-400 max-w-md leading-relaxed' }, 'Ruten "' + route + '" er ikke opprettet i prosjektet ditt ennå. Du kan opprette den fra adressebaren over eller be AI Program Agent om å lage den.'),
+                React.createElement('div', { className: 'flex items-center gap-3 pt-2' },
+                  React.createElement('button', {
+                    onClick: function() { window.__SANDBOX_NAVIGATE('/'); },
+                    className: 'px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold cursor-pointer shadow-lg'
+                  }, '← Gå til forsiden')
+                )
+              );
+            }
+
+            return React.createElement(ErrorBoundary, null, React.createElement(PageComponent));
           }
 
           rootEl.innerHTML = '';
           var root = ReactDOM.createRoot(rootEl);
-          root.render(React.createElement(ErrorBoundary, null, React.createElement(Component)));
+          root.render(React.createElement(SandboxRouter));
         } catch (err) {
-          console.error('[Sandbox Compiler Error]:', err);
+          console.error('[Sandbox Router Error]:', err);
           var errMsg = err && err.message ? err.message : String(err);
           rootEl.innerHTML = '<div class="p-6 max-w-2xl mx-auto my-8 bg-[#1f1f1f] border border-amber-500/40 rounded-2xl shadow-2xl space-y-4">' +
             '<div class="flex items-center gap-3 text-amber-400">' +
               '<span class="text-xl">⚡</span>' +
-              '<h3 class="font-bold text-sm">Sanntids React-sandkasse</h3>' +
+              '<h3 class="font-bold text-sm">Flersidig React-sandkasse</h3>' +
             '</div>' +
             '<p class="text-xs text-slate-300 leading-relaxed">' +
-              'Det oppsto en feil under kompilering av forhåndsvisningen:' +
+              'Det oppsto en feil under oppstart av forhåndsvisningen:' +
               '<code class="block mt-2 p-3 bg-[#141414] text-amber-300 font-mono text-[11px] rounded-xl border border-amber-900/50 overflow-x-auto whitespace-pre-wrap">' + errMsg + '</code>' +
             '</p>' +
             '<div class="pt-2 border-t border-[#2e2e2e] flex items-center justify-between">' +
@@ -738,7 +883,7 @@ export function LivePreview({
     </script>
   </body>
 </html>`;
-  }, [cleanedCode, compName, projectName, rawCode]);
+  }, [preparedPages, currentRoute, projectName]);
 
   const deviceWidths: Record<DeviceMode, string> = {
     desktop: "100%",
@@ -752,12 +897,20 @@ export function LivePreview({
     window.open(url, "_blank");
   };
 
+  const quickPagePresets = [
+    { label: "Timebestilling", route: "booking" },
+    { label: "Kontakt oss", route: "kontakt" },
+    { label: "Om oss", route: "om-oss" },
+    { label: "Priser & Tjenester", route: "priser" },
+    { label: "Adminpanel", route: "admin" },
+  ];
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[#121215] relative overflow-hidden">
       {/* Frame Container */}
       <div className="flex-1 p-2 sm:p-3 flex items-start justify-center overflow-auto bg-[#121215]">
         <div
-          className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#16161c]"
+          className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#16161c] flex flex-col"
           style={{ width: isGenerating ? "100%" : deviceWidths[device], maxWidth: "100%" }}
         >
           {isGenerating ? (
@@ -766,13 +919,145 @@ export function LivePreview({
               onSwitchToCode={onSwitchToCode}
             />
           ) : (
-            <iframe
-              key={`${reloadKey}-${contentHash}`}
-              srcDoc={iframeHtml}
-              title="AI Program Live Sandbox Preview"
-              className="w-full h-full border-none min-h-[550px]"
-              sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
-            />
+            <>
+              {/* Mini-Browser Address Bar & Route Navigator */}
+              <div className="h-10 bg-[#171722] border-b border-[#252532] px-3 flex items-center justify-between gap-2 select-none shrink-0 z-30">
+                {/* Left: Back / Forward / Reload Navigation */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    disabled={historyIndex <= 0}
+                    onClick={handleGoBack}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
+                    title="Gå tilbake"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={historyIndex >= routeHistory.length - 1}
+                    onClick={handleGoForward}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
+                    title="Gå frem"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReloadKey((k) => k + 1)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
+                    title="Last inn på nytt"
+                  >
+                    <RotateCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Center: Address Bar with Route Dropdown Selector */}
+                <div className="flex-1 max-w-md mx-auto relative">
+                  <div
+                    onClick={() => setIsRouteDropdownOpen(!isRouteDropdownOpen)}
+                    className="flex items-center justify-between gap-2 px-3 py-1 bg-[#101016] hover:bg-[#15151e] border border-[#2a2a38] rounded-lg text-xs font-mono cursor-pointer transition shadow-inner group"
+                  >
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="text-slate-500">https://</span>
+                      <span className="text-slate-300 font-semibold truncate">
+                        {(projectName || "app").toLowerCase().replace(/[^a-z0-9]/g, "-")}.aiprogram.site
+                      </span>
+                      <span className="text-purple-400 font-bold">{currentRoute}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-300 group-hover:text-white bg-[#20202c] px-1.5 py-0.5 rounded font-sans font-medium">
+                        {pageRoutes.find((r) => r.route === currentRoute)?.title || "Side"}
+                      </span>
+                      <ChevronDown className="w-3 h-3 text-slate-400" />
+                    </div>
+                  </div>
+
+                  {/* Route Dropdown Menu */}
+                  {isRouteDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsRouteDropdownOpen(false)}
+                      />
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#1a1a26] border border-[#2e2e42] rounded-xl shadow-2xl p-2 z-50 text-xs animate-in fade-in duration-100 space-y-1">
+                        <div className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 flex items-center justify-between">
+                          <span>Sider i prosjektet ({pageRoutes.length})</span>
+                          <span className="text-[9px] text-purple-400 font-mono">Next.js App Router</span>
+                        </div>
+
+                        <div className="max-h-52 overflow-y-auto space-y-0.5">
+                          {pageRoutes.map((pr) => (
+                            <button
+                              key={pr.route}
+                              type="button"
+                              onClick={() => handleNavigateToRoute(pr.route)}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
+                                currentRoute === pr.route
+                                  ? "bg-purple-600/30 text-white font-medium border border-purple-500/40"
+                                  : "text-slate-300 hover:bg-[#252536] hover:text-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <span className="text-purple-400 font-mono text-[11px] font-bold">
+                                  {pr.route}
+                                </span>
+                                <span className="text-slate-400 text-[11px]">
+                                  ({pr.title})
+                                </span>
+                              </div>
+                              {currentRoute === pr.route && (
+                                <Check className="w-3 h-3 text-purple-400 shrink-0" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="pt-1.5 mt-1 border-t border-[#262638]">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsRouteDropdownOpen(false);
+                              setIsNewPageModalOpen(true);
+                            }}
+                            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-left text-purple-300 hover:bg-purple-950/40 hover:text-purple-200 transition cursor-pointer font-medium"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>+ Opprett ny underside...</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Right: Popout Window Button */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handlePopout}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
+                    title="Åpne i nytt vindu"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Iframe Viewport */}
+              <div className="flex-1 w-full h-full relative overflow-hidden bg-[#141414]">
+                <iframe
+                  ref={iframeRef}
+                  key={`${reloadKey}-${contentHash}`}
+                  srcDoc={iframeHtml}
+                  title="AI Program Live Sandbox Preview"
+                  className="w-full h-full border-none min-h-[500px]"
+                  sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -825,6 +1110,88 @@ export function LivePreview({
           >
             <Smartphone className="w-3.5 h-3.5" />
           </button>
+        </div>
+      )}
+
+      {/* Modal: Opprett ny underside */}
+      {isNewPageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#16161e] border border-[#2a2a3a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#252534]">
+              <div className="flex items-center gap-2">
+                <FilePlus className="w-4 h-4 text-purple-400" />
+                <h3 className="text-sm font-bold text-white">Opprett ny underside</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewPageModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#242432] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Opprett en ny underside i Next.js App Router (f.eks. <code>app/booking/page.tsx</code>). Siden vil automatisk bli tilgjengelig i forhåndsvisningen.
+            </p>
+
+            {/* Quick Presets */}
+            <div>
+              <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">
+                Velg et vanlig sideoppsett:
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {quickPagePresets.map((qp) => (
+                  <button
+                    key={qp.route}
+                    type="button"
+                    onClick={() => setNewPageInput(qp.route)}
+                    className="px-2.5 py-1 rounded-lg bg-[#20202c] hover:bg-[#282838] border border-[#2c2c3c] text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                  >
+                    {qp.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateNewPageSubmit} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Rutenavn / Mappe:
+                </label>
+                <div className="flex items-center gap-1.5 bg-[#0e0e14] border border-[#2c2c3e] rounded-xl px-3 py-2 text-xs">
+                  <span className="text-slate-500 font-mono">app/</span>
+                  <input
+                    type="text"
+                    required
+                    value={newPageInput}
+                    onChange={(e) => setNewPageInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    placeholder="booking"
+                    className="bg-transparent text-white font-mono outline-none flex-1"
+                    autoFocus
+                  />
+                  <span className="text-slate-500 font-mono">/page.tsx</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewPageModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-[#20202a] hover:bg-[#282836] text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newPageInput.trim()}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-semibold text-white transition cursor-pointer shadow-lg shadow-purple-950/50"
+                >
+                  Opprett og åpne side
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

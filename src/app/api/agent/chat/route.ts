@@ -103,7 +103,8 @@ export async function POST(req: NextRequest) {
         `  * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"\n` +
         `  * Helse / Klinikk: hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80", behandling: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80"\n` +
         `  * Tech / SaaS: hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"\n` +
-        `- Lever ferdig oppdatert Next.js-kode i en \`\`\`tsx // app/page.tsx kodeblokk, og avslutt alltid med JSON-formatet:\n` +
+        `- FLERSIDIG ARKITEKTUR (Next.js App Router): Du kan opprette og oppdatere flere sider etter brukerens ønske (f.eks. app/page.tsx for forsiden, app/booking/page.tsx for timebestilling, app/om-oss/page.tsx, app/kontakt/page.tsx, app/priser/page.tsx). Forhåndsvisningen støtter 100% full interaktiv navigasjon mellom sidene med <Link href="/booking"> eller <Link href="/">.\n` +
+        `- Lever ferdig oppdatert Next.js-kode i en eller flere \`\`\`tsx kodeblokker (med // app/.../page.tsx på første linje), og avslutt alltid med JSON-formatet med alle opprettede/oppdaterte filer:\n` +
         `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" }\n  ]\n}`
     );
 

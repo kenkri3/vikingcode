@@ -57,7 +57,8 @@ ABSOLUTTE KRAV TIL DESIGN, KVALITET OG ARKITEKTUR:
 5. KNAPPER, SKJEMAER OG NAVIGASJON (SIKKER SANDKASSE):
    - Alle knapper som ikke navigerer til eksterne URL-er MÅ ha type="button" eller kalle e.preventDefault() i sine onClick-handlere.
    - For skjemaer, sørg for at onSubmit har e.preventDefault() slik at siden aldri lastes på nytt.
-   - For navigasjonslenker i header, bruk hash-lenker (<a href="#tjenester">, <a href="#priser">, <a href="#kontakt">) eller fane-state, ALDRI <a href="/">.
+   - For navigasjon mellom sider, bruk Next.js <Link href="/booking">, <Link href="/om-oss">, <Link href="/"> som automatisk bytter side i sandkassen.
+   - For interne sideseksjoner på samme side, bruk hash-lenker (<a href="#tjenester">, <a href="#priser">, <a href="#kontakt">).
 
 6. FULLSTACK STRUKTUR:
    - Opprett backend REST API-ruter (f.eks. 'app/api/data/route.ts' eller relevante domeneruter) med fungerende GET og POST handlere.

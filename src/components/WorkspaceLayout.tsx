@@ -701,6 +701,14 @@ export function WorkspaceLayout({
                 setActiveTab("editor");
                 if (onSetMobileTab) onSetMobileTab("code");
               }}
+              onCreateNewPage={(path, content) => {
+                onUpdateFile(path, content);
+                setSelectedFileForEditor(path);
+              }}
+              onSelectFile={(path) => {
+                setSelectedFileForEditor(path);
+                setActiveTab("editor");
+              }}
             />
           )}
 
