@@ -317,16 +317,28 @@ function BuilderContent() {
           ? localStorage.getItem("aiprogram_agent_session") || ""
           : "";
 
+      const persistentSessionId = activeProject.id
+        ? `proj_${activeProject.id}`
+        : storedSession || "aiprogram_session";
+
       try {
         const chatRes = await fetch("/api/agent/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: promptText,
-            sessionId: storedSession,
+            sessionId: persistentSessionId,
             projectName: activeProject.name,
             userName: user.name,
             userId: user.id,
+            history: messages.slice(-6).map((m) => ({
+              role: m.role,
+              content: m.content.slice(0, 1000),
+            })),
+            currentFiles: activeProject.files.map((f) => ({
+              path: f.path,
+              content: f.content,
+            })),
           }),
         });
 

@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 /**
  * 🤖 AI Program Headless Agent Proxy
  * Kommuniserer med AI-agent via REST API.
- * Fanger opp all kode som agenten spytter ut og ruter det direkte til prosjektfiler.
+ * Bevarer 100 % kontekst, samtalehistorikk og eksisterende kildekode
+ * slik at agenten husker hva som er bygget og kan gjøre presise endringer.
  */
 
 const BOT_API_KEY =
@@ -20,25 +21,80 @@ const CONVERSE_ENDPOINT = "https://agentic.botsify.com/api/v1/converse";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, sessionId, projectName, userName, userId } = body;
+    const {
+      message,
+      sessionId,
+      projectName,
+      userName,
+      userId,
+      history = [],
+      currentFiles = [],
+    } = body;
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Mangler melding" }, { status: 400 });
     }
 
-    // Beregn stabil og isolert sesjons-id (13 tegn)
-    const seed = sessionId || userId || crypto.randomBytes(8).toString("hex");
+    // 1. Beregn en stabil sesjons-id for samtalen og prosjektet
+    const seed =
+      sessionId ||
+      (userId ? `user_${userId}_proj_${projectName || "main"}` : `proj_${projectName || "main"}`);
     const demoHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 12);
     const fbId = `v${demoHash}`;
 
-    const contextHeader = `[AI Program Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]
-VIKTIG: Du er en toppleder fullstack-arkitekt som bygger produksjonsklare applikasjoner for kunden.
-Når brukeren ber deg lage, designe eller oppdatere koden:
-1. Skriv ferdig, komplett Next.js (React + Tailwind CSS + Lucide ikoner) kildekode i en kodeblokk merket \`\`\`tsx (med // app/page.tsx på første linje).
-2. Eller kall MCP-verktøyet 'build_project' eller 'update_file'.
-Systemet fanger automatisk opp koden du spytter ut, lagrer den i de riktige prosjektfilene, og viser den umiddelbart i forhåndsvisningen (live preview) for kunden!`;
+    // 2. Bygg samtalehistorikk
+    let historyBlock = "";
+    if (Array.isArray(history) && history.length > 0) {
+      historyBlock = history
+        .filter((h: any) => h && h.content)
+        .map(
+          (h: any) =>
+            `${h.role === "user" ? "Bruker" : "AI Program Arkitekt"}: ${h.content.slice(0, 1000)}`
+        )
+        .join("\n\n");
+    }
 
-    const enrichedMessage = `${contextHeader}\n\nBrukerens instruks: ${message}`;
+    // 3. Finn eksisterende kildekode for aktiv side
+    let currentPageCode = "";
+    if (Array.isArray(currentFiles) && currentFiles.length > 0) {
+      const pageFile = currentFiles.find(
+        (f: any) => f.path && (f.path.includes("page.tsx") || f.path.includes("page.jsx"))
+      );
+      if (pageFile && typeof pageFile.content === "string") {
+        currentPageCode = pageFile.content.slice(0, 30000);
+      }
+    }
+
+    // 4. Bygg full, kontekstrik prompt til agenten
+    const contextSections: string[] = [
+      `[AI Program Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]`,
+      `VIKTIG: Du er en toppleder fullstack-arkitekt som bygger og vedlikeholder produksjonsklare applikasjoner for kunden.`,
+    ];
+
+    if (historyBlock) {
+      contextSections.push(
+        `--- 📜 SAMTALEHISTORIKK (Hva dere har snakket om tidligere) ---\n${historyBlock}`
+      );
+    }
+
+    if (currentPageCode) {
+      contextSections.push(
+        `--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget) ---\n\`\`\`tsx\n${currentPageCode}\n\`\`\`\n\n` +
+          `VIKTIG INSTRUKS FOR ENDRINGER:\n` +
+          `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne siden.\n` +
+          `2. Ta direkte utgangspunkt i kildekoden over. Ikke start fra bunnen av med mindre kunden eksplisitt ber om et helt nytt prosjekt.\n` +
+          `3. Bevar eksisterende design og seksjoner, men utfør den forespurte endringen presist.\n` +
+          `4. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.`
+      );
+    }
+
+    contextSections.push(
+      `--- 🎯 BRUKERENS NYE FORESPØRSEL ---\n${message}\n\n` +
+        `Lever ferdig oppdatert Next.js-kode i en \`\`\`tsx // app/page.tsx kodeblokk, og avslutt alltid med JSON-formatet:\n` +
+        `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" }\n  ]\n}`
+    );
+
+    const enrichedMessage = contextSections.join("\n\n");
 
     const payload = {
       type: "message",
@@ -49,7 +105,10 @@ Systemet fanger automatisk opp koden du spytter ut, lagrer den i de riktige pros
       current_messages: enrichedMessage,
       url: "https://aiprogram.no",
       user_name: userName || "AIProgram Utvikler",
-      messages: [],
+      messages: (history || []).slice(-4).map((h: any) => ({
+        sender: h.role === "user" ? "user" : "bot",
+        text: (h.content || "").slice(0, 300),
+      })),
     };
 
     const response = await fetch(CONVERSE_ENDPOINT, {
@@ -123,9 +182,9 @@ Systemet fanger automatisk opp koden du spytter ut, lagrer den i de riktige pros
         });
 
         if (project) {
-          const currentFiles: Array<{ path: string; content: string }> =
+          const currentFilesFromDb: Array<{ path: string; content: string }> =
             (project.filesJson as any) || [];
-          const map = new Map(currentFiles.map((f) => [f.path, f]));
+          const map = new Map(currentFilesFromDb.map((f) => [f.path, f]));
           extractedFiles.forEach((f) => map.set(f.path, f));
 
           await prisma.project.update({
