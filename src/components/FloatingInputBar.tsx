@@ -92,7 +92,7 @@ export function FloatingInputBar({
           onChange={adjustHeight}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder="Ask AI Program..."
+          placeholder="Beskriv hva du vil endre, legge til eller bygge..."
           className="w-full bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-400 outline-none resize-none px-2 py-1 max-h-36 font-sans leading-relaxed"
         />
 

@@ -5,17 +5,12 @@ import {
   Plus,
   Search,
   Folder,
-  FolderOpen,
   Settings,
-  ChevronDown,
-  ChevronRight,
   PanelLeftClose,
   PanelLeft,
   X,
   Trash2,
   MoreHorizontal,
-  Bookmark,
-  Sparkles,
 } from "lucide-react";
 import { UserSession, Project } from "@/lib/types";
 import { VikingLogo } from "./VikingLogo";
@@ -50,8 +45,6 @@ export function Sidebar({
   isOpen,
   onToggle,
 }: SidebarProps) {
-  const [projectsExpanded, setProjectsExpanded] = useState(true);
-  const [libraryExpanded, setLibraryExpanded] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
@@ -90,11 +83,11 @@ export function Sidebar({
 
   const renderContent = (isMobile: boolean = false) => (
     <div className="flex flex-col h-full bg-[#18181c] text-slate-200 text-xs select-none">
-      {/* 1. Header with Logo, Name & Collapse Icon (Image 1) */}
+      {/* 1. Header with VikingCode Logo, Name & Collapse Icon */}
       <div className="p-3.5 flex items-center justify-between border-b border-[#26262e] shrink-0">
         <div className="flex items-center gap-2">
           <VikingLogo size={22} />
-          <span className="font-bold text-white text-sm tracking-tight">AI Program</span>
+          <span className="font-bold text-white text-sm tracking-tight font-sans">VikingCode</span>
         </div>
         <button
           onClick={onToggle}
@@ -107,116 +100,76 @@ export function Sidebar({
 
       {/* 2. Top Action Controls */}
       <div className="p-3 space-y-2 shrink-0">
-        {/* + New Chat Button (Image 1) */}
+        {/* + Ny samtale Button */}
         <button
           onClick={() => handleAction(onNewConversation)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#22222a] hover:bg-[#2c2c36] border border-[#2e2e38] text-xs font-semibold text-white transition shadow-sm cursor-pointer"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#22222a] hover:bg-[#2c2c36] border border-[#2e2e38] text-xs font-semibold text-white transition shadow-sm cursor-pointer group"
         >
-          <Plus className="w-4 h-4 text-[#A78BFA]" />
-          <span>New Chat</span>
+          <Plus className="w-4 h-4 text-[#A78BFA] group-hover:scale-110 transition-transform" />
+          <span>Ny samtale</span>
         </button>
 
         {/* Search Chats Input */}
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#141418] border border-[#26262e] text-slate-400 focus-within:border-slate-500 transition">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#141418] border border-[#26262e] text-slate-400 focus-within:border-purple-500/50 focus-within:text-slate-200 transition">
           <Search className="w-3.5 h-3.5 shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Chats"
+            placeholder="Søk i prosjekter..."
             className="bg-transparent text-xs text-white placeholder-slate-500 outline-none w-full"
           />
         </div>
       </div>
 
-      {/* 3. Middle Scrollable Area: Library & Projects */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-4 font-sans">
-        {/* My Library Carousel / Artifacts Thumbnails (Image 1) */}
-        <div className="space-y-1.5">
-          <button
-            onClick={() => setLibraryExpanded(!libraryExpanded)}
-            className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-400 hover:text-slate-200 py-1 transition cursor-pointer"
-          >
-            <span className="flex items-center gap-1.5">
-              <Bookmark className="w-3.5 h-3.5 text-purple-400" />
-              <span>My Library</span>
-            </span>
-            {libraryExpanded ? (
-              <ChevronDown className="w-3 h-3 text-slate-500" />
-            ) : (
-              <ChevronRight className="w-3 h-3 text-slate-500" />
-            )}
-          </button>
-
-          {libraryExpanded && (
-            <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-thin">
-              {projectsList.slice(0, 3).map((p, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleAction(() => onSelectProject(p.name))}
-                  className="w-20 h-16 rounded-xl bg-[#22222a] hover:bg-[#2a2a34] border border-[#2e2e38] hover:border-purple-500/50 p-1.5 flex flex-col justify-between shrink-0 transition cursor-pointer shadow-sm group"
-                  title={`Åpne ${p.name}`}
-                >
-                  <div className="w-full h-7 rounded-md bg-[#18181e] border border-[#2e2e38] flex items-center justify-center text-[10px] text-purple-300 font-bold group-hover:text-white">
-                    {p.name.slice(0, 4)}
-                  </div>
-                  <span className="text-[9px] text-slate-400 truncate leading-tight group-hover:text-slate-200">
-                    {p.name}
-                  </span>
-                </div>
-              ))}
-            </div>
+      {/* 3. Middle Scrollable Area: Clean Projects List */}
+      <div className="flex-1 overflow-y-auto px-2 space-y-1 font-sans scrollbar-thin">
+        {/* Section Header */}
+        <div className="flex items-center justify-between px-2 py-1 text-slate-400">
+          <span className="text-[11px] font-semibold uppercase tracking-wider">
+            Prosjekter
+          </span>
+          {onNewProject && (
+            <button
+              type="button"
+              onClick={() => handleAction(onNewProject)}
+              className="flex items-center gap-1 text-[11px] font-medium text-purple-300 hover:text-white transition cursor-pointer"
+              title="Opprett nytt prosjekt"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nytt</span>
+            </button>
           )}
         </div>
 
-        {/* Projects Section (Image 1) */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between py-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Projects
-            </span>
-            {onNewProject && (
-              <button
-                type="button"
-                onClick={() => handleAction(onNewProject)}
-                className="flex items-center gap-1 text-[11px] text-purple-300 hover:text-white transition cursor-pointer"
-                title="Nytt prosjekt"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New Project</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* All Chats (Categorized by Yesterday, 7 days, 30 days) */}
-        <div className="space-y-2 pt-1">
-          <span className="text-[11px] font-semibold text-slate-400">All chats</span>
-
-          <div className="space-y-0.5">
-            {filteredProjects.map((p) => {
+        {/* Projects List */}
+        <div className="space-y-0.5 pt-0.5">
+          {filteredProjects.length === 0 ? (
+            <div className="text-center py-8 text-slate-500 text-xs">
+              Ingen prosjekter funnet
+            </div>
+          ) : (
+            filteredProjects.map((p) => {
               const isActive = activeProject.name.toLowerCase().includes(p.name.toLowerCase());
               const isMenuOpen = activeMenuId === p.id;
 
               return (
                 <div
                   key={p.id || p.name}
-                  className={`group relative flex items-center justify-between w-full px-2.5 py-1.5 rounded-xl text-xs transition ${
+                  className={`group relative flex items-center justify-between w-full px-2.5 py-2 rounded-xl text-xs transition cursor-pointer ${
                     isActive
-                      ? "bg-[#25252e] text-white font-medium shadow-sm"
+                      ? "bg-[#25252e] text-white font-medium shadow-sm border border-purple-500/30"
                       : "text-slate-300 hover:text-white hover:bg-[#202026]"
                   }`}
+                  onClick={() => handleAction(() => onSelectProject(p.name))}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleAction(() => onSelectProject(p.name))}
-                    className="flex-1 flex items-center gap-2 truncate text-left cursor-pointer"
-                  >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Folder className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-purple-400" : "text-slate-500 group-hover:text-slate-400"}`} />
                     <span className="truncate">{p.name}</span>
-                  </button>
+                  </div>
 
-                  {/* Three-dots menu on hover (Exact Image 1) */}
-                  <div className="relative shrink-0">
+                  {/* Three-dots menu on hover */}
+                  <div className="relative shrink-0 ml-1">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -226,7 +179,7 @@ export function Sidebar({
                       className={`p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#2e2e38] transition cursor-pointer ${
                         isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                       }`}
-                      title="Valg"
+                      title="Prosjektvalg"
                     >
                       <MoreHorizontal className="w-3.5 h-3.5" />
                     </button>
@@ -235,20 +188,27 @@ export function Sidebar({
                       <>
                         <div
                           className="fixed inset-0 z-30"
-                          onClick={() => setActiveMenuId(null)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId(null);
+                          }}
                         />
-                        <div className="absolute right-0 top-full mt-1 w-32 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1 z-40 text-xs animate-in fade-in duration-100">
+                        <div
+                          className="absolute right-0 top-full mt-1 w-32 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1 z-40 text-xs animate-in fade-in duration-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {onDeleteProject && (
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setActiveMenuId(null);
                                 onDeleteProject(p.id, p.name);
                               }}
                               className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-rose-400 hover:bg-rose-950/40 transition cursor-pointer text-left"
                             >
                               <Trash2 className="w-3 h-3" />
-                              <span>Slett chat</span>
+                              <span>Slett prosjekt</span>
                             </button>
                           )}
                         </div>
@@ -257,12 +217,12 @@ export function Sidebar({
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
       </div>
 
-      {/* 4. Bottom User Profile Card with Upgrade Button (Exact Image 1 & 2) */}
+      {/* 4. Bottom User Profile Card with Upgrade Button */}
       <div className="p-3 border-t border-[#26262e] bg-[#141418] shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -275,19 +235,19 @@ export function Sidebar({
                 {user.name || "Kenneth Glo"}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
-                {user.plan === "TRIAL" ? "Free" : user.plan}
+                {user.plan === "TRIAL" ? "Gratis" : user.plan}
               </p>
             </div>
           </div>
 
-          {/* Upgrade Button */}
+          {/* Upgrade & Settings */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => handleAction(onOpenPricing)}
               className="px-2.5 py-1 rounded-lg bg-[#22222a] hover:bg-[#2c2c36] border border-[#2e2e38] text-[11px] font-semibold text-purple-300 hover:text-white transition cursor-pointer shadow-sm"
-              title="Oppgrader plan"
+              title="Se abonnementer og priser"
             >
-              Upgrade
+              Oppgrader
             </button>
 
             <button
@@ -331,7 +291,7 @@ export function Sidebar({
           <button
             onClick={onNewConversation}
             className="p-2 rounded-xl text-purple-400 hover:text-white hover:bg-purple-950/50 transition cursor-pointer"
-            title="New Chat"
+            title="Ny samtale"
           >
             <Plus className="w-4 h-4" />
           </button>
