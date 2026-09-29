@@ -44,7 +44,22 @@ ABSOLUTTE KRAV TIL DESIGN, KVALITET OG ARKITEKTUR:
    - Bruk Lucide-react ikoner med omhu.
    - INGEN «Lorem ipsum» eller engelske placeholders. Alt innhold må være på flytende, profesjonelt norsk med realistiske tall, priser og firmanavn.
 
-4. FULLSTACK STRUKTUR:
+4. AUTOMATISKE KVALITETSBILDER & VISUELL STYRKE (Unsplash & AI):
+   - Bruk ALLTID virkelige, høyoppløselige Unsplash-bilder for hero-bakgrunn, tjenester, prosjektgalleri og team-profiler. ALDRI bruk tomme grå firkanter eller tomme src-attributter!
+   - Bruk korrekte <img> tagger med alt-tekst, loading="lazy" og className="w-full h-full object-cover".
+   - Eksempler på bransjebilder:
+     * Frisør / Salong: hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80", klipp: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80", styling: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80"
+     * Håndverker / Snekker: hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80", terrasse: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80"
+     * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
+     * Helse / Klinikk: hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80"
+     * SaaS / Tech: hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"
+
+5. KNAPPER, SKJEMAER OG NAVIGASJON (SIKKER SANDKASSE):
+   - Alle knapper som ikke navigerer til eksterne URL-er MÅ ha type="button" eller kalle e.preventDefault() i sine onClick-handlere.
+   - For skjemaer, sørg for at onSubmit har e.preventDefault() slik at siden aldri lastes på nytt.
+   - For navigasjonslenker i header, bruk hash-lenker (<a href="#tjenester">, <a href="#priser">, <a href="#kontakt">) eller fane-state, ALDRI <a href="/">.
+
+6. FULLSTACK STRUKTUR:
    - Opprett backend REST API-ruter (f.eks. 'app/api/data/route.ts' eller relevante domeneruter) med fungerende GET og POST handlere.
    - Opprett eller oppdater 'prisma/schema.prisma' med relevante PostgreSQL modeller for prosjektet.
 

@@ -510,9 +510,87 @@ export function LivePreview({
         return origFetch(url, options);
       };
 
+      // Toast notification helper inside sandbox
+      function showSandboxToast(msg) {
+        var existing = document.getElementById('__sandbox_toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.id = '__sandbox_toast';
+        toast.textContent = msg;
+        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c24;color:#f3f4f6;border:1px solid #7C3AED;padding:8px 18px;border-radius:9999px;font-size:12px;font-weight:500;box-shadow:0 10px 25px rgba(0,0,0,0.6);z-index:99999;transition:opacity 0.25s, transform 0.25s;pointer-events:none;';
+        document.body.appendChild(toast);
+        setTimeout(function() {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(-50%) translateY(8px)';
+          setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+        }, 2200);
+      }
+
+      // Universal click interceptor: Forhindrer at iframe navigerer til verts-applikasjonen
+      document.addEventListener('click', function(e) {
+        var el = e.target;
+        while (el && el !== document.body) {
+          if (el.tagName === 'A') {
+            var href = el.getAttribute('href') || '';
+            e.preventDefault();
+            e.stopPropagation();
+            if (href.startsWith('#')) {
+              var target = document.querySelector(href);
+              if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+              }
+            } else if (href.startsWith('http://') || href.startsWith('https://')) {
+              window.open(href, '_blank', 'noopener,noreferrer');
+            } else if (href) {
+              showSandboxToast('Simulert side: ' + href);
+            }
+            return;
+          }
+          el = el.parentElement;
+        }
+      }, true);
+
+      // Universal form submit interceptor: Hindrer at innsending av skjema laster siden på nytt
+      document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showSandboxToast('✓ Skjema innsendt (sandkasse-modus)');
+      }, true);
+
       // Mock Next.js navigation & components
-      const Link = (props) => React.createElement('a', { href: props.href || '#', ...props }, props.children);
+      const Link = (props) => {
+        const { href, children, onClick, ...rest } = props;
+        return React.createElement('a', {
+          href: href || '#',
+          onClick: (e) => {
+            e.preventDefault();
+            if (onClick) onClick(e);
+            if (href && href.startsWith('#')) {
+              const target = document.querySelector(href);
+              if (target) target.scrollIntoView({ behavior: 'smooth' });
+            } else if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+              window.open(href, '_blank', 'noopener,noreferrer');
+            } else if (href) {
+              showSandboxToast('Simulert side: ' + href);
+            }
+          },
+          ...rest
+        }, children);
+      };
+
       const Image = (props) => React.createElement('img', { ...props, alt: props.alt || '' });
+
+      const useRouter = () => ({
+        push: (url) => showSandboxToast('Navigasjon: ' + url),
+        replace: (url) => showSandboxToast('Erstatter: ' + url),
+        prefetch: () => {},
+        back: () => showSandboxToast('Går tilbake'),
+        pathname: '/',
+        query: {}
+      });
+      const usePathname = () => '/';
+      const useSearchParams = () => new URLSearchParams();
+      const redirect = (url) => showSandboxToast('Omdirigert til: ' + url);
 
       const rawSource = ${JSON.stringify(cleanedCode)};
       const compName = ${JSON.stringify(compName)};
@@ -583,7 +661,7 @@ export function LivePreview({
           }
 
           var execFn = new Function(
-            'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image',
+            'React', 'useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useId', 'Fragment', 'Link', 'Image', 'useRouter', 'usePathname', 'useSearchParams', 'redirect',
             transpiled + String.fromCharCode(10) + 'return typeof ' + compName + ' !== "undefined" ? ' + compName + ' : (typeof App !== "undefined" ? App : null);'
           );
 
@@ -597,7 +675,11 @@ export function LivePreview({
             React.useId,
             React.Fragment,
             Link,
-            Image
+            Image,
+            useRouter,
+            usePathname,
+            useSearchParams,
+            redirect
           );
 
           if (!Component) {
@@ -698,6 +780,15 @@ export function LivePreview({
       {/* Floating Device Switcher at bottom left (Active only when preview is live) */}
       {!isGenerating && (
         <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-[#1c1c22]/90 backdrop-blur-md p-1 rounded-xl border border-[#2e2e38] shadow-xl select-none">
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="p-1.5 rounded-lg transition cursor-pointer text-slate-400 hover:text-white hover:bg-[#2c2c36]"
+            title="Last inn på nytt (Nullstill forhåndsvisning)"
+          >
+            <RotateCw className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-3.5 bg-[#2e2e38] mx-0.5" />
           <button
             type="button"
             onClick={() => setDevice("desktop")}

@@ -92,8 +92,17 @@ export async function POST(req: NextRequest) {
     contextSections.push(
       `--- 🎯 BRUKERENS NYE FORESPØRSEL ---\n${message}\n\n` +
         `KRAV TIL KILDEKODEN:\n` +
-        `- Skriv 100% syntaktisk gyldig TypeScript/React JSX.\n` +
+        `- Skriv 100% syntaktisk gyldig TypeScript/React JSX med 'use client'.\n` +
         `- Alle egenskaper i objekter/arrays med tekst må være gyldige strenger med hermetegn.\n` +
+        `- KNAPPER & SKJEMAER: Alle knapper som ikke skal navigere til en ekstern URL må ha type="button" eller håndtere klikk med e.preventDefault() slik at de ikke forårsaker utilsiktet side-omlasting.\n` +
+        `- NAVIGASJONSLENKER: Bruk hash-lenker som <a href="#tjenester">, <a href="#priser">, <a href="#kontakt"> eller state-basert fanebytte, ALDRI <a href="/">.\n` +
+        `- AUTOMATISKE KVALITETSBILDER (Unsplash & AI): Bruk ALLTID virkelige, relevante Unsplash-bilder for hero-bakgrunn, tjenestekort, galleri og team. ALDRI bruk tomme grå firkanter eller tomme src-attributter!\n` +
+        `  Eksempler på bransjebilder:\n` +
+        `  * Frisør / Barber: hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80", klipp: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80", styling: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80", team: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"\n` +
+        `  * Håndverker / Snekker: hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80", terrasse: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80", finsnekring: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"\n` +
+        `  * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"\n` +
+        `  * Helse / Klinikk: hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80", behandling: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80"\n` +
+        `  * Tech / SaaS: hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"\n` +
         `- Lever ferdig oppdatert Next.js-kode i en \`\`\`tsx // app/page.tsx kodeblokk, og avslutt alltid med JSON-formatet:\n` +
         `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" }\n  ]\n}`
     );

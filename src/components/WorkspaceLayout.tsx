@@ -41,6 +41,7 @@ import { CodeEditor } from "./CodeEditor";
 import { BackendExplorer } from "./BackendExplorer";
 import { DatabaseStudio } from "./DatabaseStudio";
 import { TerminalView } from "./TerminalView";
+import { ImageGeneratorModal } from "./ImageGeneratorModal";
 import { ChatMessage, Project, UserSession } from "@/lib/types";
 
 export type WorkspaceTab = "preview" | "backend" | "database" | "editor" | "terminal";
@@ -119,6 +120,7 @@ export function WorkspaceLayout({
 
   // Deploy Popover State (Image 3)
   const [isDeployPopoverOpen, setIsDeployPopoverOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const defaultSubdomain = (activeProject.name || "webdev")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "-")
@@ -138,6 +140,17 @@ export function WorkspaceLayout({
         .replace(/^-|-$/g, "")
     );
   }, [activeProject.name]);
+
+  const handleInsertImageIntoProject = (imageUrl: string) => {
+    const pageFile = activeProject.files.find((f) => f.path.includes("page.tsx"));
+    if (pageFile) {
+      let updatedContent = pageFile.content;
+      if (updatedContent.includes("https://images.unsplash.com/")) {
+        updatedContent = updatedContent.replace(/https:\/\/images\.unsplash\.com\/[^\s"']+/i, imageUrl);
+      }
+      onUpdateFile("app/page.tsx", updatedContent);
+    }
+  };
 
   const handleOpenFile = (path: string) => {
     setSelectedFileForEditor(path);
@@ -579,8 +592,18 @@ export function WorkspaceLayout({
             </button>
           </div>
 
-          {/* Right: Refresh + Fullscreen + Three Dots menu for extra tools */}
-          <div className="flex items-center gap-1">
+          {/* Right: AI-Bilder + Refresh + Fullscreen + Three Dots menu for extra tools */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsImageModalOpen(true)}
+              className="px-2.5 py-1 text-slate-300 hover:text-white bg-[#1e1e26] hover:bg-[#282834] border border-[#2e2e3e] rounded-md transition cursor-pointer flex items-center gap-1.5 text-xs shadow-xs"
+              title="Generer AI-bilder med 1min.AI (Flux Schnell) eller Unsplash"
+            >
+              <Sparkles className="w-3 h-3 text-purple-400" />
+              <span className="hidden sm:inline">AI-Bilder</span>
+            </button>
+
             <button
               type="button"
               onClick={() => {
@@ -709,6 +732,12 @@ export function WorkspaceLayout({
           )}
         </div>
       </div>
+
+      <ImageGeneratorModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        onInsertImage={handleInsertImageIntoProject}
+      />
     </div>
   );
 }
