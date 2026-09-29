@@ -50,53 +50,6 @@ function prepareComponentCode(rawCode: string) {
   code = code.replace(/^```[a-zA-Z0-9_-]*\s*$/gm, '');
   code = code.replace(/```\s*$/g, '');
 
-  // 1.5 Auto-fix JSX curly braces wrapping plain text with spaces: {Verdensledende frisørkunst...}
-  code = code.replace(
-    /\{([A-Za-zæøåÆØÅ0-9_+\-–—•·/\\:.,!?#&%()@\s]{10,})\}/g,
-    (match, inner) => {
-      const trimmed = inner.trim();
-      if (
-        trimmed.startsWith('"') ||
-        trimmed.startsWith("'") ||
-        trimmed.startsWith('`') ||
-        trimmed.startsWith('{') ||
-        trimmed.includes('?') ||
-        trimmed.includes('&&') ||
-        trimmed.includes('||') ||
-        trimmed.includes('=>') ||
-        trimmed.includes('(') ||
-        !trimmed.includes(' ')
-      ) {
-        return match;
-      }
-      return `{"${trimmed.replace(/"/g, '\\"')}"}`;
-    }
-  );
-
-  // 1.6 Auto-fix unquoted string property values in objects/arrays:
-  code = code.replace(
-    /^(\s*[a-zA-Z0-9_$]+:\s*)([A-Za-zæøåÆØÅ][^,;\n{}()[\]]*)(,?)$/gm,
-    (match, prop, val, term) => {
-      const trimmedVal = val.trim();
-      if (
-        trimmedVal.startsWith('"') ||
-        trimmedVal.startsWith("'") ||
-        trimmedVal.startsWith('`') ||
-        trimmedVal.startsWith('[') ||
-        trimmedVal.startsWith('{') ||
-        trimmedVal.includes('(') ||
-        trimmedVal === 'true' ||
-        trimmedVal === 'false' ||
-        trimmedVal === 'null' ||
-        trimmedVal === 'undefined' ||
-        !isNaN(Number(trimmedVal))
-      ) {
-        return match;
-      }
-      return `${prop}"${trimmedVal.replace(/"/g, '\\"')}"${term || ','}`;
-    }
-  );
-
   // 2. Strip "use client"
   code = code.replace(/['"]use client['"];?/g, "");
 
@@ -600,56 +553,33 @@ export function LivePreview({
           }
 
           var transpiled = null;
-          var currentSource = rawSource;
-          var lastCompileErr = null;
-
-          for (var attempt = 0; attempt < 5; attempt++) {
-            try {
-              transpiled = Babel.transform(currentSource, {
-                presets: ['react', 'typescript'],
-                filename: 'preview.tsx'
-              }).code;
-              break;
-            } catch (bErr) {
-              lastCompileErr = bErr;
-              var lineNum = 0;
-              if (bErr && bErr.loc && bErr.loc.line) {
-                lineNum = bErr.loc.line;
-              } else if (bErr && bErr.message && bErr.message.indexOf('(') !== -1) {
-                var p1 = bErr.message.split('(')[1];
-                if (p1 && p1.indexOf(':') !== -1) {
-                  lineNum = parseInt(p1.split(':')[0], 10);
+          try {
+            transpiled = Babel.transform(rawSource, {
+              presets: ['react', 'typescript'],
+              filename: 'preview.tsx'
+            }).code;
+          } catch (firstErr) {
+            console.warn('[Babel Sandbox parse error]:', firstErr);
+            var errLine = (firstErr && firstErr.loc && firstErr.loc.line) || 0;
+            if (errLine > 0) {
+              var lines = rawSource.split(String.fromCharCode(10));
+              if (errLine <= lines.length) {
+                var bad = lines[errLine - 1];
+                if (bad.indexOf('<') !== -1 || bad.indexOf('>') !== -1) {
+                  lines[errLine - 1] = '{/* ' + bad.replace(/[{}]/g, '') + ' */}';
+                } else {
+                  lines[errLine - 1] = '// ' + bad;
                 }
-              }
-              if (!lineNum || isNaN(lineNum)) {
-                break;
-              }
-              var lines = currentSource.split(String.fromCharCode(10));
-              if (lineNum < 1 || lineNum > lines.length) {
-                break;
-              }
-              var badLine = lines[lineNum - 1];
-              if (badLine.indexOf(':') !== -1 && badLine.indexOf('"') === -1 && badLine.indexOf("'") === -1) {
-                var colonIdx = badLine.indexOf(':');
-                var propPart = badLine.slice(0, colonIdx + 1);
-                var valPart = badLine.slice(colonIdx + 1).trim();
-                var hasComma = valPart.endsWith(',');
-                if (hasComma) valPart = valPart.slice(0, -1).trim();
-                lines[lineNum - 1] = propPart + ' ' + JSON.stringify(valPart) + (hasComma ? ',' : '');
-              } else if (badLine.indexOf('{') !== -1 && badLine.indexOf('}') !== -1 && badLine.indexOf('"') === -1) {
-                var openBrace = badLine.indexOf('{');
-                var closeBrace = badLine.lastIndexOf('}');
-                var innerText = badLine.slice(openBrace + 1, closeBrace).trim();
-                lines[lineNum - 1] = badLine.slice(0, openBrace) + '{"' + innerText.replace(/"/g, '\\"') + '"}' + badLine.slice(closeBrace + 1);
+                transpiled = Babel.transform(lines.join(String.fromCharCode(10)), {
+                  presets: ['react', 'typescript'],
+                  filename: 'preview.tsx'
+                }).code;
               } else {
-                lines[lineNum - 1] = '// [Auto-reparert]: ' + badLine.trim();
+                throw firstErr;
               }
-              currentSource = lines.join(String.fromCharCode(10));
+            } else {
+              throw firstErr;
             }
-          }
-
-          if (!transpiled) {
-            throw lastCompileErr || new Error('Kompilering mislyktes');
           }
 
           var execFn = new Function(
