@@ -387,36 +387,78 @@ export function createNewProject(name: string, description?: string): Project {
         content: `'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Zap, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Zap, Layers, Globe, Code2, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('oversikt');
 
   return (
-    <div className="min-h-screen bg-[#0A0D12] text-slate-100 p-6 md:p-12 font-sans selection:bg-[#7C3AED] selection:text-white">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <header className="flex items-center justify-between pb-6 border-b border-[#1F2937]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white shadow-lg">
-              ${name.slice(0, 1).toUpperCase()}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-white">${name}</h1>
-              <p className="text-xs text-slate-400">Autonomt generert av AI Program Ultra</p>
-            </div>
+    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans selection:bg-[#7C3AED] selection:text-white">
+      {/* 1. Header */}
+      <header className="border-b border-[#1F2937]/80 bg-[#0A0D12]/90 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-black text-white shadow-lg shadow-purple-900/40">
+            ${name.slice(0, 1).toUpperCase()}
           </div>
-          <span className="px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-700/40 text-xs text-emerald-400 font-medium">
-            ● Aktiv Løsning
+          <div>
+            <h1 className="text-base font-extrabold text-white tracking-tight leading-none">${name}</h1>
+            <p className="text-[10px] text-slate-400">Autonomt generert av AI Program Ultra</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/40 text-[10px] text-emerald-400 font-medium font-mono flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Aktiv Sandbox
           </span>
-        </header>
+        </div>
+      </header>
 
-        <main className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-8 shadow-2xl space-y-6">
-          <h2 className="text-2xl font-bold text-white">Velkommen til ${name}</h2>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            Dette prosjektet er klart for tilpasning. Du kan be AI Program Ultra om å legge til nye komponenter, undersider, datamodeller i Prisma, Vipps-betaling eller henvendelsesskjemaer.
+      {/* 2. Hero */}
+      <main className="max-w-5xl mx-auto px-6 py-16 space-y-8">
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-800/40 text-xs text-[#C4B5FD] font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
+            <span>Klar for autonom koding i sanntid</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            ${name}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+            Skriv inn hva du vil bygge i chatten til venstre – for eksempel en profesjonell nettside for en snekker, florist, restaurant eller en SaaS-portal med Vipps og database.
           </p>
-        </main>
-      </div>
+        </div>
+
+        {/* 3. Feature Highlights */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-950/80 border border-amber-800/40 text-amber-400 flex items-center justify-center">
+              <Zap className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Fullstack & Unsplash</h3>
+            <p className="text-xs text-slate-400">
+              Genererer virkelige fotografier, interaktive kalkulatorer, booking og Next.js kildekode.
+            </p>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="w-8 h-8 rounded-xl bg-purple-950/80 border border-purple-800/40 text-purple-400 flex items-center justify-center">
+              <Code2 className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Kirurgisk Detaljstyring</h3>
+            <p className="text-xs text-slate-400">
+              Endre farger, tekster, knapper og ikonstørrelser med én enkel prompt uten å miste resten.
+            </p>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] space-y-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-950/80 border border-emerald-800/40 text-emerald-400 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-white">Produksjonsklar Deploy</h3>
+            <p className="text-xs text-slate-400">
+              1-klikk utrulling til produksjon med tilpasset subdomene og PostgreSQL database.
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

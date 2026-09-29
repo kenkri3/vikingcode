@@ -266,6 +266,8 @@ function BuilderContent() {
     };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
+    setIsPreviewOpen(true);
+    setMobileTab("preview");
 
     try {
       const pLower = promptText.toLowerCase();
@@ -340,7 +342,7 @@ function BuilderContent() {
           activeKey = localStorage.getItem("aiprogram_gemini_key") || geminiApiKeyInput || "";
         }
       }
-      const keyToUse = isPaidUser ? activeKey : "";
+      const keyToUse = activeKey;
 
       try {
         const chatRes = await fetch("/api/agent/chat", {

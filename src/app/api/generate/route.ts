@@ -157,16 +157,27 @@ function buildPromptContext(
     (f) => f.path && (f.path.includes("page.tsx") || f.path.includes("page.jsx"))
   );
 
+  const isDefaultPlaceholder =
+    !pageFile ||
+    !pageFile.content ||
+    pageFile.content.trim().length < 600 ||
+    pageFile.content.includes("Dette prosjektet er klart for tilpasning") ||
+    pageFile.content.includes("Velkommen til ditt nye prosjekt") ||
+    pageFile.content.includes("Autonomt generert av AI Program Ultra");
+
   let existingCodeSection = "";
-  if (pageFile && pageFile.content && pageFile.content.trim().length > 100) {
+  if (!isDefaultPlaceholder && pageFile && pageFile.content) {
     existingCodeSection = `\n\n--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget for prosjektet) ---\n\`\`\`tsx\n${pageFile.content.slice(0, 32000)}\n\`\`\`\n
 KIRURGISK DETALJREDIGERING & PRESERVERINGSPROTOKOLL:
-1. DETALJERT TILPASNING: Brukeren ber her om en justering, tilføyelse eller endring på en eksisterende nettside. Du kan og skal endre på den minste lille detalj (tekst, farge, ikonstørrelse, padding, knappestil, bilde eller seksjon) nøyaktig slik brukeren ber om.
-2. BEVAR DET SOM ER BRA: Du må ALDRI kaste eller bytte ut hele siden fra bunnen av når brukeren ber om en detaljendring! Bevar det eksisterende designet, fargepaletten, seksjonene, teksten og strukturen som brukeren allerede liker.
-3. GJØR KUN DEN FORESPURTE ENDRINGEN med kirurgisk presisjon rett i kildekoden.
-4. IKON-REGLER: Alle ikoner MÅ ha eksplisitte, trygge Tailwind-størrelsesklasser som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". Ikoner må ALDRI være udefinerte eller blåses opp!
-5. BILDER: Bruk alltid høyoppløselige, profesjonelle Unsplash-fotografier som passer bransjen nøyaktig.
-6. Returner den oppdaterte, komplette koden for 'app/page.tsx' samt eventuelle nye undersider eller filer i JSON-formatet.`;
+1. DETALJERT TILPASNING: Hvis brukeren ber om en justering, tilføyelse eller endring på denne eksisterende nettsiden (f.eks. justere tekst, endre farge, ikonstørrelse, padding, knappestil, bilde, telefonnummer eller legge til en seksjon):
+   - Endre nøyaktig på den minste lille detalj brukeren ber om!
+   - BEVAR 100% av det eksisterende designet, fargepaletten, seksjonene, teksten og strukturen som brukeren allerede liker.
+   - ALDRI forkast eller slett hele siden fra bunnen av når brukeren ber om en detaljendring!
+2. NYTT PROSJEKT / NY NETTSIDE: Hvis brukeren derimot eksplisitt ber om å bygge en ny nettside (f.eks. for en annen bransje som en snekker, florist, restaurant etc.):
+   - Bygg en helt ny, komplett, storslått nettside for denne bransjen med kuraterte Unsplash-bilder og full WOW-effekt.
+3. Returner den oppdaterte, komplette koden for 'app/page.tsx' samt eventuelle nye undersider eller filer i JSON-formatet.`;
+  } else {
+    existingCodeSection = `\n\nSTATUS FOR PROSJEKTET: Prosjektet er helt nytt uten eksisterende innhold. Brukeren ønsker å bygge en ny nettside / webapplikasjon. Bygg en komplett, overbevisende, hyperprofesjonell nettside fra bunnen av med ekte Unsplash-bilder, interaktive verktøy (f.eks. kalkulator eller booking) og full WOW-effekt tilpasset brukerens henvendelse!`;
   }
 
   return `Prosjekt: ${projectName}
@@ -577,61 +588,159 @@ export function generateAutonomousCode(
   const pLower = prompt.toLowerCase();
   const createdFiles: ProjectFile[] = [];
 
-  // 1. SJEKK OM SIDEN ALLEREDE EKSISTERER OG BRUKEREN BER OM JUSTERING / DETALJREDIGERING
+  // 1. SJEKK OM SIDEN ALLEREDE EKSISTERER OG OM DETTE ER DETALJREDIGERING VS NYOPPRETTELSE
   const existingPage = existingFiles.find(
     (f) => f.path && (f.path.includes("page.tsx") || f.path.includes("page.jsx"))
   );
 
-  if (existingPage && existingPage.content && existingPage.content.trim().length > 100) {
+  // Sjekk om eksisterende side kun er en standard/tom oppstartsmal (f.eks. "Velkommen til [navn]")
+  const isDefaultPlaceholder =
+    !existingPage ||
+    !existingPage.content ||
+    existingPage.content.trim().length < 600 ||
+    existingPage.content.includes("Dette prosjektet er klart for tilpasning") ||
+    existingPage.content.includes("Velkommen til ditt nye prosjekt") ||
+    existingPage.content.includes("Autonomt generert av AI Program Ultra");
+
+  // Sjekk om brukerens henvendelse er en instruks om å generere/bygge en ny nettside eller bransjeløsning
+  const isBuildOrNewProject =
+    pLower.includes("lag en") ||
+    pLower.includes("lag et") ||
+    pLower.includes("lag side") ||
+    pLower.includes("lag nettside") ||
+    pLower.includes("bygg") ||
+    pLower.includes("opprett") ||
+    pLower.includes("design en") ||
+    pLower.includes("design et") ||
+    pLower.includes("ny nettside") ||
+    pLower.includes("ny side") ||
+    pLower.includes("nytt prosjekt") ||
+    pLower.includes("generer") ||
+    pLower.includes("nettside for") ||
+    pLower.includes("side for") ||
+    pLower.includes("portal for") ||
+    pLower.includes("hjemmeside for") ||
+    pLower.includes("snekker") ||
+    pLower.includes("tømrer") ||
+    pLower.includes("florist") ||
+    pLower.includes("blomst") ||
+    pLower.includes("håndverk") ||
+    pLower.includes("frisør") ||
+    pLower.includes("restaurant") ||
+    pLower.includes("helse") ||
+    pLower.includes("klinikk") ||
+    pLower.includes("nettbutikk") ||
+    pLower.includes("butikk") ||
+    pLower.includes("kafe") ||
+    pLower.includes("helt nytt prosjekt") ||
+    pLower.includes("start på nytt") ||
+    pLower.includes("slett alt") ||
+    pLower.includes("bytt bransje");
+
+  // KUN hvis siden IKKE er en tom mal og brukeren IKKE ber om å bygge en ny nettside:
+  if (!isDefaultPlaceholder && !isBuildOrNewProject && existingPage && existingPage.content) {
+    let updatedContent = existingPage.content;
+    const changesMade: string[] = [];
+
+    // A. Kirurgisk ikontilpasning (gjør ikoner mindre eller harmoniske)
     const isIconAdjustment =
-      pLower.includes("ikon") ||
-      pLower.includes("større") ||
-      pLower.includes("mindre") ||
-      pLower.includes("store") ||
-      pLower.includes("små") ||
-      pLower.includes("størrelse");
+      pLower.includes("ikon") &&
+      (pLower.includes("mindre") || pLower.includes("større") || pLower.includes("store") || pLower.includes("størrelse") || pLower.includes("juster"));
 
-    const isColorAdjustment =
-      pLower.includes("farge") ||
-      pLower.includes("blå") ||
-      pLower.includes("mørk") ||
-      pLower.includes("lys") ||
-      pLower.includes("grønn") ||
-      pLower.includes("rød");
+    if (isIconAdjustment || updatedContent.includes("w-24") || updatedContent.includes("w-32")) {
+      updatedContent = updatedContent
+        .replace(/className=(["'])w-(?:1[2-9]|[2-9][0-9]|full)\s+h-(?:1[2-9]|[2-9][0-9]|full)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
+        .replace(/className=(["'])w-(?:8|10)\s+h-(?:8|10)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
+        .replace(/w-24\s+h-24/g, "w-6 h-6 shrink-0")
+        .replace(/w-16\s+h-16/g, "w-5 h-5 shrink-0")
+        .replace(/w-32\s+h-32/g, "w-6 h-6 shrink-0");
+      changesMade.push("Justerte ikonstørrelser til elegante, harmoniske proporsjoner (w-5 h-5)");
+    }
 
-    const isExplicitNewProject =
-      pLower.includes("helt nytt prosjekt") ||
-      pLower.includes("start på nytt") ||
-      pLower.includes("slett alt") ||
-      pLower.includes("bytt bransje");
+    // B. Farge- og temaendringer (blå, grønn, smaragd, rød, rav, mørk etc.)
+    if (pLower.includes("blå") || pLower.includes("blue")) {
+      updatedContent = updatedContent
+        .replace(/amber-(?:500|600|700)/g, "blue-600")
+        .replace(/amber-(?:400)/g, "blue-400")
+        .replace(/amber-(?:900|950)/g, "blue-950")
+        .replace(/purple-(?:500|600|700)/g, "blue-600")
+        .replace(/purple-(?:400)/g, "blue-400")
+        .replace(/emerald-(?:500|600|700)/g, "blue-600");
+      changesMade.push("Endret aksent- og knappefarger til dyp maritim blå");
+    } else if (pLower.includes("grønn") || pLower.includes("emerald") || pLower.includes("smaragd")) {
+      updatedContent = updatedContent
+        .replace(/amber-(?:500|600|700)/g, "emerald-600")
+        .replace(/amber-(?:400)/g, "emerald-400")
+        .replace(/purple-(?:500|600|700)/g, "emerald-600")
+        .replace(/blue-(?:500|600|700)/g, "emerald-600");
+      changesMade.push("Endret aksent- og knappefarger til frisk smaragdgrønn");
+    } else if (pLower.includes("rød") || pLower.includes("burgund") || pLower.includes("rose")) {
+      updatedContent = updatedContent
+        .replace(/amber-(?:500|600|700)/g, "rose-600")
+        .replace(/amber-(?:400)/g, "rose-400")
+        .replace(/purple-(?:500|600|700)/g, "rose-600")
+        .replace(/blue-(?:500|600|700)/g, "rose-600");
+      changesMade.push("Endret aksent- og knappefarger til eksklusiv burgunder rød");
+    } else if (pLower.includes("rav") || pLower.includes("amber") || pLower.includes("treverk") || pLower.includes("gull")) {
+      updatedContent = updatedContent
+        .replace(/purple-(?:500|600|700)/g, "amber-600")
+        .replace(/blue-(?:500|600|700)/g, "amber-600")
+        .replace(/emerald-(?:500|600|700)/g, "amber-600");
+      changesMade.push("Endret aksent- og knappefarger til varm gyllen rav");
+    }
 
-    if (!isExplicitNewProject && (isIconAdjustment || isColorAdjustment || pLower.length < 90)) {
-      let updatedContent = existingPage.content;
-      const changesMade: string[] = [];
+    // C. Telefonnummer / kontaktinfo endring
+    const phoneMatch = prompt.match(/(?:tlf|telefon|nummer|ring)[\s:]*([+\d\s]{8,15})/i);
+    if (phoneMatch && phoneMatch[1]) {
+      const newPhone = phoneMatch[1].trim();
+      updatedContent = updatedContent
+        .replace(/href="tel:[^"]*"/g, `href="tel:${newPhone.replace(/\s+/g, '')}"`)
+        .replace(/22\s*14\s*00\s*00/g, newPhone)
+        .replace(/telefonnummer|ring oss/gi, `Ring oss på ${newPhone}`);
+      changesMade.push(`Oppdaterte telefonnummer til ${newPhone}`);
+    }
 
-      // Kirurgisk ikontilpasning: Skaler ned eventuelle overdimensjonerte ikoner
-      if (isIconAdjustment || updatedContent.includes("w-24") || updatedContent.includes("w-32")) {
-        updatedContent = updatedContent
-          .replace(/className=(["'])w-(?:1[2-9]|[2-9][0-9]|full)\s+h-(?:1[2-9]|[2-9][0-9]|full)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
-          .replace(/className=(["'])w-(?:8|10)\s+h-(?:8|10)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
-          .replace(/w-24\s+h-24/g, "w-6 h-6 shrink-0")
-          .replace(/w-16\s+h-16/g, "w-5 h-5 shrink-0")
-          .replace(/w-32\s+h-32/g, "w-6 h-6 shrink-0");
-        changesMade.push("Justerte ikonstørrelser til elegante, harmoniske proporsjoner (w-5 h-5)");
-      }
+    // D. Tittel / overskriftsendring
+    const titleMatch = prompt.match(/(?:overskrift|tittel|kall det|døp det)[\s:]*["'«]([^"'»]+)["'»]/i);
+    if (titleMatch && titleMatch[1]) {
+      const newTitle = titleMatch[1].trim();
+      updatedContent = updatedContent.replace(/<h1[^>]*>[\s\S]*?<\/h1>/i, (m) => {
+        return m.replace(/>[\s\S]*?<\//, `>${newTitle}</`);
+      });
+      changesMade.push(`Oppdaterte hovedoverskrift til «${newTitle}»`);
+    }
 
-      if (changesMade.length === 0) {
-        changesMade.push("Utførte kirurgiske justeringer på kildekoden");
-      }
+    // E. Firmanavn / logo-tekst
+    const nameMatch = prompt.match(/(?:firmanavn|bedriftsnavn|endre navn til)[\s:]*["'«]?([a-zA-ZæøåÆØÅ0-9\s&.-]+?)["'»]?(?:\s*$|\s+og|\s*,)/i);
+    if (nameMatch && nameMatch[1] && nameMatch[1].trim().length > 2) {
+      const newName = nameMatch[1].trim();
+      updatedContent = updatedContent
+        .replace(/Nordic Tre & Håndverk/g, newName)
+        .replace(/Flora Botanikk/g, newName)
+        .replace(/Atelier Nordic/g, newName);
+      changesMade.push(`Oppdaterte merkenavn til «${newName}»`);
+    }
 
+    // F. Pris / timeprisjustering
+    const priceMatch = prompt.match(/(?:timepris|pris|kostnad)[\s:]*(\d+)/i);
+    if (priceMatch && priceMatch[1]) {
+      const newPrice = priceMatch[1].trim();
+      updatedContent = updatedContent
+        .replace(/rate:\s*\d+/g, `rate: ${newPrice}`)
+        .replace(/Timepris \d+ kr\/t/g, `Timepris ${newPrice} kr/t`);
+      changesMade.push(`Justerte pris/timepris til ${newPrice} kr`);
+    }
+
+    // Hvis noen endring ble utført, returner den oppdaterte koden umiddelbart:
+    if (changesMade.length > 0) {
       const files = existingFiles.map((f) =>
         f.path === existingPage.path ? { ...f, content: updatedContent } : f
       );
       ensureFullstackFiles(files, projectName);
 
       return {
-        message: `Jeg har beholdt hele det eksisterende designet og utført en kirurgisk tilpasning: **${changesMade.join(", ")}**.\n\nForhåndsvisningen er oppdatert uten at resten av siden ble påvirket.`,
-        thought: "Preserverte eksisterende kildekode og utførte kirurgisk presisjonsjustering.",
+        message: `Jeg har beholdt 100 % av resten av nettsiden og utførte en kirurgisk tilpasning: **${changesMade.join(", ")}**.\n\nForhåndsvisningen er oppdatert umiddelbart med endringen.`,
+        thought: "Preserverte alt eksisterende innhold og utførte kirurgisk presisjonsjustering.",
         actions: [
           {
             id: `act-${Date.now()}-detail`,
@@ -660,8 +769,8 @@ export function generateAutonomousCode(
     pLower.includes("journal") ||
     pLower.includes("helseapp") ||
     pLower.includes("resept");
-  const isCarpenter = !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("snekring"));
-  const isCraftsman = !isHealth && !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester"));
+  const isCarpenter = !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("platting") || pLower.includes("veranda") || pLower.includes("snekring") || pLower.includes("carpenter") || pLower.includes("treverk") || pLower.includes("byggmester"));
+  const isCraftsman = !isHealth && !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester") || pLower.includes("oppussing"));
   const isVipps = pLower.includes("vipp") || pLower.includes("betaling");
   const isSalon =
     pLower.includes("frisør") ||
@@ -1286,6 +1395,7 @@ export default function NordicCraftsmanApp() {
       location: 'Holmenkollen, Oslo',
       size: '92 m²',
       wood: 'MøreRoyal Grå',
+      image: 'https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80',
       completion: 'August 2026',
       quote: '«Utrolig presist utført snekkerarbeid. Plattingen har sømløse skjøter og LED-sporene i trappetrinnene er magiske på kveldstid.»',
       author: 'Henrik & Camilla W.'
@@ -1297,6 +1407,7 @@ export default function NordicCraftsmanApp() {
       location: 'Snarøya, Bærum',
       size: '42 m²',
       wood: 'Malmfuru & 3-lags Glass',
+      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
       completion: 'Juni 2026',
       quote: '«De holdt både tidsplan og fastpris på kronen. Ryddet byggeplassen hver eneste dag. Anbefales på det varmeste!»',
       author: 'Lars Petter E.'
@@ -1308,6 +1419,7 @@ export default function NordicCraftsmanApp() {
       location: 'Bekkestua, Bærum',
       size: '18 m²',
       wood: 'Norsk Hvitpigmentert Eik',
+      image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
       completion: 'September 2026',
       quote: '«Et kunstverk i stuen vår. Akustikken ble fantastisk mye bedre og de integrerte dørene er helt usynlige.»',
       author: 'Marianne S.'
@@ -1319,6 +1431,7 @@ export default function NordicCraftsmanApp() {
       location: 'Nordstrand, Oslo',
       size: '185 m²',
       wood: 'Dobbelfals Kledning m/Spor',
+      image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
       completion: 'Juli 2026',
       quote: '«Huset fremstår som flunkende nytt og strømforbruket sank merkbart allerede første måned.»',
       author: 'Knut Arild T.'
@@ -1330,6 +1443,7 @@ export default function NordicCraftsmanApp() {
       location: 'Nesøya, Asker',
       size: '64 m²',
       wood: 'Kebony Clear',
+      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
       completion: 'Mai 2026',
       quote: '«Håndverkerne var punktlige og holdt en millimeterpresisjon som imponerte både oss og naboene.»',
       author: 'Cecilie M.'
@@ -1341,6 +1455,7 @@ export default function NordicCraftsmanApp() {
       location: 'Grefsen, Oslo',
       size: '28 m²',
       wood: 'Termofuru & Sort Stål',
+      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
       completion: 'April 2026',
       quote: '«Utrolig god kommunikasjon underveis med ukentlige oppdateringer og ingen overraskelser på sluttoppgjøret.»',
       author: 'Fredrik B.'
@@ -1464,54 +1579,81 @@ export default function NordicCraftsmanApp() {
 
       {/* 3. HERO SECTION */}
       <section className="relative px-4 sm:px-8 py-16 sm:py-24 max-w-6xl mx-auto overflow-hidden">
-        <div className="max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/50 border border-amber-800/40 text-xs font-semibold text-amber-300">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Norsk Håndverkstradisjon med Millimeterpresisjon</span>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/50 border border-amber-800/40 text-xs font-semibold text-amber-300">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Norsk Håndverkstradisjon med Millimeterpresisjon</span>
+            </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
-            Skreddersydde terrasser og tilbygg som hever boligens verdi.
-          </h1>
+            <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-white tracking-tight leading-[1.15]">
+              Skreddersydde terrasser og tilbygg som hever boligens verdi.
+            </h1>
 
-          <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl font-normal">
-            Vi prosjekterer og bygger arkitekttegnede uterom, tilbygg og spesialtilpasset interiørsnekring for kresne huseiere i Oslo, Bærum og Asker. Med 100 % fastprisavtale og 5 års TEK17-garanti.
-          </p>
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+              Vi prosjekterer og bygger arkitekttegnede uterom, tilbygg og spesialtilpasset interiørsnekring for kresne huseiere i Oslo, Bærum og Asker. Med 100 % fastprisavtale og 5 års TEK17-garanti.
+            </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <a
-              href="#kalkulator"
-              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-sm shadow-xl shadow-amber-950/50 flex items-center gap-2 transition cursor-pointer"
-            >
-              <span>Beregn Prosjektpris i Sanntid</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href="#prosjekter"
-              className="px-6 py-3.5 rounded-xl bg-[#141822] hover:bg-[#1A202E] border border-[#242C3D] text-slate-200 font-bold text-sm transition flex items-center gap-2"
-            >
-              <span>Se Referanseprosjekter (6)</span>
-            </a>
-          </div>
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <a
+                href="#kalkulator"
+                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-sm shadow-xl shadow-amber-950/50 flex items-center gap-2 transition cursor-pointer"
+              >
+                <span>Beregn Prosjektpris i Sanntid</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="#prosjekter"
+                className="px-6 py-3.5 rounded-xl bg-[#141822] hover:bg-[#1A202E] border border-[#242C3D] text-slate-200 font-bold text-sm transition flex items-center gap-2"
+              >
+                <span>Se Referanseprosjekter (6)</span>
+              </a>
+            </div>
 
-          {/* Social Proof Strip */}
-          <div className="pt-6 border-t border-[#1E2330] flex flex-wrap items-center gap-6 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <div className="flex text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
+            {/* Social Proof Strip */}
+            <div className="pt-6 border-t border-[#1E2330] flex flex-wrap items-center gap-5 text-xs text-slate-300">
+              <div className="flex items-center gap-1.5">
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-amber-400" />
+                  ))}
+                </div>
+                <span className="font-bold text-white">4.9 / 5.0</span>
+                <span className="text-slate-400">(142 oppdrag)</span>
               </div>
-              <span className="font-bold text-white">4.9 / 5.0</span>
-              <span className="text-slate-400">(142 verifiserte oppdrag)</span>
+              <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <CheckCircle className="w-4 h-4" />
+                <span>100 % Fastpris</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-cyan-400 font-semibold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>5 Års Garanti</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-emerald-400 font-semibold">
-              <CheckCircle className="w-4 h-4" />
-              <span>100 % Skriftlig Fastprisgaranti</span>
-            </div>
-            <div className="flex items-center gap-2 text-cyan-400 font-semibold">
-              <ShieldCheck className="w-4 h-4" />
-              <span>5 Års Garanti iht. Norsk Lov</span>
+          </div>
+
+          <div className="lg:col-span-5 relative">
+            <div className="relative rounded-3xl overflow-hidden border border-[#2A344A] shadow-2xl group">
+              <img
+                src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1000&q=80"
+                alt="Nordic Tre & Håndverk - Tømrermester i arbeid"
+                className="w-full h-[380px] sm:h-[420px] object-cover group-hover:scale-105 transition duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0C0E14] via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl bg-[#11151E]/90 backdrop-blur-md border border-[#242C3D] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                    Mesterbedrift i tømrerfaget
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
+                    Aktivt verksted
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Vi benytter utelukkende sertifisert malmfuru, termotre og eik fra bærekraftig skogbruk.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1873,8 +2015,19 @@ export default function NordicCraftsmanApp() {
           {filteredGallery.map((p) => (
             <div
               key={p.id}
-              className="bg-[#11151E] border border-[#1E2433] hover:border-amber-500/50 rounded-2xl overflow-hidden transition-all group flex flex-col justify-between"
+              className="bg-[#11151E] border border-[#1E2433] hover:border-amber-500/50 rounded-2xl overflow-hidden transition-all group flex flex-col justify-between shadow-xl"
             >
+              <div className="relative h-48 w-full overflow-hidden bg-[#0C0E14]">
+                <img
+                  src={p.image}
+                  alt={p.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                />
+                <div className="absolute top-3 left-3 bg-[#0C0E14]/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-amber-300 border border-amber-800/40 uppercase">
+                  {p.category}
+                </div>
+              </div>
+
               <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
                   <span className="flex items-center gap-1 text-amber-400">

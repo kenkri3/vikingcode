@@ -208,6 +208,49 @@ export function FloatingInputBar({
           </div>
         )}
 
+        {/* Quick Vibe-Action Chips for 1-click micro-edits */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none text-[10px] text-slate-300">
+          <span className="text-[10px] text-slate-500 font-medium shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-purple-400" />
+            <span>Raske justeringer:</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onSendMessage("Gjør ikonene mindre og elegante (w-5 h-5)", selectedModel)}
+            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+          >
+            📐 Små ikoner
+          </button>
+          <button
+            type="button"
+            onClick={() => onSendMessage("Endre fargen til dyp maritim blå", selectedModel)}
+            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+          >
+            🎨 Dyp Blå
+          </button>
+          <button
+            type="button"
+            onClick={() => onSendMessage("Endre fargen til frisk smaragdgrønn", selectedModel)}
+            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+          >
+            🌿 Smaragdgrønn
+          </button>
+          <button
+            type="button"
+            onClick={() => onSendMessage("Endre fargen til varm gyllen rav", selectedModel)}
+            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+          >
+            ✨ Varm Rav
+          </button>
+          <button
+            type="button"
+            onClick={() => onSendMessage("Optimaliser design og layout for mobilskjermer", selectedModel)}
+            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+          >
+            📱 Mobiloptimer
+          </button>
+        </div>
+
         {/* Text input area */}
         <textarea
           ref={textareaRef}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { extractFilesFromAgentReply } from "@/lib/code-extractor";
 import { prisma } from "@/lib/prisma";
-import { callAiModel } from "@/app/api/generate/route";
+import { callAiModel, generateAutonomousCode } from "@/app/api/generate/route";
 
 /**
  * 🤖 AI Program Headless Agent Proxy
@@ -48,26 +48,14 @@ export async function POST(req: NextRequest) {
     // 🎯 SJEKK OM BRUKEREN BRUKER EGEN API-NØKKEL (BYOK)
     const userCustomKey = (customApiKey || apiKey)?.trim();
     if (userCustomKey && userCustomKey.length > 5) {
-      // Sjekk om brukeren er på betalt plan i DB (Modell 1: BYOK krever Starter eller Pro)
-      let isAllowedByok = true;
-      if (userId) {
-        try {
-          const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-          if (dbUser && dbUser.plan === "TRIAL" && dbUser.role !== "ADMIN") {
-            isAllowedByok = false;
-          }
-        } catch {}
-      }
-
-      if (isAllowedByok) {
-        try {
-          const aiResult = await callAiModel(
-            message,
-            projectName || "Mitt Prosjekt",
-            Array.isArray(currentFiles) ? currentFiles : [],
-            userCustomKey,
-            body.provider || body.aiProvider
-          );
+      try {
+        const aiResult = await callAiModel(
+          message,
+          projectName || "Mitt Prosjekt",
+          Array.isArray(currentFiles) ? currentFiles : [],
+          userCustomKey,
+          body.provider || body.aiProvider
+        );
 
         if (aiResult) {
           // Auto-lagre til DB hvis prosjekt finnes
@@ -121,7 +109,6 @@ export async function POST(req: NextRequest) {
         console.warn("Feil ved kjøring med egen API-nøkkel, faller tilbake til standard agent:", keyErr);
       }
     }
-  }
 
     // 2. Bygg samtalehistorikk
     let historyBlock = "";
@@ -267,7 +254,38 @@ export async function POST(req: NextRequest) {
     }
 
     // 🎯 Ekstraher automatisk alle kodefiler som agenten spyttet ut
-    const { files: extractedFiles, cleanedReply } = extractFilesFromAgentReply(replyText);
+    let { files: extractedFiles, cleanedReply } = extractFilesFromAgentReply(replyText);
+
+    // Hvis agenten svarte med ren tekst uten kodeblokker, kjør autonom fullstack-bygger umiddelbart
+    if (extractedFiles.length === 0) {
+      try {
+        const aiFallback = await callAiModel(
+          message,
+          projectName || "Mitt Prosjekt",
+          Array.isArray(currentFiles) ? currentFiles : []
+        );
+        if (aiFallback && aiFallback.files && aiFallback.files.length > 0) {
+          extractedFiles = aiFallback.files;
+          if (aiFallback.message) {
+            cleanedReply = aiFallback.message;
+          }
+        } else {
+          const autoFallback = generateAutonomousCode(
+            message,
+            projectName || "Mitt Prosjekt",
+            Array.isArray(currentFiles) ? currentFiles : []
+          );
+          if (autoFallback && autoFallback.files && autoFallback.files.length > 0) {
+            extractedFiles = autoFallback.files;
+            if (autoFallback.message) {
+              cleanedReply = autoFallback.message;
+            }
+          }
+        }
+      } catch (genFallbackErr) {
+        console.warn("Feil ved lokal generering i agent chat:", genFallbackErr);
+      }
+    }
 
     // Hvis koden inneholdt filer, lagre til database hvis prosjekt finnes
     if (extractedFiles.length > 0 && projectName) {
