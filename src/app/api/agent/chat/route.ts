@@ -149,13 +149,14 @@ export async function POST(req: NextRequest) {
       contextSections.push(
         `--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget) ---\n\`\`\`tsx\n${currentPageCode}\n\`\`\`\n\n` +
           `VIKTIG INSTRUKS FOR KIRURGISK DETALJREDIGERING:\n` +
-          `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne siden (f.eks. justere tekst, endre farger, forminske ikoner, tilpasse knapper eller legge til en seksjon).\n` +
+          `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne eksisterende siden (f.eks. legge til flervalg/checkboxer i skjemaet, justere tekst, endre farger, forminske ikoner, tilpasse knapper eller legge til en seksjon).\n` +
           `2. Ta direkte utgangspunkt i kildekoden over. Ikke start fra bunnen av med mindre kunden eksplisitt ber om et helt nytt prosjekt.\n` +
-          `3. BEVAR 100% AV DET EKSISTERENDE DESIGNET, fargepaletten, seksjonene, bildene og layouten som kunden allerede er fornøyd med!\n` +
-          `4. Gjør KUN den spesifikke detaljendringen brukeren ber om med kirurgisk nøyaktighet.\n` +
-          `5. IKONER: Alle ikoner fra 'lucide-react' MÅ ha eksplisitte Tailwind-størrelser som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". De må ALDRI være udefinerte eller blåses opp.\n` +
-          `6. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.\n` +
-          `7. SYNTAKS-KRAV: Alle strenger i JavaScript-objekter MÅ ha anførselstegn (f.eks. desc: "Tekst her", IKKE desc: Tekst her). All ren tekst i JSX må skrives direkte i JSX-tagger (<p>Tekst</p>), ALDRI pakket i nakne krøllparenteser som {Tekst}.`
+          `3. BEVAR 100% AV DET EKSISTERENDE DESIGNET, fargepaletten, seksjonene, bildene, merkenavnet og layouten som kunden allerede er fornøyd med!\n` +
+          `4. ALDRI endre firmanavnet, logoen eller hero-tittelen til brukerens forespørselsetning! Gjør KUN den spesifikke detaljendringen brukeren ber om med kirurgisk nøyaktighet.\n` +
+          `5. Hvis brukeren ber om å kunne velge flere alternativer/agenter i skjemaet: Legg til sjekkbokser (multi-select buttons/chips) i <form> med interaktiv state (f.eks. selectedAgents og toggleAgent) slik at man kan velge én eller flere.\n` +
+          `6. IKONER: Alle ikoner fra 'lucide-react' MÅ ha eksplisitte Tailwind-størrelser som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". De må ALDRI være udefinerte eller blåses opp.\n` +
+          `7. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.\n` +
+          `8. SYNTAKS-KRAV: Alle strenger i JavaScript-objekter MÅ ha anførselstegn (f.eks. desc: "Tekst her", IKKE desc: Tekst her). All ren tekst i JSX må skrives direkte i JSX-tagger (<p>Tekst</p>), ALDRI pakket i nakne krøllparenteser som {Tekst}.`
       );
     }
 
@@ -163,22 +164,16 @@ export async function POST(req: NextRequest) {
       `--- 🎯 BRUKERENS NYE FORESPØRSEL ---\n${message}\n\n` +
         `KRAV TIL KILDEKODEN:\n` +
         `- Skriv 100% syntaktisk gyldig TypeScript/React JSX med 'use client'.\n` +
+        `- FULLSTACK-ARKITEKTUR (BÅDE NETTSIDER OG BACKEND): Skjemaer skal faktisk kalle backend med fetch('/api/data', { method: 'POST', body: JSON.stringify(...) }) for å lagre henvendelser og valgte agenter i databasen.\n` +
+        `- AUTOMATISK GOOGLE #1 SEO: Inkluder ALLTID en <script type="application/ld+json"> med Schema.org strukturert data (LocalBusiness/Organization og FAQPage for Google Rich Snippets), nøyaktig én <h1> med relevante søkeord, logiske <h2> og <h3>, og beskrivende alt-tekster på alle bilder.\n` +
         `- Alle egenskaper i objekter/arrays med tekst må være gyldige strenger med hermetegn.\n` +
         `- IKON-STØRRELSE: Alle ikoner MÅ ha eksplisitte proporsjoner som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". ALDRI la ikoner stå uten størrelse eller ha w-full.\n` +
         `- KNAPPER & SKJEMAER: Alle knapper som ikke skal navigere til en ekstern URL må ha type="button" eller håndtere klikk med e.preventDefault() slik at de ikke forårsaker utilsiktet side-omlasting.\n` +
         `- NAVIGASJONSLENKER: Bruk hash-lenker som <a href="#tjenester">, <a href="#priser">, <a href="#kontakt"> eller state-basert fanebytte, ALDRI <a href="/">.\n` +
         `- AUTOMATISKE KVALITETSBILDER (Unsplash & AI): Bruk ALLTID virkelige, relevante og høyoppløselige Unsplash-bilder for hero-bakgrunn, tjenestekort, galleri og team. ALDRI bruk tomme grå firkanter eller tomme src-attributter!\n` +
-        `  Eksempler på bransjebilder:\n` +
-        `  * Sjømat & Kyst / Fisk / Skalldyr: hero: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=1600&q=80", retter: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80", kyst: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"\n` +
-        `  * Frisør / Barber: hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80", klipp: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80", styling: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80", team: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"\n` +
-        `  * Håndverker / Snekker: hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80", terrasse: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80", finsnekring: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"\n` +
-        `  * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"\n` +
-        `  * Helse / Klinikk: hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80", behandling: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80"\n` +
-        `  * Florist / Blomster: hero: "https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&w=1600&q=80", buketter: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80", bryllup: "https://images.unsplash.com/photo-1522057384400-681b4213fb52?auto=format&fit=crop&w=800&q=80"\n` +
-        `  * Tech / SaaS: hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"\n` +
         `- FLERSIDIG ARKITEKTUR (Next.js App Router): Du kan opprette og oppdatere flere sider etter brukerens ønske (f.eks. app/page.tsx for forsiden, app/booking/page.tsx for timebestilling, app/om-oss/page.tsx, app/kontakt/page.tsx, app/priser/page.tsx). Forhåndsvisningen støtter 100% full interaktiv navigasjon mellom sidene med <Link href="/booking"> eller <Link href="/">.\n` +
         `- Lever ferdig oppdatert Next.js-kode i en eller flere \`\`\`tsx kodeblokker (med // app/.../page.tsx på første linje), og avslutt alltid med JSON-formatet med alle opprettede/oppdaterte filer:\n` +
-        `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" }\n  ]\n}`
+        `{\n  "action": "CODE_GENERATE",\n  "project_name": "${projectName || "prosjekt"}",\n  "files": [\n    { "path": "app/page.tsx", "content": "/* komplett oppdatert kode */" },\n    { "path": "app/api/data/route.ts", "content": "/* backend api route */" },\n    { "path": "prisma/schema.prisma", "content": "/* postgresql schema */" }\n  ]\n}`
     );
 
     const enrichedMessage = contextSections.join("\n\n");

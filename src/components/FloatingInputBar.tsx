@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Plus,
   Mic,
@@ -37,6 +38,10 @@ export function FloatingInputBar({
   const [hasContextPill, setHasContextPill] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // URL Scraping state
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
@@ -345,62 +350,77 @@ export function FloatingInputBar({
         </div>
       </div>
 
-      {/* Modal: Re-imagine from URL */}
-      {isUrlModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#161822] border border-[#2b3348] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+      {/* Modal: Re-imagine from URL (Portaled to document.body to avoid parent container bounds / clipping) */}
+      {isUrlModalOpen && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsUrlModalOpen(false);
+          }}
+        >
+          <div
+            className="bg-[#141620] border border-[#2b3348] rounded-2xl w-full max-w-md overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_30px_rgba(124,58,237,0.15)] p-6 space-y-4 my-auto relative animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between pb-3 border-b border-[#242b3d]">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-purple-400" />
-                <h3 className="text-sm font-bold text-white">Re-imagine from URL</h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-sm">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-tight">Re-imagine from URL</h3>
+                  <p className="text-[10px] text-slate-400">Ekstraher merkevare, innhold og struktur</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsUrlModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#242b3d] transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#202534] transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Lim inn URL-en til en nettside. AI-agenten henter merkevaren, tjenestene og strukturen automatisk, og gjenskaper en moderne, luksuriøs versjon.
+              Lim inn URL-en til en eksisterende nettside. AI-agenten henter merkevaren, tjenestene og strukturen automatisk, og gjenskaper en moderne, luksuriøs versjon for deg.
             </p>
 
             <form onSubmit={handleScrapeUrlSubmit} className="space-y-4">
               <div>
-                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">
                   Nettadresse (URL):
                 </label>
-                <div className="flex items-center gap-2 bg-[#0e1017] border border-[#2d3748] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
-                  <LinkIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-2 bg-[#0b0c10] border border-[#2d3748] focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500/50 rounded-xl px-3.5 py-2.5 text-xs transition">
+                  <LinkIcon className="w-4 h-4 text-purple-400 shrink-0" />
                   <input
                     type="text"
                     required
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
                     placeholder="https://bedrift.no eller blomsterbutikk.no"
-                    className="bg-transparent text-white outline-none w-full font-sans"
+                    className="bg-transparent text-white placeholder-slate-500 outline-none w-full font-sans text-xs"
                     autoFocus
                   />
                 </div>
                 {urlError && (
-                  <p className="text-[11px] text-rose-400 mt-1">{urlError}</p>
+                  <p className="text-[11px] text-rose-400 mt-1.5 flex items-center gap-1">
+                    <span>⚠️</span> {urlError}
+                  </p>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#1e2330]">
                 <button
                   type="button"
                   onClick={() => setIsUrlModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-[#202534] hover:bg-[#283042] text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#1c202c] hover:bg-[#262c3c] text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer border border-[#2b3345]"
                 >
                   Avbryt
                 </button>
                 <button
                   type="submit"
                   disabled={!inputUrl.trim() || isScrapingUrl}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-lg shadow-purple-950/50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-xs font-semibold text-white transition flex items-center gap-2 shadow-lg shadow-purple-950/60 cursor-pointer"
                 >
                   {isScrapingUrl ? (
                     <>
@@ -417,7 +437,8 @@ export function FloatingInputBar({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
