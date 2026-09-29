@@ -9,8 +9,9 @@ import {
   Terminal,
   RotateCcw,
   Sparkles,
-  Bot,
   Layers,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { AgentChatView } from "./AgentChatView";
 import { FloatingInputBar } from "./FloatingInputBar";
@@ -31,6 +32,8 @@ interface WorkspaceLayoutProps {
   onUpdateFile: (path: string, content: string) => void;
   onStopGeneration?: () => void;
   isQuotaExceeded?: boolean;
+  isPreviewOpen?: boolean;
+  onTogglePreview?: (open: boolean) => void;
   mobileTab?: "agent" | "preview" | "backend" | "database" | "code" | "terminal";
   onSetMobileTab?: (tab: "agent" | "preview" | "backend" | "database" | "code" | "terminal") => void;
 }
@@ -43,19 +46,32 @@ export function WorkspaceLayout({
   onUpdateFile,
   onStopGeneration,
   isQuotaExceeded = false,
+  isPreviewOpen: externalPreviewOpen,
+  onTogglePreview,
   mobileTab = "agent",
   onSetMobileTab,
 }: WorkspaceLayoutProps) {
+  const [internalPreviewOpen, setInternalPreviewOpen] = useState(false);
+  const isPreviewOpen = externalPreviewOpen !== undefined ? externalPreviewOpen : internalPreviewOpen;
+
+  const setIsPreviewOpen = (open: boolean) => {
+    if (onTogglePreview) {
+      onTogglePreview(open);
+    }
+    setInternalPreviewOpen(open);
+  };
+
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("preview");
   const [selectedFileForEditor, setSelectedFileForEditor] = useState<string>("app/page.tsx");
 
   const handleOpenFile = (path: string) => {
     setSelectedFileForEditor(path);
     setActiveTab("editor");
+    setIsPreviewOpen(true);
     if (onSetMobileTab) onSetMobileTab("code");
   };
 
-  // Keep internal activeTab synced with mobileTab if user selects one
+  // Sync internal activeTab with mobileTab if user taps mobile dock
   useEffect(() => {
     if (mobileTab === "preview") setActiveTab("preview");
     if (mobileTab === "backend") setActiveTab("backend");
@@ -65,21 +81,39 @@ export function WorkspaceLayout({
   }, [mobileTab]);
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-[#0A0D12]">
-      {/* LEFT SIDE (Agent Chat & Floating Input) */}
+    <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-[#181818]">
+      {/* CHAT PANE (Expands to 100% full width when preview is closed, splits to ~42% when preview is open) */}
       <div
-        className={`w-full md:w-[38%] lg:w-[35%] flex-col h-full border-r border-[#1F2937] bg-[#0A0D12] overflow-hidden ${
-          mobileTab === "agent" ? "flex" : "hidden md:flex"
-        }`}
+        className={`flex-col h-full bg-[#181818] overflow-hidden transition-all duration-300 ${
+          isPreviewOpen
+            ? "w-full md:w-[42%] lg:w-[40%] md:border-r border-[#262626]"
+            : "w-full md:w-full"
+        } ${mobileTab === "agent" ? "flex" : "hidden md:flex"}`}
       >
         {/* Left Side Header */}
-        <div className="h-9 bg-[#12161F]/40 border-b border-[#1E2430] px-3.5 flex items-center justify-between select-none shrink-0">
+        <div className="h-10 bg-[#1f1f1f]/80 border-b border-[#2a2a2a] px-4 flex items-center justify-between select-none shrink-0">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-pulse" />
             <span className="text-xs font-semibold text-white">AI Autonom Utvikler</span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* If preview is closed, show a subtle button to open preview */}
+            {!isPreviewOpen && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPreviewOpen(true);
+                  setActiveTab("preview");
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#242424] hover:bg-[#2b2b2b] text-[#d4d4d4] hover:text-white border border-[#333] text-xs font-medium transition cursor-pointer"
+                title="Åpne forhåndsvisning"
+              >
+                <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
+                <span>Åpne forhåndsvisning</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -90,7 +124,7 @@ export function WorkspaceLayout({
                   }
                 }
               }}
-              className="p-1 text-slate-400 hover:text-white rounded-md hover:bg-[#1E2430] transition cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#282828] transition cursor-pointer"
               title="Kjør siste melding på nytt"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -98,30 +132,37 @@ export function WorkspaceLayout({
           </div>
         </div>
 
-        {/* Left Side Content: Interactive Live Agent & Builder Chat */}
+        {/* Chat Content & Input */}
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <AgentChatView
             messages={messages}
             isLoading={isLoading}
+            projectName={activeProject.name}
+            isPreviewOpen={isPreviewOpen}
             onOpenFile={handleOpenFile}
             onQuickReply={(text) => onSendMessage(text, "Gemini 3.8 Flash High")}
             onOpenPreview={() => {
+              setIsPreviewOpen(true);
               setActiveTab("preview");
               if (onSetMobileTab) onSetMobileTab("preview");
             }}
             onOpenBackend={() => {
+              setIsPreviewOpen(true);
               setActiveTab("backend");
               if (onSetMobileTab) onSetMobileTab("backend");
             }}
             onOpenDatabase={() => {
+              setIsPreviewOpen(true);
               setActiveTab("database");
               if (onSetMobileTab) onSetMobileTab("database");
             }}
             onOpenCode={() => {
+              setIsPreviewOpen(true);
               setActiveTab("editor");
               if (onSetMobileTab) onSetMobileTab("code");
             }}
             onOpenTerminal={() => {
+              setIsPreviewOpen(true);
               setActiveTab("terminal");
               if (onSetMobileTab) onSetMobileTab("terminal");
             }}
@@ -135,78 +176,91 @@ export function WorkspaceLayout({
         </div>
       </div>
 
-      {/* RIGHT SIDE: Multi-Tab Full-Stack Vibe Workspace */}
+      {/* RIGHT SIDE: Multi-Tab Preview & Code Canvas (Only visible when isPreviewOpen is true or mobileTab !== 'agent') */}
       <div
-        className={`w-full md:w-[62%] lg:w-[65%] flex-col h-full bg-[#0A0D12] overflow-hidden ${
-          mobileTab !== "agent" ? "flex" : "hidden md:flex"
-        }`}
+        className={`flex-col h-full bg-[#141414] overflow-hidden transition-all duration-300 ${
+          isPreviewOpen
+            ? "w-full md:w-[58%] lg:w-[60%] flex"
+            : "hidden"
+        } ${mobileTab !== "agent" ? "flex !w-full" : ""}`}
       >
-        {/* Workspace Tab Header */}
-        <div className="h-9 bg-[#12161F]/60 border-b border-[#1E2430] px-3 flex items-center justify-between select-none shrink-0 overflow-x-auto">
-          {/* 5 Tab Navigation: Frontend | Backend | Database | Kode | Terminal */}
-          <div className="flex items-center gap-1 bg-[#0A0D12] p-0.5 rounded-lg border border-[#1E2430] shrink-0">
+        {/* Workspace Tab Header with Sleek Segmented Switcher & Close Button */}
+        <div className="h-11 bg-[#1e1e1e] border-b border-[#2a2a2a] px-3.5 flex items-center justify-between select-none shrink-0 overflow-x-auto">
+          {/* Left: App Title and Live Badge */}
+          <div className="flex items-center gap-2.5 min-w-0 mr-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-xs font-semibold text-white truncate max-w-[140px] sm:max-w-[200px]">
+              {activeProject.name}
+            </span>
+            <span className="hidden lg:inline-flex text-[10px] px-2 py-0.5 rounded-full bg-[#2a2a2a] text-[#a1a1aa] border border-[#383838]">
+              Live Sandkasse
+            </span>
+          </div>
+
+          {/* Center: Sleek Segmented Switcher */}
+          <div className="flex items-center gap-1 bg-[#141414] p-1 rounded-xl border border-[#2a2a2a] shrink-0">
             {/* 1. Frontend Preview */}
             <button
               onClick={() => {
                 setActiveTab("preview");
                 if (onSetMobileTab) onSetMobileTab("preview");
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#282828] text-white font-medium shadow-sm"
+                  : "text-[#9ca3af] hover:text-white"
               }`}
             >
               <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span>Frontend App</span>
+              <span>Forhåndsvisning</span>
             </button>
 
-            {/* 2. Backend API Explorer */}
-            <button
-              onClick={() => {
-                setActiveTab("backend");
-                if (onSetMobileTab) onSetMobileTab("backend");
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
-                activeTab === "backend"
-                  ? "bg-[#1E2430] text-cyan-300 font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Server className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Backend API</span>
-            </button>
-
-            {/* 3. Database Studio */}
-            <button
-              onClick={() => {
-                setActiveTab("database");
-                if (onSetMobileTab) onSetMobileTab("database");
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
-                activeTab === "database"
-                  ? "bg-[#1E2430] text-emerald-300 font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Database</span>
-            </button>
-
-            {/* 4. Code Editor */}
+            {/* 2. Code Editor */}
             <button
               onClick={() => {
                 setActiveTab("editor");
                 if (onSetMobileTab) onSetMobileTab("code");
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition cursor-pointer ${
                 activeTab === "editor"
-                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#282828] text-white font-medium shadow-sm"
+                  : "text-[#9ca3af] hover:text-white"
               }`}
             >
               <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
               <span>Kode ({activeProject.files.length})</span>
+            </button>
+
+            {/* 3. Backend API Explorer */}
+            <button
+              onClick={() => {
+                setActiveTab("backend");
+                if (onSetMobileTab) onSetMobileTab("backend");
+              }}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${
+                activeTab === "backend"
+                  ? "bg-[#282828] text-cyan-300 font-medium shadow-sm"
+                  : "text-[#9ca3af] hover:text-white"
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Backend</span>
+            </button>
+
+            {/* 4. Database Studio */}
+            <button
+              onClick={() => {
+                setActiveTab("database");
+                if (onSetMobileTab) onSetMobileTab("database");
+              }}
+              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${
+                activeTab === "database"
+                  ? "bg-[#282828] text-emerald-300 font-medium shadow-sm"
+                  : "text-[#9ca3af] hover:text-white"
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Database</span>
             </button>
 
             {/* 5. Terminal */}
@@ -215,10 +269,10 @@ export function WorkspaceLayout({
                 setActiveTab("terminal");
                 if (onSetMobileTab) onSetMobileTab("terminal");
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
+              className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${
                 activeTab === "terminal"
-                  ? "bg-[#1E2430] text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#282828] text-amber-300 font-medium shadow-sm"
+                  : "text-[#9ca3af] hover:text-white"
               }`}
             >
               <Terminal className="w-3.5 h-3.5 text-amber-400" />
@@ -226,9 +280,16 @@ export function WorkspaceLayout({
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-400 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>Railway Fullstack Ready</span>
+          {/* Right: Close Preview Button (Collapses to full-width chat like Qwen) */}
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(false)}
+              className="p-1.5 text-[#9ca3af] hover:text-white hover:bg-[#282828] rounded-lg transition cursor-pointer"
+              title="Lukk forhåndsvisning (vis full bredde chat)"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 

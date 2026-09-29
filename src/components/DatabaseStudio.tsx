@@ -320,10 +320,10 @@ model Lead {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-full bg-[#0A0D12] text-slate-100 overflow-hidden font-sans">
+    <div className="flex-1 min-w-0 flex flex-col md:flex-row h-full bg-[#141414] text-slate-100 overflow-hidden font-sans">
       {/* LEFT: Models / Tables Sidebar */}
-      <div className="w-full md:w-64 bg-[#0E121A] border-r border-[#1F2937] flex flex-col h-full shrink-0">
-        <div className="p-3.5 border-b border-[#1F2937] flex items-center justify-between">
+      <div className="w-full md:w-56 lg:w-60 bg-[#1a1a1a] border-r border-[#262626] flex flex-col h-full shrink-0">
+        <div className="p-3.5 border-b border-[#262626] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-emerald-400" />
             <span className="font-bold text-xs text-white">PostgreSQL Tabeller</span>
@@ -370,9 +370,9 @@ model Lead {
       </div>
 
       {/* RIGHT: Table Grid & Controls */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0A0D12]">
+      <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-[#141414]">
         {/* Table Header Toolbar */}
-        <div className="p-3 bg-[#12161F]/60 border-b border-[#1F2937] flex flex-wrap items-center justify-between gap-3">
+        <div className="p-3 bg-[#1a1a1a] border-b border-[#262626] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">

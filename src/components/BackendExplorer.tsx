@@ -439,10 +439,10 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-full bg-[#0A0D12] text-slate-100 overflow-hidden font-sans">
+    <div className="flex-1 min-w-0 flex flex-col md:flex-row h-full bg-[#141414] text-slate-100 overflow-hidden font-sans">
       {/* LEFT: Endpoints Directory */}
-      <div className="w-full md:w-72 bg-[#0E121A] border-r border-[#1F2937] flex flex-col h-full shrink-0">
-        <div className="p-3.5 border-b border-[#1F2937] flex items-center justify-between">
+      <div className="w-full md:w-56 lg:w-64 bg-[#1a1a1a] border-r border-[#262626] flex flex-col h-full shrink-0">
+        <div className="p-3.5 border-b border-[#262626] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Server className="w-4 h-4 text-[#A78BFA]" />
             <span className="font-bold text-xs text-white">Backend Endepunkter</span>
@@ -470,12 +470,12 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
                       className={`w-full text-left p-2.5 rounded-xl text-xs transition cursor-pointer flex flex-col gap-1 border ${
                         isSelected
                           ? "bg-purple-950/50 border-[#7C3AED] text-white shadow-sm"
-                          : "bg-[#12161F]/60 border-[#1F2937] text-slate-300 hover:border-slate-700 hover:text-white"
+                          : "bg-[#212121]/60 border-[#2e2e2e] text-slate-300 hover:border-slate-600 hover:text-white"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${
+                          className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${
                             ep.method === "GET"
                               ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
                               : ep.method === "POST"
@@ -513,7 +513,7 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
                       className={`w-full text-left p-2 rounded-xl text-xs transition cursor-pointer flex items-center justify-between border ${
                         isSelected
                           ? "bg-purple-950/50 border-[#7C3AED] text-white"
-                          : "bg-[#12161F]/40 border-[#1F2937] text-slate-400 hover:text-white hover:border-slate-700"
+                          : "bg-[#212121]/40 border-[#2e2e2e] text-slate-400 hover:text-white hover:border-slate-600"
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -536,7 +536,7 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
         </div>
 
         {/* Runtime footer */}
-        <div className="p-3 bg-[#0A0D12] border-t border-[#1F2937] text-[11px] text-slate-400 space-y-1">
+        <div className="p-3 bg-[#161616] border-t border-[#262626] text-[11px] text-slate-400 space-y-1">
           <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Node.js / Nixpacks Kjørende</span>
@@ -546,26 +546,26 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
       </div>
 
       {/* RIGHT: Interactive API Workbench */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0A0D12]">
+      <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-[#141414]">
         {/* URL Bar & Method Header */}
-        <div className="p-3.5 bg-[#12161F]/60 border-b border-[#1F2937] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white">{currentEndpoint?.name}</span>
-              <span className="text-xs text-slate-400">• {currentEndpoint?.description}</span>
+        <div className="p-3.5 bg-[#1a1a1a] border-b border-[#262626] space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-bold text-white truncate">{currentEndpoint?.name}</span>
+              <span className="text-xs text-slate-400 truncate hidden md:inline">• {currentEndpoint?.description}</span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+            <div className="flex items-center gap-2 text-xs font-mono text-slate-400 shrink-0">
               <span className="text-emerald-400">● 200 OK</span>
-              <span>PostgreSQL Live</span>
+              <span className="hidden sm:inline">PostgreSQL Live</span>
             </div>
           </div>
 
           {/* Interactive Request Bar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <select
               value={requestMethod}
               onChange={(e) => setRequestMethod(e.target.value as any)}
-              className="bg-[#0E121A] border border-[#1F2937] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#A78BFA] outline-none cursor-pointer"
+              className="bg-[#212121] border border-[#2e2e2e] rounded-xl px-2.5 sm:px-3 py-2 text-xs font-mono font-bold text-[#A78BFA] outline-none cursor-pointer shrink-0"
             >
               <option value="GET">GET</option>
               <option value="POST">POST</option>
@@ -573,20 +573,20 @@ export function BackendExplorer({ files, projectName }: BackendExplorerProps) {
               <option value="DELETE">DELETE</option>
             </select>
 
-            <div className="flex-1 bg-[#0E121A] border border-[#1F2937] rounded-xl px-3.5 py-2 flex items-center gap-2 font-mono text-xs">
-              <span className="text-slate-500 select-none">https://aiprogram.no</span>
+            <div className="flex-1 min-w-0 bg-[#212121] border border-[#2e2e2e] rounded-xl px-2.5 sm:px-3 py-2 flex items-center gap-1.5 font-mono text-xs overflow-hidden">
+              <span className="text-slate-500 select-none hidden lg:inline shrink-0">https://aiprogram.no</span>
               <input
                 type="text"
                 value={requestPath}
                 onChange={(e) => setRequestPath(e.target.value)}
-                className="flex-1 bg-transparent text-white outline-none"
+                className="flex-1 min-w-0 bg-transparent text-white outline-none"
               />
             </div>
 
             <button
               onClick={handleExecuteRequest}
               disabled={isExecuting}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#38BDF8] hover:from-[#6D28D9] text-white text-xs font-bold transition shadow-lg shadow-purple-900/30 flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
+              className="px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#38BDF8] hover:from-[#6D28D9] text-white text-xs font-bold transition shadow-lg shadow-purple-900/30 flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
             >
               {isExecuting ? (
                 <>

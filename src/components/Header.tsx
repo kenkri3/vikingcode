@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   Menu,
   MoreVertical,
+  Eye,
   X,
 } from "lucide-react";
 
@@ -28,6 +29,8 @@ interface HeaderProps {
   onDownloadZip: () => void;
   onPushGithub: () => void;
   isDeploying?: boolean;
+  isPreviewOpen?: boolean;
+  onTogglePreview?: () => void;
   onResetToStart?: () => void;
   onToggleSidebar?: () => void;
 }
@@ -40,6 +43,8 @@ export function Header({
   onDownloadZip,
   onPushGithub,
   isDeploying = false,
+  isPreviewOpen = false,
+  onTogglePreview,
   onResetToStart,
   onToggleSidebar,
 }: HeaderProps) {
@@ -51,14 +56,14 @@ export function Header({
   const tokenPercent = Math.min(100, Math.max(0, (user.tokensRemaining / maxTokens) * 100));
 
   return (
-    <header className="sticky top-0 z-40 h-14 bg-[#0A0D12]/95 backdrop-blur-md border-b border-[#1F2937] px-3 sm:px-4 flex items-center justify-between select-none">
+    <header className="sticky top-0 z-40 h-14 bg-[#181818]/95 backdrop-blur-md border-b border-[#262626] px-3 sm:px-4 flex items-center justify-between select-none">
       {/* Left: Hamburger (Mobile) + AI Program Logo & Project breadcrumb */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Hamburger on mobile */}
         <button
           onClick={onToggleSidebar}
           aria-label="Åpne prosjektmeny"
-          className="md:hidden p-2 -ml-1 text-slate-300 hover:text-white rounded-lg hover:bg-[#181E2B] transition"
+          className="md:hidden p-2 -ml-1 text-slate-300 hover:text-white rounded-lg hover:bg-[#242424] transition"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -83,12 +88,12 @@ export function Header({
         </button>
 
         {/* Vertical divider */}
-        <div className="h-5 w-[1px] bg-[#1F2937] hidden md:block"></div>
+        <div className="h-5 w-[1px] bg-[#262626] hidden md:block"></div>
 
         {/* Active Project Breadcrumb (Antigravity style) */}
         <div className="hidden md:flex items-center gap-2 text-xs text-slate-300">
           <span className="text-slate-500 font-medium">Prosjekt /</span>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12161F] border border-[#1F2937] text-slate-200">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#212121] border border-[#2e2e2e] text-slate-200">
             <FolderGit2 className="w-3.5 h-3.5 text-[#A78BFA]" />
             <span className="font-semibold text-white max-w-[200px] truncate">
               {activeProject.name}
@@ -103,7 +108,7 @@ export function Header({
         {/* Sleek Token Pill */}
         <button
           onClick={onOpenPricing}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs transition cursor-pointer group"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#212121] hover:bg-[#282828] border border-[#2e2e2e] text-xs transition cursor-pointer group"
           title="Klikk for å fylle på tokens eller se plan"
         >
           <Zap className="w-3.5 h-3.5 text-[#A78BFA] group-hover:scale-110 transition-transform" />
@@ -116,12 +121,29 @@ export function Header({
           </span>
         </button>
 
+        {/* Action Button: Preview Toggle (Desktop) */}
+        {onTogglePreview && (
+          <button
+            type="button"
+            onClick={onTogglePreview}
+            className={`hidden md:flex h-8 px-3 rounded-lg text-xs font-semibold items-center gap-1.5 transition cursor-pointer border ${
+              isPreviewOpen
+                ? "bg-[#282828] text-white border-[#444]"
+                : "bg-[#212121] text-[#a1a1aa] hover:text-white border-[#2e2e2e] hover:border-[#444]"
+            }`}
+            title={isPreviewOpen ? "Lukk forhåndsvisning (vis full bredde chat)" : "Åpne forhåndsvisning"}
+          >
+            <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
+            <span>{isPreviewOpen ? "Lukk Preview" : "Forhåndsvisning"}</span>
+          </button>
+        )}
+
         {/* Action Button 1: Deploy til egen Railway-konto via GitHub (Desktop) */}
         <button
           onClick={isTrial ? onOpenPricing : onDeployRailway}
           className={`hidden md:flex h-8 px-3 rounded-lg text-xs font-semibold items-center gap-1.5 transition cursor-pointer ${
             isTrial
-              ? "bg-[#141822] text-slate-400 border border-[#1F2937] hover:border-slate-600"
+              ? "bg-[#212121] text-slate-400 border border-[#2e2e2e] hover:border-slate-600"
               : "bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] hover:to-[#7C3AED] text-white shadow-sm shadow-purple-950/50"
           }`}
           title={isTrial ? "Oppgrader for 1-klikks Railway Template deploy" : "Deploy direkte på din egen Railway-konto"}

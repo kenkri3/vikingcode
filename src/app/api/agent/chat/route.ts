@@ -90,7 +90,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (!replyText) {
-      replyText = "Jeg mottok henvendelsen din og har behandlet forespørselen.";
+      replyText = "Jeg har behandlet forespørselen din og oppdatert prosjektet.";
+    } else {
+      replyText = replyText
+        .replace(/VikingCode\s*Architect/gi, "AI Program Arkitekt")
+        .replace(/VikingCode/gi, "AI Program")
+        .replace(/Viking/gi, "Nordic");
     }
 
     return NextResponse.json({

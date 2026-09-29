@@ -147,6 +147,9 @@ function BuilderContent() {
   // Visningsmodus: "start" eller "workspace"
   const [viewMode, setViewMode] = useState<"start" | "workspace">("workspace");
 
+  // Forhåndsvisning: kun synlig når kode er generert eller bruker åpner det (som Qwen)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   // Meldinger og agentstatus
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -411,6 +414,7 @@ function BuilderContent() {
 
               return updatedProj;
             });
+            setIsPreviewOpen(true);
             setMobileTab("preview");
           }
         }
@@ -425,10 +429,7 @@ function BuilderContent() {
       // Sett sammen innhold til chat-boblen
       let finalContent = "";
       if (filesGenerated.length > 0) {
-        finalContent = `🚀 **Kode og forhåndsvisning er oppdatert!**\n\nJeg har bygget og konfigurert løsningen for forespørselen din: **"${promptText}"**.\n\nBruk knappene under for å teste i **Live Preview** eller åpne **Se Koden**.`;
-        if (botReply) {
-          finalContent += `\n\n---\n${botReply}`;
-        }
+        finalContent = `Jeg har bygget og konfigurert løsningen for forespørselen din: **"${promptText}"**.\n\nForhåndsvisningen er oppdatert og klar. Du kan teste applikasjonen i vinduet til høyre eller åpne kildekoden for å se endringene.`;
       } else if (botReply) {
         finalContent = botReply;
       } else {
@@ -576,13 +577,14 @@ function BuilderContent() {
     }
   };
 
-  // Ny samtale
+  // Ny samtale (starter i full-bredde ren chat som Qwen)
   const handleNewConversation = () => {
+    setIsPreviewOpen(false);
     setMessages([
       {
         id: `msg-welcome-${Date.now()}`,
         role: "assistant",
-        content: `Hei! Hva ønsker du å bygge eller endre på ${activeProject.name}? Beskriv ønsket funksjon, så oppretter jeg filene og oppdaterer forhåndsvisningen.`,
+        content: `Hei! Hva ønsker du å bygge eller endre på ${activeProject.name}? Beskriv ønsket funksjon, så oppretter jeg filene og setter opp forhåndsvisningen for deg.`,
         timestamp: new Date().toISOString(),
       },
     ]);
@@ -703,7 +705,7 @@ function BuilderContent() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0A0D12]">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#181818]">
       {/* 1. Header (alltid synlig med sanntids token-måler) */}
       <Header
         user={user}
@@ -713,6 +715,8 @@ function BuilderContent() {
         onDownloadZip={handleDownloadZip}
         onPushGithub={handlePushGithub}
         isDeploying={isDeploying}
+        isPreviewOpen={isPreviewOpen}
+        onTogglePreview={() => setIsPreviewOpen((prev) => !prev)}
         onResetToStart={() => setViewMode("start")}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
       />
@@ -766,6 +770,7 @@ function BuilderContent() {
             } else {
               setActiveProject((prev) => ({ ...prev, name }));
             }
+            setIsPreviewOpen(false);
             setViewMode("workspace");
           }}
           onNewConversation={handleNewConversation}
@@ -792,6 +797,8 @@ function BuilderContent() {
             onSendMessage={handleSendMessage}
             onUpdateFile={handleUpdateFile}
             isQuotaExceeded={isQuotaExceeded}
+            isPreviewOpen={isPreviewOpen}
+            onTogglePreview={setIsPreviewOpen}
             mobileTab={mobileTab}
             onSetMobileTab={setMobileTab}
           />
