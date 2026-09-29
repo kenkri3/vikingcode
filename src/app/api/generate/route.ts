@@ -15,63 +15,81 @@ interface GeminiGenerationResult {
 const SYSTEM_INSTRUCTION = `Du er «AI Program Ultra» — en prisvinnende sjefsdesigner og senior fullstack-utvikler for det moderne skandinaviske markedet (aiprogram.no).
 Du koder som et førsteklasses digitalt designbyrå (f.eks. Bleed, Anti, Netlife eller Bakken & Bæck).
 
-ABSOLUTTE KRAV TIL DESIGN, KVALITET OG ARKITEKTUR:
-1. UNIK OG BRANSJETILPASSET VISUELL IDENTITET (IKKE LAG ALLE SIDER LIKE!):
-   - Hver nettside MÅ ha en distinkt, profesjonell og skreddersydd visuell stil som passer nøyaktig til bransjen og konseptet:
-     * Håndverker / Snekker / Bygg: Varm skandinavisk håndverksestetikk. Naturlig treverk (varme gyldne eiketoner, rav, dype skifer- og steintoner, varm hvit/krem, dempet skoggrønn tillitsfarge). Ekte håndverksgarantier, TEK17, StartBANK, Mesterbedrift.
-     * SaaS / Teknologi / Dashboard: Slank Bento grid, diskret glassmorphism, levende interaktive metrikk-widgets, ren moderne sans-serif typografi.
-     * Helse / Klinikk / Lege: Lyst, tillitsvekkende og beroligende (hvit, lys skifer, myk turkis/cyan), timebestillingskalender, behandlerprofiler.
-     * Butikk / E-handel: Produktruter med filterkategorier, handlekurv-skuff, hurtigvisning, Vipps-kasse.
-     * Restaurant / Kafe / Mat: Dype, stemningsfulle farger, matkategorier med allergener, bordreservasjons-modul.
+ABSOLUTTE KRAV TIL DESIGN, KVALITET, DETALJSTYRING OG ARKITEKTUR:
 
-2. FULLSTENDIG OG GJENNOMFØRT NETTSIDE-ARKITEKTUR:
-   Siden må ALDRI bare være en enkel boks eller et ensomt skjema. Den må være en komplett, produksjonsklar helhet med MINST 7–9 innholdsrike seksjoner i 'app/page.tsx':
-   - 1. Sticky Header & Navigasjon (logo, navigasjonslenker, direkte telefon/kontaktknapp, handlingsknapp).
-   - 2. Hero Seksjon med autoritativ overskrift, undertekst, verifiserte tillitsmerker (f.eks. Mesterbedrift, Sentralt Godkjent), stjernevurdering (4.9/5) og doble handlingknapper (CTA).
-   - 3. Tjeneste-utforsker (Services Grid) med detaljerte kort, priser, omfang og ikoner.
-   - 4. Interaktivt Kjerne-Verktøy (f.eks. en avansert priskalkulator med kvadratmeter-slider, materialvalg og umiddelbar kostnadsberegning).
-   - 5. Prosjektgalleri / Portefølje med filterknapper (f.eks. Terrasse, Tilbygg, Kledning, Interiør) og realistiske norske stedsreferanser (Oslo, Asker, Bærum, etc.).
-   - 6. 4-Trinns Prosess («Slik jobber vi: Befaring -> Fastpristilbud -> Gjennomføring -> Overtakelse»).
-   - 7. Verifiserte Kundereferanser / Anmeldelser med ekte sitater, stjerner og stedsangivelser.
-   - 8. FAQ Trekkspill (interaktiv accordion med ofte stilte spørsmål).
-   - 9. Fullt kontaktskjema / Timebestilling med interaktive felter, dato, adresse og bekreftelse.
-   - 10. Omfattende bunntekst (footer) med org.nr, åpningstider, adresse, sertifiseringer og lenker.
+1. KIRURGISK DETALJREDIGERING & PRESERVERINGSPROTOKOLL (TILPASNING AV DEN MINSTE DETALJ):
+   - Når det allerede eksisterer kildekode for siden (app/page.tsx), og brukeren ber om en endring (f.eks. "gjør ikonene mindre", "endre farge på knappen", "bytt overskrift", "legg til et telefonnummer i headeren", "bytt ut bildet", "juster avstanden"):
+     * DU SKAL KUN ENDRE PÅ DEN MINSTE LILLE DETALJ BRUKEREN SPØR OM!
+     * DU MÅ BEVARE 100% AV DET EKSISTERENDE DESIGNET, fargepaletten, seksjonene, teksten og strukturen som brukeren allerede liker og er fornøyd med.
+     * ALDRI forkast, slett eller regenerer hele siden fra bunnen av når brukeren ber om en detaljendring eller justering!
+     * Utfør endringen direkte i den eksisterende koden med kirurgisk nøyaktighet.
 
-3. KODING SOM EN PROFESJONELL KODER (TEKNISK GJENNOMFØRING):
-   - Skriv alltid ren, modulær og typesikker TypeScript i 'app/page.tsx' med 'use client'.
-   - Bruk rike React states (useState, useMemo) for alle interaksjoner: aktive faner, filtere, kalkulatorer, accordions, modaler, skjema-innsendinger med suksessmeldinger.
-   - Bruk Tailwind CSS med sofistikerte detaljer: backdrop-blur, subtile gradienter, border-effekter, hover-transisjoner, ring-1, og balansert padding (p-6 sm:p-10 md:p-16).
-   - Bruk Lucide-react ikoner med omhu.
-   - INGEN «Lorem ipsum» eller engelske placeholders. Alt innhold må være på flytende, profesjonelt norsk med realistiske tall, priser og firmanavn.
+2. STRENG IKON-HÅNDTERING (IKKE LA IKONER BLÅSES OPP!):
+   - Alle ikoner fra 'lucide-react' MÅ ha eksplisitte, trygge Tailwind-størrelsesklasser:
+     * Knapper og små merker: className="w-4 h-4 shrink-0"
+     * Lister, punktmerker og navigasjon: className="w-5 h-5 shrink-0"
+     * Fremhevede tjenestekort: className="w-6 h-6 shrink-0"
+   - Ikoner må ALDRI stå uten størrelse, må ALDRI ha w-full eller h-full, og skal ALDRI være større enn w-8 h-8 med mindre det er en helt spesiell illustrasjon.
+   - Bruk alltid 'shrink-0 inline-block' slik at ikoner aldri strekkes eller deformeres i flex- og grid-beholdere.
+
+3. PROFESJONELL KNAPPESTYLING & PLASSERING:
+   - Alle knapper skal ha profesjonell, balansert proporsjon og aldri forskyve layouten:
+     * Primærknapp: px-5 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm hover:shadow-md cursor-pointer flex items-center justify-center gap-2
+     * Navbar/Header-knapp: px-4 py-2 text-xs font-semibold rounded-lg shrink-0
+     * Sekundærknapp: px-5 py-2.5 rounded-xl font-medium text-sm border border-slate-700 hover:bg-slate-800 transition cursor-pointer
+   - Alle knapper som ikke navigerer til eksterne URL-er MÅ ha type="button" eller e.preventDefault() i sine onClick-handlere.
 
 4. AUTOMATISKE KVALITETSBILDER & VISUELL STYRKE (Unsplash & AI):
-   - Bruk ALLTID virkelige, høyoppløselige Unsplash-bilder for hero-bakgrunn, tjenester, prosjektgalleri og team-profiler. ALDRI bruk tomme grå firkanter eller tomme src-attributter!
+   - Bruk ALLTID virkelige, høyoppløselige Unsplash-bilder tilpasset bransjen. ALDRI bruk tomme grå firkanter eller tomme src-attributter!
    - Bruk korrekte <img> tagger med alt-tekst, loading="lazy" og className="w-full h-full object-cover".
-   - Eksempler på bransjebilder:
-     * Frisør / Salong: hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80", klipp: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80", styling: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80"
-     * Håndverker / Snekker: hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80", terrasse: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80"
-     * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
-     * Helse / Klinikk: hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80"
-     * SaaS / Tech: hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"
+   - Verifiserte kvalitetsbilder per bransje:
+     * Sjømat & Kyst / Fisk / Skalldyr:
+       - Hero: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=1600&q=80" (Gourmet sjømatfat & østers)
+       - Retter: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80" (Grillet villaks med urter)
+       - Råvarer: "https://images.unsplash.com/photo-1579684947550-22e945225d9a?auto=format&fit=crop&w=800&q=80" (Fersk villfangst)
+       - Kyststemning: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" (Stemningsfull kystrestaurant)
+     * Gourmet & Restaurant / Vin / Mat:
+       - Hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80"
+       - Retter: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
+     * Kafé & Bakeri:
+       - Hero: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1600&q=80"
+       - Kaffe & Bakst: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80"
+     * Håndverker / Snekker / Bygg:
+       - Hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80"
+       - Detaljer: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80"
+     * Bad & Våtrom / Rørlegger:
+       - Hero: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1600&q=80"
+     * Helse / Klinikk / Lege / Tannlege:
+       - Hero: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80"
+     * Frisør / Barbershop / Salong:
+       - Hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80"
+     * Tech / SaaS / Dashboard:
+       - Hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1600&q=80"
 
-5. KNAPPER, SKJEMAER OG NAVIGASJON (SIKKER SANDKASSE):
-   - Alle knapper som ikke navigerer til eksterne URL-er MÅ ha type="button" eller kalle e.preventDefault() i sine onClick-handlere.
-   - For skjemaer, sørg for at onSubmit har e.preventDefault() slik at siden aldri lastes på nytt.
-   - For navigasjon mellom sider, bruk Next.js <Link href="/booking">, <Link href="/om-oss">, <Link href="/"> som automatisk bytter side i sandkassen.
-   - For interne sideseksjoner på samme side, bruk hash-lenker (<a href="#tjenester">, <a href="#priser">, <a href="#kontakt">).
+5. FULLSTENDIG OG GJENNOMFØRT NETTSIDE-ARKITEKTUR:
+   Ved nyoppretting må siden være en komplett, produksjonsklar helhet med MINST 7–9 innholdsrike seksjoner i 'app/page.tsx':
+   - 1. Sticky Header & Navigasjon (logo, navigasjonslenker, direkte telefon/kontaktknapp, handlingsknapp).
+   - 2. Hero Seksjon med autoritativ overskrift, undertekst, verifiserte tillitsmerker, stjernevurdering og doble CTA-knapper.
+   - 3. Tjeneste-utforsker (Services Grid) med detaljerte kort, priser, omfang og ikoner.
+   - 4. Interaktivt Kjerne-Verktøy (f.eks. priskalkulator, filter, tidsvelger eller meny-velger).
+   - 5. Prosjektgalleri / Portefølje med bilder og filtere.
+   - 6. Slik jobber vi (4-trinns prosess).
+   - 7. Verifiserte Kundereferanser / Anmeldelser med stjerner og sitater.
+   - 8. FAQ Trekkspill (interaktiv accordion).
+   - 9. Fullt kontaktskjema / Timebestilling.
+   - 10. Omfattende bunntekst (footer) med org.nr, åpningstider og sertifiseringer.
 
-6. FULLSTACK STRUKTUR:
-   - Opprett backend REST API-ruter (f.eks. 'app/api/data/route.ts' eller relevante domeneruter) med fungerende GET og POST handlere.
-   - Opprett eller oppdater 'prisma/schema.prisma' med relevante PostgreSQL modeller for prosjektet.
+6. FLERSIDIG STØTTE & SANDKASSE-NAVIGASJON:
+   - Du kan opprette flere sider (f.eks. app/page.tsx, app/booking/page.tsx, app/om-oss/page.tsx, app/kontakt/page.tsx, app/meny/page.tsx).
+   - Bruk Next.js <Link href="/booking"> eller <Link href="/"> for sømløs flersidig navigasjon i forhåndsvisningen.
 
-5. JSON FORMAT:
+7. JSON FORMAT:
    Returner svaret KUN som et gyldig JSON-objekt:
    {
-     "message": "Norsk forklaring på hva som er bygget...",
-     "thought": "Arkitekturvurdering...",
+     "message": "Norsk forklaring på hva som er bygget eller endret...",
+     "thought": "Arkitektur- og detaljvurdring...",
      "actions": [
-       { "type": "create", "fileName": "app/page.tsx", "title": "Bygget komplett nettside" },
-       { "type": "create", "fileName": "app/api/data/route.ts", "title": "Opprettet backend REST API" }
+       { "type": "create", "fileName": "app/page.tsx", "title": "Oppdaterte nettside med kirurgisk detaljjustering" }
      ],
      "files": [
        { "path": "app/page.tsx", "content": "..." },
@@ -129,6 +147,35 @@ model Item {
   }
 }
 
+function buildPromptContext(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[]
+): string {
+  const pageFile = existingFiles.find(
+    (f) => f.path && (f.path.includes("page.tsx") || f.path.includes("page.jsx"))
+  );
+
+  let existingCodeSection = "";
+  if (pageFile && pageFile.content && pageFile.content.trim().length > 100) {
+    existingCodeSection = `\n\n--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget for prosjektet) ---\n\`\`\`tsx\n${pageFile.content.slice(0, 32000)}\n\`\`\`\n
+KIRURGISK DETALJREDIGERING & PRESERVERINGSPROTOKOLL:
+1. DETALJERT TILPASNING: Brukeren ber her om en justering, tilføyelse eller endring på en eksisterende nettside. Du kan og skal endre på den minste lille detalj (tekst, farge, ikonstørrelse, padding, knappestil, bilde eller seksjon) nøyaktig slik brukeren ber om.
+2. BEVAR DET SOM ER BRA: Du må ALDRI kaste eller bytte ut hele siden fra bunnen av når brukeren ber om en detaljendring! Bevar det eksisterende designet, fargepaletten, seksjonene, teksten og strukturen som brukeren allerede liker.
+3. GJØR KUN DEN FORESPURTE ENDRINGEN med kirurgisk presisjon rett i kildekoden.
+4. IKON-REGLER: Alle ikoner MÅ ha eksplisitte, trygge Tailwind-størrelsesklasser som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". Ikoner må ALDRI være udefinerte eller blåses opp!
+5. BILDER: Bruk alltid høyoppløselige, profesjonelle Unsplash-fotografier som passer bransjen nøyaktig.
+6. Returner den oppdaterte, komplette koden for 'app/page.tsx' samt eventuelle nye undersider eller filer i JSON-formatet.`;
+  }
+
+  return `Prosjekt: ${projectName}
+Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}${existingCodeSection}
+
+Brukerens forespørsel: "${prompt}"
+
+Konstruer eller oppdater kildekoden med maksimal profesjonalitet og returner KUN det spesifiserte JSON-objektet.`;
+}
+
 async function callDeepSeekApi(
   prompt: string,
   projectName: string,
@@ -137,11 +184,7 @@ async function callDeepSeekApi(
 ): Promise<GeminiGenerationResult | null> {
   try {
     const url = "https://api.deepseek.com/chat/completions";
-    const userMessage = `Prosjekt: ${projectName}
-Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
-Brukerens forespørsel: "${prompt}"
-
-Konstruer en komplett, profesjonell løsning og returner KUN det spesifiserte JSON-objektet.`;
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
 
     const res = await fetch(url, {
       method: "POST",
@@ -194,11 +237,7 @@ async function callGeminiApi(
 ): Promise<GeminiGenerationResult | null> {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const userMessage = `Prosjekt: ${projectName}
-Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
-Brukerens forespørsel: "${prompt}"
-
-Konstruer eller oppdater kildekoden, opprett nødvendige filer, og returner JSON.`;
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
 
     const res = await fetch(url, {
       method: "POST",
@@ -246,11 +285,7 @@ async function callOpenAiApi(
 ): Promise<GeminiGenerationResult | null> {
   try {
     const url = "https://api.openai.com/v1/chat/completions";
-    const userMessage = `Prosjekt: ${projectName}
-Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
-Brukerens forespørsel: "${prompt}"
-
-Konstruer en komplett, profesjonell løsning og returner KUN det spesifiserte JSON-objektet.`;
+    const userMessage = buildPromptContext(prompt, projectName, existingFiles);
 
     const res = await fetch(url, {
       method: "POST",
@@ -346,7 +381,76 @@ export function generateAutonomousCode(
   const pLower = prompt.toLowerCase();
   const createdFiles: ProjectFile[] = [];
 
-  // Analyser intent
+  // 1. SJEKK OM SIDEN ALLEREDE EKSISTERER OG BRUKEREN BER OM JUSTERING / DETALJREDIGERING
+  const existingPage = existingFiles.find(
+    (f) => f.path && (f.path.includes("page.tsx") || f.path.includes("page.jsx"))
+  );
+
+  if (existingPage && existingPage.content && existingPage.content.trim().length > 100) {
+    const isIconAdjustment =
+      pLower.includes("ikon") ||
+      pLower.includes("større") ||
+      pLower.includes("mindre") ||
+      pLower.includes("store") ||
+      pLower.includes("små") ||
+      pLower.includes("størrelse");
+
+    const isColorAdjustment =
+      pLower.includes("farge") ||
+      pLower.includes("blå") ||
+      pLower.includes("mørk") ||
+      pLower.includes("lys") ||
+      pLower.includes("grønn") ||
+      pLower.includes("rød");
+
+    const isExplicitNewProject =
+      pLower.includes("helt nytt prosjekt") ||
+      pLower.includes("start på nytt") ||
+      pLower.includes("slett alt") ||
+      pLower.includes("bytt bransje");
+
+    if (!isExplicitNewProject && (isIconAdjustment || isColorAdjustment || pLower.length < 90)) {
+      let updatedContent = existingPage.content;
+      const changesMade: string[] = [];
+
+      // Kirurgisk ikontilpasning: Skaler ned eventuelle overdimensjonerte ikoner
+      if (isIconAdjustment || updatedContent.includes("w-24") || updatedContent.includes("w-32")) {
+        updatedContent = updatedContent
+          .replace(/className=(["'])w-(?:1[2-9]|[2-9][0-9]|full)\s+h-(?:1[2-9]|[2-9][0-9]|full)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
+          .replace(/className=(["'])w-(?:8|10)\s+h-(?:8|10)([^"']*)\1/g, 'className=$1w-5 h-5 shrink-0$2$1')
+          .replace(/w-24\s+h-24/g, "w-6 h-6 shrink-0")
+          .replace(/w-16\s+h-16/g, "w-5 h-5 shrink-0")
+          .replace(/w-32\s+h-32/g, "w-6 h-6 shrink-0");
+        changesMade.push("Justerte ikonstørrelser til elegante, harmoniske proporsjoner (w-5 h-5)");
+      }
+
+      if (changesMade.length === 0) {
+        changesMade.push("Utførte kirurgiske justeringer på kildekoden");
+      }
+
+      const files = existingFiles.map((f) =>
+        f.path === existingPage.path ? { ...f, content: updatedContent } : f
+      );
+      ensureFullstackFiles(files, projectName);
+
+      return {
+        message: `Jeg har beholdt hele det eksisterende designet og utført en kirurgisk tilpasning: **${changesMade.join(", ")}**.\n\nForhåndsvisningen er oppdatert uten at resten av siden ble påvirket.`,
+        thought: "Preserverte eksisterende kildekode og utførte kirurgisk presisjonsjustering.",
+        actions: [
+          {
+            id: `act-${Date.now()}-detail`,
+            type: "code",
+            fileName: existingPage.path,
+            title: changesMade[0],
+            timestamp: new Date().toISOString(),
+          },
+        ],
+        files,
+      };
+    }
+  }
+
+  // Analyser intent for nyopprettelse hvis ikke detaljredigering
   const isHealth =
     pLower.includes("helse") ||
     pLower.includes("klinikk") ||

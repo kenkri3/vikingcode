@@ -732,6 +732,7 @@ export function WorkspaceLayout({
               onUpdateFile={onUpdateFile}
               selectedFile={selectedFileForEditor}
               onSelectFile={setSelectedFileForEditor}
+              onSwitchToPreview={() => setActiveTab("preview")}
             />
           )}
 

@@ -44,16 +44,21 @@ export async function generate1MinAiImage(
   }
 
   try {
+    const cleanPrompt = options.prompt || "Nordic modern aesthetic";
+    const enhancedPrompt = cleanPrompt.includes("photography") || cleanPrompt.includes("8k")
+      ? cleanPrompt
+      : `Award-winning commercial editorial photography, hyper-realistic, 8k resolution, authentic natural lighting, minimalist Scandinavian aesthetic, magazine quality: ${cleanPrompt}`;
+
     const payload = {
       type: "IMAGE_GENERATOR",
       model: "black-forest-labs/flux-schnell",
       promptObject: {
-        prompt: options.prompt,
+        prompt: enhancedPrompt,
         aspect_ratio: options.aspectRatio || "16:9",
         num_inference_steps: 4,
         go_fast: true,
         megapixels: "1",
-        output_quality: options.quality || 80,
+        output_quality: options.quality || 85,
       },
     };
 
@@ -233,6 +238,95 @@ export const CURATED_UNSPLASH_GALLERY: Record<
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
     ],
   },
+  sjomat: {
+    hero: [
+      "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=1600&q=80", // Luksuriøst sjømatfat med østers, hummer og kyststemning
+      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=1600&q=80", // Grillet villaks med urter og sitron
+      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1600&q=80", // Eksklusiv kystrestaurant med varm belysning
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1579684947550-22e945225d9a?auto=format&fit=crop&w=800&q=80", // Fersk villfangst fra havet
+      "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80", // Kongekrabbe og skalldyr
+      "https://images.unsplash.com/photo-1559737558-245ff2011b0e?auto=format&fit=crop&w=800&q=80", // Kamskjell og gourmet-tilberedning
+      "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80", // Vinparring og middagsopplevelse
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80", // Norsk kyst og fjord
+      "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80", // Rustikk nordisk sjømatrestaurant
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80", // Kjøkkensjef i full sving
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", // Kjøkkensjef
+      "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=400&q=80", // Hovmester
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", // Daglig leder
+    ],
+  },
+  kafe: {
+    hero: [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1600&q=80", // Lys skandinavisk kaffebar
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1600&q=80", // Koselig kafé med ferske bakverk
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", // Espresso og kaffekunst
+      "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80", // Ferske surdeigsbrød og croissanter
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80", // Lunsjretter
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=800&q=80",
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    ],
+  },
+  bad: {
+    hero: [
+      "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1600&q=80", // Eksklusivt minimalistisk bad
+      "https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=1600&q=80", // Moderne flisarbeid og servant
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", // Dusjløsninger og armatur
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=800&q=80", // Flislegging og baderomsmøbler
+      "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80", // Rørleggerarbeid
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=80",
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    ],
+  },
+  eiendom: {
+    hero: [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1600&q=80", // Moderne arkitektonisk villa
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80", // Luksuriøst hjem
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&w=800&q=80",
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
+    ],
+  },
+  okonomi: {
+    hero: [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80", // Skandinavisk finans- og forretningsbygg
+      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80", // Møterom og rådgivning
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80", // Regnskap og tall
+      "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80", // Juridisk rådgivning
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+    ],
+  },
 };
 
 /**
@@ -240,17 +334,42 @@ export const CURATED_UNSPLASH_GALLERY: Record<
  */
 export function detectCategory(text: string): keyof typeof CURATED_UNSPLASH_GALLERY {
   const lower = (text || "").toLowerCase();
+  if (
+    lower.includes("sjømat") ||
+    lower.includes("sjomat") ||
+    lower.includes("fisk") ||
+    lower.includes("hav") ||
+    lower.includes("kyst") ||
+    lower.includes("skalldyr") ||
+    lower.includes("laks") ||
+    lower.includes("sushi") ||
+    lower.includes("seafood")
+  ) {
+    return "sjomat";
+  }
   if (lower.includes("frisør") || lower.includes("hår") || lower.includes("barber") || lower.includes("salong")) {
     return "frisor";
   }
-  if (lower.includes("snekker") || lower.includes("håndverk") || lower.includes("bygg") || lower.includes("terrasse") || lower.includes("maling")) {
+  if (lower.includes("snekker") || lower.includes("håndverk") || lower.includes("bygg") || lower.includes("terrasse") || lower.includes("maling") || lower.includes("tømrer")) {
     return "handverker";
   }
-  if (lower.includes("restaurant") || lower.includes("mat") || lower.includes("kafe") || lower.includes("bakeri") || lower.includes("pizza") || lower.includes("meny")) {
+  if (lower.includes("bad") || lower.includes("rørlegger") || lower.includes("rorlegger") || lower.includes("flis") || lower.includes("våtrom")) {
+    return "bad";
+  }
+  if (lower.includes("kafe") || lower.includes("kafé") || lower.includes("bakeri") || lower.includes("kaffe") || lower.includes("croissant") || lower.includes("konditori")) {
+    return "kafe";
+  }
+  if (lower.includes("restaurant") || lower.includes("mat") || lower.includes("pizza") || lower.includes("meny") || lower.includes("gourmet") || lower.includes("bordbestilling") || lower.includes("catering")) {
     return "restaurant";
   }
-  if (lower.includes("tannlege") || lower.includes("lege") || lower.includes("klinikk") || lower.includes("helse") || lower.includes("terapi")) {
+  if (lower.includes("eiendom") || lower.includes("bolig") || lower.includes("arkitekt") || lower.includes("hytte") || lower.includes("megler")) {
+    return "eiendom";
+  }
+  if (lower.includes("tannlege") || lower.includes("lege") || lower.includes("klinikk") || lower.includes("helse") || lower.includes("terapi") || lower.includes("fysio") || lower.includes("spa")) {
     return "helse";
+  }
+  if (lower.includes("regnskap") || lower.includes("økonomi") || lower.includes("advokat") || lower.includes("juridisk") || lower.includes("finans") || lower.includes("revisjon")) {
+    return "okonomi";
   }
   if (lower.includes("bil") || lower.includes("verksted") || lower.includes("dekk") || lower.includes("lakk")) {
     return "bil";

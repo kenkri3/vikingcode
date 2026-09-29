@@ -160,12 +160,14 @@ export async function POST(req: NextRequest) {
     if (currentPageCode) {
       contextSections.push(
         `--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget) ---\n\`\`\`tsx\n${currentPageCode}\n\`\`\`\n\n` +
-          `VIKTIG INSTRUKS FOR ENDRINGER:\n` +
-          `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne siden.\n` +
+          `VIKTIG INSTRUKS FOR KIRURGISK DETALJREDIGERING:\n` +
+          `1. Brukeren ønsker å gjøre endringer, justeringer eller bygge videre på denne siden (f.eks. justere tekst, endre farger, forminske ikoner, tilpasse knapper eller legge til en seksjon).\n` +
           `2. Ta direkte utgangspunkt i kildekoden over. Ikke start fra bunnen av med mindre kunden eksplisitt ber om et helt nytt prosjekt.\n` +
-          `3. Bevar eksisterende design og seksjoner, men utfør den forespurte endringen presist.\n` +
-          `4. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.\n` +
-          `5. SYNTAKS-KRAV: Alle strenger i JavaScript-objekter MÅ ha anførselstegn (f.eks. desc: "Tekst her", IKKE desc: Tekst her). All ren tekst i JSX må skrives direkte i JSX-tagger (<p>Tekst</p>), ALDRI pakket i nakne krøllparenteser som {Tekst}.`
+          `3. BEVAR 100% AV DET EKSISTERENDE DESIGNET, fargepaletten, seksjonene, bildene og layouten som kunden allerede er fornøyd med!\n` +
+          `4. Gjør KUN den spesifikke detaljendringen brukeren ber om med kirurgisk nøyaktighet.\n` +
+          `5. IKONER: Alle ikoner fra 'lucide-react' MÅ ha eksplisitte Tailwind-størrelser som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". De må ALDRI være udefinerte eller blåses opp.\n` +
+          `6. Lever den komplette, oppdaterte koden i en \`\`\`tsx (med // app/page.tsx på første linje) og i JSON-blokken.\n` +
+          `7. SYNTAKS-KRAV: Alle strenger i JavaScript-objekter MÅ ha anførselstegn (f.eks. desc: "Tekst her", IKKE desc: Tekst her). All ren tekst i JSX må skrives direkte i JSX-tagger (<p>Tekst</p>), ALDRI pakket i nakne krøllparenteser som {Tekst}.`
       );
     }
 
@@ -174,10 +176,12 @@ export async function POST(req: NextRequest) {
         `KRAV TIL KILDEKODEN:\n` +
         `- Skriv 100% syntaktisk gyldig TypeScript/React JSX med 'use client'.\n` +
         `- Alle egenskaper i objekter/arrays med tekst må være gyldige strenger med hermetegn.\n` +
+        `- IKON-STØRRELSE: Alle ikoner MÅ ha eksplisitte proporsjoner som className="w-5 h-5 shrink-0" eller className="w-4 h-4 shrink-0". ALDRI la ikoner stå uten størrelse eller ha w-full.\n` +
         `- KNAPPER & SKJEMAER: Alle knapper som ikke skal navigere til en ekstern URL må ha type="button" eller håndtere klikk med e.preventDefault() slik at de ikke forårsaker utilsiktet side-omlasting.\n` +
         `- NAVIGASJONSLENKER: Bruk hash-lenker som <a href="#tjenester">, <a href="#priser">, <a href="#kontakt"> eller state-basert fanebytte, ALDRI <a href="/">.\n` +
-        `- AUTOMATISKE KVALITETSBILDER (Unsplash & AI): Bruk ALLTID virkelige, relevante Unsplash-bilder for hero-bakgrunn, tjenestekort, galleri og team. ALDRI bruk tomme grå firkanter eller tomme src-attributter!\n` +
+        `- AUTOMATISKE KVALITETSBILDER (Unsplash & AI): Bruk ALLTID virkelige, relevante og høyoppløselige Unsplash-bilder for hero-bakgrunn, tjenestekort, galleri og team. ALDRI bruk tomme grå firkanter eller tomme src-attributter!\n` +
         `  Eksempler på bransjebilder:\n` +
+        `  * Sjømat & Kyst / Fisk / Skalldyr: hero: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=1600&q=80", retter: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80", kyst: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"\n` +
         `  * Frisør / Barber: hero: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80", klipp: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80", styling: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=800&q=80", team: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"\n` +
         `  * Håndverker / Snekker: hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80", terrasse: "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=800&q=80", finsnekring: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"\n` +
         `  * Restaurant / Kafe: hero: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80", mat: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"\n` +

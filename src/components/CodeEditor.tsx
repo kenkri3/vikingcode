@@ -14,6 +14,8 @@ import {
   Plus,
   X,
   FilePlus,
+  Play,
+  CheckCircle2,
 } from "lucide-react";
 import { ProjectFile } from "@/lib/types";
 import { generatePageTemplate } from "@/lib/page-routes";
@@ -23,9 +25,16 @@ interface CodeEditorProps {
   onUpdateFile: (path: string, newContent: string) => void;
   selectedFile?: string;
   onSelectFile?: (path: string) => void;
+  onSwitchToPreview?: () => void;
 }
 
-export function CodeEditor({ files, onUpdateFile, selectedFile, onSelectFile }: CodeEditorProps) {
+export function CodeEditor({
+  files,
+  onUpdateFile,
+  selectedFile,
+  onSelectFile,
+  onSwitchToPreview,
+}: CodeEditorProps) {
   const [activeFilePath, setActiveFilePath] = useState<string>(selectedFile || files[0]?.path || "app/page.tsx");
   const [copied, setCopied] = useState(false);
   const [isAddingFile, setIsAddingFile] = useState(false);
@@ -182,9 +191,26 @@ export function CodeEditor({ files, onUpdateFile, selectedFile, onSelectFile }: 
           </div>
 
           <div className="flex items-center gap-2">
+            <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-400 font-sans mr-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sanntidssynkronisert</span>
+            </span>
+
+            {onSwitchToPreview && (
+              <button
+                type="button"
+                onClick={onSwitchToPreview}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-xs font-semibold text-white shadow-sm transition cursor-pointer"
+                title="Bytt til forhåndsvisning for å se endringene"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span>Se i forhåndsvisning</span>
+              </button>
+            )}
+
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0A0D12] hover:bg-[#181E2B] border border-[#1F2937] text-xs text-slate-300 hover:text-white transition"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0A0D12] hover:bg-[#181E2B] border border-[#1F2937] text-xs text-slate-300 hover:text-white transition cursor-pointer"
               title="Kopier kildekode"
             >
               {copied ? (
