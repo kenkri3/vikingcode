@@ -3,20 +3,22 @@
 import React, { useState } from "react";
 import {
   Plus,
-  History,
-  Clock,
+  Search,
   Folder,
   FolderOpen,
   Settings,
   ChevronDown,
   ChevronRight,
-  Sparkles,
   PanelLeftClose,
   PanelLeft,
   X,
   Trash2,
+  MoreHorizontal,
+  Bookmark,
+  Sparkles,
 } from "lucide-react";
 import { UserSession, Project } from "@/lib/types";
+import { VikingLogo } from "./VikingLogo";
 
 interface SidebarProps {
   user: UserSession;
@@ -29,6 +31,7 @@ interface SidebarProps {
   onOpenSettings?: () => void;
   onNewProject?: () => void;
   onDeleteProject?: (id: string, name: string) => void;
+  onOpenPricing?: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -40,29 +43,43 @@ export function Sidebar({
   onSelectProject,
   onNewConversation,
   onOpenHistory,
-  onOpenTasks,
   onOpenSettings,
   onNewProject,
   onDeleteProject,
+  onOpenPricing,
   isOpen,
   onToggle,
 }: SidebarProps) {
   const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [libraryExpanded, setLibraryExpanded] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   const defaultProjects = [
-    { name: "VikingMester", desc: "Håndverkerportal & Priskalkulator" },
-    { name: "VikingNet", desc: "Bedriftsportal & Ressursbase" },
-    { name: "VikingCRM", desc: "Kunderelasjoner & Salgspipeline" },
-    { name: "Helge", desc: "Kundeadministrasjon & Timeføring" },
-    { name: "Opplev Horten", desc: "Lokalguide & Opplevelser" },
-    { name: "Eidsfossmarked", desc: "Markedsplass & Bod-booking" },
-    { name: "Opplev Tønsberg", desc: "Byguide & Kulturportal" },
+    { name: "Helsegaarden Landingsside", desc: "Legekontor & Direktebooking", date: "I går" },
+    { name: "Website Upgrade Vikingnet", desc: "Bedriftsportal & Ressursbase", date: "Siste 7 dager" },
+    { name: "Hent GitHub-repo", desc: "Integrasjon & Synk", date: "Siste 30 dager" },
+    { name: "Interaktiv 3D Hero-seksjon", desc: "Landing page elementer", date: "Siste 30 dager" },
   ];
 
   const projectsList =
     projects && projects.length > 0
-      ? projects.map((p) => ({ id: p.id, name: p.name, desc: p.description || "" }))
-      : defaultProjects.map((p, i) => ({ id: `default-${i}`, name: p.name, desc: p.desc }));
+      ? projects.map((p) => ({
+          id: p.id,
+          name: p.name,
+          desc: p.description || "",
+          date: "Nylig",
+        }))
+      : defaultProjects.map((p, i) => ({
+          id: `default-${i}`,
+          name: p.name,
+          desc: p.desc,
+          date: p.date,
+        }));
+
+  const filteredProjects = projectsList.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAction = (cb?: () => void) => {
     if (cb) cb();
@@ -72,143 +89,218 @@ export function Sidebar({
   };
 
   const renderContent = (isMobile: boolean = false) => (
-    <>
-      {/* Top action list */}
-      <div className="p-3 space-y-2 overflow-y-auto flex-1">
-        <div className="flex items-center justify-between mb-1 px-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Arbeidsflate
-          </span>
-          <button
-            onClick={onToggle}
-            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
-            title="Lukk sidepanel"
-            aria-label="Lukk sidepanel"
-          >
-            {isMobile ? <X className="w-4 h-4" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
-          </button>
+    <div className="flex flex-col h-full bg-[#18181c] text-slate-200 text-xs select-none">
+      {/* 1. Header with Logo, Name & Collapse Icon (Image 1) */}
+      <div className="p-3.5 flex items-center justify-between border-b border-[#26262e] shrink-0">
+        <div className="flex items-center gap-2">
+          <VikingLogo size={22} />
+          <span className="font-bold text-white text-sm tracking-tight">AI Program</span>
         </div>
+        <button
+          onClick={onToggle}
+          className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#25252e] transition cursor-pointer"
+          title="Lukk sidepanel"
+        >
+          {isMobile ? <X className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+        </button>
+      </div>
 
-        {/* New Conversation Button */}
+      {/* 2. Top Action Controls */}
+      <div className="p-3 space-y-2 shrink-0">
+        {/* + New Chat Button (Image 1) */}
         <button
           onClick={() => handleAction(onNewConversation)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#12161F] hover:bg-[#181E2B] border border-[#1F2937] text-xs font-medium text-slate-200 hover:text-white transition shadow-sm cursor-pointer"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#22222a] hover:bg-[#2c2c36] border border-[#2e2e38] text-xs font-semibold text-white transition shadow-sm cursor-pointer"
         >
-          <Plus className="w-3.5 h-3.5 text-[#A78BFA]" />
-          <span>Ny samtale</span>
+          <Plus className="w-4 h-4 text-[#A78BFA]" />
+          <span>New Chat</span>
         </button>
 
-        {/* Navigation Items */}
-        <div className="space-y-0.5 pt-1">
+        {/* Search Chats Input */}
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#141418] border border-[#26262e] text-slate-400 focus-within:border-slate-500 transition">
+          <Search className="w-3.5 h-3.5 shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Chats"
+            className="bg-transparent text-xs text-white placeholder-slate-500 outline-none w-full"
+          />
+        </div>
+      </div>
+
+      {/* 3. Middle Scrollable Area: Library & Projects */}
+      <div className="flex-1 overflow-y-auto px-3 space-y-4 font-sans">
+        {/* My Library Carousel / Artifacts Thumbnails (Image 1) */}
+        <div className="space-y-1.5">
           <button
-            onClick={() => handleAction(onOpenHistory)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer text-left"
+            onClick={() => setLibraryExpanded(!libraryExpanded)}
+            className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-400 hover:text-slate-200 py-1 transition cursor-pointer"
           >
-            <History className="w-3.5 h-3.5 text-slate-500" />
-            <span>Historikk</span>
+            <span className="flex items-center gap-1.5">
+              <Bookmark className="w-3.5 h-3.5 text-purple-400" />
+              <span>My Library</span>
+            </span>
+            {libraryExpanded ? (
+              <ChevronDown className="w-3 h-3 text-slate-500" />
+            ) : (
+              <ChevronRight className="w-3 h-3 text-slate-500" />
+            )}
           </button>
+
+          {libraryExpanded && (
+            <div className="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-thin">
+              {projectsList.slice(0, 3).map((p, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => handleAction(() => onSelectProject(p.name))}
+                  className="w-20 h-16 rounded-xl bg-[#22222a] hover:bg-[#2a2a34] border border-[#2e2e38] hover:border-purple-500/50 p-1.5 flex flex-col justify-between shrink-0 transition cursor-pointer shadow-sm group"
+                  title={`Åpne ${p.name}`}
+                >
+                  <div className="w-full h-7 rounded-md bg-[#18181e] border border-[#2e2e38] flex items-center justify-center text-[10px] text-purple-300 font-bold group-hover:text-white">
+                    {p.name.slice(0, 4)}
+                  </div>
+                  <span className="text-[9px] text-slate-400 truncate leading-tight group-hover:text-slate-200">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Collapsible Projects Tree */}
-        <div className="pt-3">
-          <div className="flex items-center justify-between px-2 py-1">
-            <button
-              onClick={() => setProjectsExpanded(!projectsExpanded)}
-              className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition cursor-pointer"
-            >
-              <span className="uppercase tracking-wider">Prosjekter ({projectsList.length})</span>
-              {projectsExpanded ? (
-                <ChevronDown className="w-3 h-3 text-slate-500" />
-              ) : (
-                <ChevronRight className="w-3 h-3 text-slate-500" />
-              )}
-            </button>
+        {/* Projects Section (Image 1) */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between py-1">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Projects
+            </span>
             {onNewProject && (
               <button
                 type="button"
                 onClick={() => handleAction(onNewProject)}
-                className="p-1 rounded text-slate-500 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
-                title="Opprett nytt prosjekt"
+                className="flex items-center gap-1 text-[11px] text-purple-300 hover:text-white transition cursor-pointer"
+                title="Nytt prosjekt"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Project</span>
               </button>
             )}
           </div>
+        </div>
 
-          {projectsExpanded && (
-            <div className="mt-1 space-y-0.5">
-              {projectsList.map((p) => {
-                const isActive = activeProject.name.toLowerCase().includes(p.name.toLowerCase());
-                return (
-                  <div
-                    key={p.id || p.name}
-                    className={`group flex items-center justify-between w-full px-2 py-1 rounded-lg text-xs transition ${
-                      isActive
-                        ? "bg-[#161B26] text-white font-medium border border-purple-800/40"
-                        : "text-slate-400 hover:text-slate-200 hover:bg-[#12161F]"
-                    }`}
+        {/* All Chats (Categorized by Yesterday, 7 days, 30 days) */}
+        <div className="space-y-2 pt-1">
+          <span className="text-[11px] font-semibold text-slate-400">All chats</span>
+
+          <div className="space-y-0.5">
+            {filteredProjects.map((p) => {
+              const isActive = activeProject.name.toLowerCase().includes(p.name.toLowerCase());
+              const isMenuOpen = activeMenuId === p.id;
+
+              return (
+                <div
+                  key={p.id || p.name}
+                  className={`group relative flex items-center justify-between w-full px-2.5 py-1.5 rounded-xl text-xs transition ${
+                    isActive
+                      ? "bg-[#25252e] text-white font-medium shadow-sm"
+                      : "text-slate-300 hover:text-white hover:bg-[#202026]"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleAction(() => onSelectProject(p.name))}
+                    className="flex-1 flex items-center gap-2 truncate text-left cursor-pointer"
                   >
+                    <span className="truncate">{p.name}</span>
+                  </button>
+
+                  {/* Three-dots menu on hover (Exact Image 1) */}
+                  <div className="relative shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleAction(() => onSelectProject(p.name))}
-                      className="flex-1 flex items-center justify-between min-w-0 pr-1 text-left cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuId(isMenuOpen ? null : p.id);
+                      }}
+                      className={`p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#2e2e38] transition cursor-pointer ${
+                        isMenuOpen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                      title="Valg"
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        {isActive ? (
-                          <FolderOpen className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
-                        ) : (
-                          <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                        )}
-                        <span className="truncate">{p.name}</span>
-                      </div>
-                      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0 ml-1.5" />}
+                      <MoreHorizontal className="w-3.5 h-3.5" />
                     </button>
-                    {onDeleteProject && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteProject(p.id, p.name);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-950/60 hover:text-rose-400 text-slate-500 transition cursor-pointer shrink-0"
-                        title={`Slett prosjekt: ${p.name}`}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+
+                    {isMenuOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-30"
+                          onClick={() => setActiveMenuId(null)}
+                        />
+                        <div className="absolute right-0 top-full mt-1 w-32 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1 z-40 text-xs animate-in fade-in duration-100">
+                          {onDeleteProject && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                onDeleteProject(p.id, p.name);
+                              }}
+                              className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-rose-400 hover:bg-rose-950/40 transition cursor-pointer text-left"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Slett chat</span>
+                            </button>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Bottom Profile & Settings */}
-      <div className="p-3 border-t border-[#1F2937] bg-[#0E121A] shrink-0">
+      {/* 4. Bottom User Profile Card with Upgrade Button (Exact Image 1 & 2) */}
+      <div className="p-3 border-t border-[#26262e] bg-[#141418] shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md shadow-purple-900/30">
-              K
+            {/* User Avatar */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md">
+              {user.name ? user.name.slice(0, 2).toUpperCase() : "KG"}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white truncate">Kenneth Glosli K.</p>
-              <div className="flex items-center gap-1 text-[10px] text-[#A78BFA]">
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>{user.plan === "TRIAL" ? "Prøveperiode" : `AI ${user.plan}`}</span>
-              </div>
+              <p className="text-xs font-semibold text-white truncate max-w-[90px]">
+                {user.name || "Kenneth Glo"}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {user.plan === "TRIAL" ? "Free" : user.plan}
+              </p>
             </div>
           </div>
-          <button
-            onClick={() => handleAction(onOpenSettings)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
-            title="Innstillinger & API-nøkler"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+
+          {/* Upgrade Button */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleAction(onOpenPricing)}
+              className="px-2.5 py-1 rounded-lg bg-[#22222a] hover:bg-[#2c2c36] border border-[#2e2e38] text-[11px] font-semibold text-purple-300 hover:text-white transition cursor-pointer shadow-sm"
+              title="Oppgrader plan"
+            >
+              Upgrade
+            </button>
+
+            <button
+              onClick={() => handleAction(onOpenSettings)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#22222a] transition cursor-pointer"
+              title="Innstillinger"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -216,14 +308,11 @@ export function Sidebar({
       {/* MOBILE: Off-canvas slide-over drawer */}
       {isOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
             onClick={onToggle}
           />
-
-          {/* Drawer panel */}
-          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[#0A0D12] border-r border-[#1F2937] flex flex-col justify-between shadow-2xl z-10 select-none animate-in slide-in-from-left duration-200">
+          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[#18181c] border-r border-[#26262e] flex flex-col justify-between shadow-2xl z-10 select-none animate-in slide-in-from-left duration-200">
             {renderContent(true)}
           </aside>
         </div>
@@ -231,10 +320,10 @@ export function Sidebar({
 
       {/* DESKTOP: Collapsed mode */}
       {!isOpen && (
-        <div className="hidden md:flex w-12 bg-[#0A0D12] border-r border-[#1F2937] flex-col items-center py-3 justify-between shrink-0 select-none h-[calc(100vh-3.5rem)]">
+        <div className="hidden md:flex w-12 bg-[#18181c] border-r border-[#26262e] flex-col items-center py-3 justify-between shrink-0 select-none h-full">
           <button
             onClick={onToggle}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#12161F] transition cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#25252e] transition cursor-pointer"
             title="Åpne sidepanel"
           >
             <PanelLeft className="w-4 h-4" />
@@ -242,27 +331,26 @@ export function Sidebar({
           <button
             onClick={onNewConversation}
             className="p-2 rounded-xl text-purple-400 hover:text-white hover:bg-purple-950/50 transition cursor-pointer"
-            title="Ny samtale"
+            title="New Chat"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button
-            onClick={onOpenSettings}
-            className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:opacity-90 transition"
-            title="Innstillinger"
+            onClick={onOpenPricing}
+            className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:opacity-90 transition"
+            title="Profil & Oppgradering"
           >
-            K
+            {user.name ? user.name.slice(0, 2).toUpperCase() : "KG"}
           </button>
         </div>
       )}
 
       {/* DESKTOP: Expanded mode */}
       {isOpen && (
-        <aside className="hidden md:flex w-64 bg-[#0A0D12] border-r border-[#1F2937] flex-col justify-between shrink-0 h-[calc(100vh-3.5rem)] select-none">
+        <aside className="hidden md:flex w-64 bg-[#18181c] border-r border-[#26262e] flex-col justify-between shrink-0 h-full select-none">
           {renderContent(false)}
         </aside>
       )}
     </>
   );
 }
-

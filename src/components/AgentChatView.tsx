@@ -2,22 +2,24 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import {
+  Lightbulb,
   ChevronRight,
   ChevronDown,
   Search,
   Brain,
-  Sparkles,
   Atom,
   Loader2,
   Copy,
   Check,
   RotateCcw,
-  ExternalLink,
   Eye,
-  Code2,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  MoreHorizontal,
+  ExternalLink,
 } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
-import { VikingLogo } from "./VikingLogo";
 
 interface AgentChatViewProps {
   messages: ChatMessage[];
@@ -62,7 +64,7 @@ function renderInlineText(raw: string): React.ReactNode[] {
       parts.push(
         <code
           key={match.index}
-          className="px-1.5 py-0.5 rounded bg-[#1f1f1f] text-[#C4B5FD] font-mono text-[11px] border border-[#2e2e2e]"
+          className="px-1.5 py-0.5 rounded bg-[#1e1e24] text-[#C4B5FD] font-mono text-[11px] border border-[#2e2e34]"
         >
           {token.slice(1, -1)}
         </code>
@@ -88,11 +90,11 @@ function formatChatMarkdown(text: string): React.ReactNode {
       {lines.map((line, lineIdx) => {
         const trimmed = line.trim();
         if (!trimmed) {
-          return <div key={lineIdx} className="h-1.5" />;
+          return <div key={lineIdx} className="h-1" />;
         }
 
         if (trimmed.startsWith("---")) {
-          return <hr key={lineIdx} className="border-[#2a2a2a] my-2" />;
+          return <hr key={lineIdx} className="border-[#2e2e34] my-2" />;
         }
 
         if (trimmed.startsWith("### ")) {
@@ -112,7 +114,7 @@ function formatChatMarkdown(text: string): React.ReactNode {
           );
         }
 
-        // Bullet list item (- or *)
+        // Bullet list item
         const bulletMatch = trimmed.match(/^[-*•]\s+(.*)/);
         if (bulletMatch) {
           return (
@@ -123,7 +125,7 @@ function formatChatMarkdown(text: string): React.ReactNode {
           );
         }
 
-        // Numbered list item (1. 2. etc)
+        // Numbered list item
         const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
         if (numberMatch) {
           return (
@@ -155,12 +157,10 @@ export function AgentChatView({
   onOpenFile,
   onQuickReply,
   onOpenPreview,
-  onOpenBackend,
-  onOpenDatabase,
-  onOpenCode,
-  onOpenTerminal,
 }: AgentChatViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [likedId, setLikedId] = useState<string | null>(null);
+  const [dislikedId, setDislikedId] = useState<string | null>(null);
   const [expandedThoughts, setExpandedThoughts] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -170,7 +170,7 @@ export function AgentChatView({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // Live timer for real-time streaming feedback
+  // Live timer
   useEffect(() => {
     let interval: any;
     if (isLoading) {
@@ -206,9 +206,9 @@ export function AgentChatView({
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end">
-                <div className="max-w-[85%] bg-[#242424] border border-[#2e2e2e] text-slate-100 text-xs sm:text-sm rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+                <div className="max-w-[85%] bg-[#24242a] border border-[#303038] text-slate-100 text-xs sm:text-sm rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
                   <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                  <div className="mt-1 text-[10px] text-[#71717a] text-right">
+                  <div className="mt-1 text-[10px] text-slate-500 text-right">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>
@@ -216,23 +216,21 @@ export function AgentChatView({
             );
           }
 
-          // Assistant / Agent Output
+          // Assistant Message
           const hasFiles = msg.filesCreated && msg.filesCreated.length > 0;
 
           return (
-            <div key={msg.id} className="space-y-3 max-w-full">
-              {/* Sleek Collapsible Agent Steps / Actions */}
+            <div key={msg.id} className="space-y-2.5 max-w-full">
+              {/* 1. Thinking completed collapsible pill (Exact Qwen style) */}
               {msg.actions && msg.actions.length > 0 && (
                 <div>
                   <button
                     type="button"
                     onClick={() => toggleThought(msg.id)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] text-[#9ca3af] hover:text-slate-200 bg-[#212121] hover:bg-[#282828] border border-[#2e2e2e] transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer font-sans py-0.5"
                   >
-                    <Sparkles className="w-3 h-3 text-[#A78BFA]" />
-                    <span className="font-medium">
-                      {msg.actions.length} {msg.actions.length === 1 ? "steg fullført" : "steg fullført"}
-                    </span>
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
+                    <span className="font-medium">Thinking completed</span>
                     {expandedThoughts[msg.id] ? (
                       <ChevronDown className="w-3 h-3 text-slate-500" />
                     ) : (
@@ -241,7 +239,7 @@ export function AgentChatView({
                   </button>
 
                   {expandedThoughts[msg.id] && (
-                    <div className="mt-2 ml-1 pl-3 border-l border-[#2e2e2e] space-y-1.5 py-1 text-[11px] font-mono text-[#9ca3af]">
+                    <div className="mt-2 ml-1 pl-3 border-l border-[#2e2e36] space-y-1.5 py-1 text-[11px] font-mono text-slate-400">
                       {msg.actions.map((act) => (
                         <div key={act.id} className="flex items-center gap-2">
                           {act.type === "analyze" && (
@@ -280,139 +278,147 @@ export function AgentChatView({
                 </div>
               )}
 
-              {/* Clean Message Bubble / Qwen Flow */}
-              <div className="bg-[#212121] border border-[#2e2e2e] rounded-2xl rounded-tl-sm p-4 text-xs sm:text-sm text-slate-200 space-y-3 shadow-md">
-                <div className="flex items-center justify-between border-b border-[#2a2a2a] pb-2">
-                  <div className="flex items-center gap-2">
-                    <VikingLogo size={16} />
-                    <span className="text-xs font-semibold text-white">AI Program</span>
-                  </div>
-                  {msg.tokensUsed && (
-                    <span className="text-[10px] text-[#71717a] font-mono">
-                      {msg.tokensUsed.toLocaleString("no-NO")} tokens
-                    </span>
-                  )}
-                </div>
-
-                <div className="leading-relaxed text-slate-300">
+              {/* 2. Assistant Response Text */}
+              {msg.content && (
+                <div className="text-slate-200 text-xs sm:text-sm leading-relaxed max-w-3xl">
                   {formatChatMarkdown(msg.content)}
                 </div>
+              )}
 
-                {/* Sleek Qwen-Style Artifact Card (Rendered when app/code is created) */}
-                {hasFiles && (
+              {/* 3. Sleek Qwen-Style Web Dev Artifact Card (Image 1) */}
+              {hasFiles && (
+                <div className="pt-1 space-y-2">
                   <div
                     onClick={onOpenPreview}
-                    className="mt-3 group cursor-pointer rounded-2xl bg-[#1b1b1b] hover:bg-[#242424] border border-[#333333] hover:border-[#4f4f4f] p-3.5 transition-all duration-150 flex items-center justify-between gap-3 shadow-lg"
+                    className="w-full max-w-sm rounded-xl bg-[#1e1e24] hover:bg-[#25252d] border border-[#2d2d36] hover:border-[#3f3f4c] p-3 transition-all duration-150 flex items-center justify-between gap-3 shadow-md group cursor-pointer"
+                    title="Klikk for å åpne forhåndsvisning"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       {/* Mini Window Frame Mockup Icon */}
-                      <div className="w-12 h-12 rounded-xl bg-[#141414] border border-[#333333] flex flex-col justify-between shrink-0 p-1.5 shadow-inner group-hover:border-[#8B5CF6]/60 transition">
-                        <div className="w-full flex items-center gap-1 opacity-70">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <div className="w-13 h-13 rounded-lg bg-[#272730] border border-[#353542] flex flex-col justify-between shrink-0 p-1.5 shadow-inner">
+                        <div className="w-full h-2 bg-[#333340] rounded-xs flex items-center px-1 gap-0.5">
+                          <div className="w-1 h-1 rounded-full bg-slate-500" />
+                          <div className="w-1 h-1 rounded-full bg-slate-500" />
+                          <div className="w-1 h-1 rounded-full bg-slate-500" />
                         </div>
-                        <div className="w-full h-2.5 bg-[#262626] rounded-xs flex items-center px-1">
-                          <div className="w-3 h-0.5 bg-[#666] rounded-full" />
+                        <div className="w-full h-4 bg-[#1a1a20] rounded-xs flex items-center justify-center">
+                          <Eye className="w-2.5 h-2.5 text-slate-500 group-hover:text-slate-300 transition" />
                         </div>
-                        <div className="w-full flex gap-1">
-                          <div className="w-1/2 h-2 bg-[#222] rounded-xs" />
-                          <div className="w-1/2 h-2 bg-[#8B5CF6]/40 rounded-xs" />
-                        </div>
+                        <div className="w-full h-1 bg-[#333340] rounded-xs" />
                       </div>
 
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-semibold text-white truncate">
-                            {projectName || "Interaktiv Applikasjon"}
-                          </span>
-                          <span className="px-1.5 py-0.2 text-[9px] font-medium uppercase rounded bg-[#2e2e2e] text-[#a1a1aa] border border-[#3a3a3a]">
-                            React
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-[#9ca3af] truncate mt-0.5">
-                          Interaktiv forhåndsvisning • Klikk for å se app og kode
-                        </p>
-                        <span className="text-[10px] text-[#71717a] mt-0.5">
+                      <div className="flex flex-col min-w-0 justify-center">
+                        <span className="text-sm font-semibold text-white truncate group-hover:text-purple-300 transition">
+                          {projectName || "Web Dev"}
+                        </span>
+                        <span className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                          {new Date(msg.timestamp).toLocaleDateString("no-NO", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}{" "}
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOpenPreview?.();
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2a2a2a] group-hover:bg-[#7C3AED] text-white text-xs font-medium border border-[#383838] group-hover:border-[#7C3AED] transition-all shadow-sm"
-                      >
-                        <span>Forhåndsvisning</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Message Actions Bar (Qwen style: Copy, Regenerate, Thumbs) */}
-              <div className="flex items-center justify-between px-1 text-[11px] text-[#71717a]">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(msg.id, msg.content)}
-                    className="p-1.5 rounded-lg hover:bg-[#242424] hover:text-slate-200 transition cursor-pointer"
-                    title="Kopier svar"
-                  >
-                    {copiedId === msg.id ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const lastUser = [...messages].reverse().find((m) => m.role === "user");
-                      if (lastUser && onQuickReply) {
-                        onQuickReply(lastUser.content);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-[#242424] hover:text-slate-200 transition cursor-pointer"
-                    title="Kjør på nytt"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {hasFiles && onOpenPreview && (
-                  <button
-                    type="button"
-                    onClick={onOpenPreview}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-[#242424] text-[#a1a1aa] hover:text-white transition cursor-pointer"
-                  >
-                    <Eye className="w-3 h-3 text-[#A78BFA]" />
-                    <span>Vis preview</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Interactive Quick Replies */}
-              {msg.quickReplies && msg.quickReplies.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {msg.quickReplies.map((qr, i) => (
+                    {/* Eye icon on right side of card (User: "trykker jeg på øyet på web dev så kommer preview rett opp") */}
                     <button
-                      key={i}
                       type="button"
-                      onClick={() => onQuickReply?.(qr.title)}
-                      className="px-3 py-1 rounded-full text-[11px] font-medium bg-[#212121] hover:bg-[#7C3AED]/20 border border-[#2e2e2e] hover:border-[#7C3AED]/60 text-slate-300 hover:text-white transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPreview?.();
+                      }}
+                      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#30303c] transition cursor-pointer"
+                      title="Åpne forhåndsvisning"
                     >
-                      <Sparkles className="w-2.5 h-2.5 text-[#A78BFA]" />
-                      <span>{qr.title}</span>
+                      <Eye className="w-4 h-4 text-slate-300 group-hover:text-white" />
                     </button>
-                  ))}
+                  </div>
+
+                  {/* 4. Action Bar under Artifact Card: [ 👁️ Preview ] + Copy + Thumbs + Regenerate */}
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <button
+                      type="button"
+                      onClick={onOpenPreview}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e1e24] hover:bg-[#282832] text-slate-200 hover:text-white border border-[#2d2d36] text-xs font-medium transition cursor-pointer shadow-sm"
+                      title="Åpne forhåndsvisning på høyre side"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
+                      <span>Preview</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(msg.id, msg.content)}
+                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      title="Kopier svar"
+                    >
+                      {copiedId === msg.id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setLikedId((prev) => (prev === msg.id ? null : msg.id))}
+                      className={`p-1.5 rounded-lg hover:bg-[#222228] transition cursor-pointer ${
+                        likedId === msg.id ? "text-purple-400" : "hover:text-slate-200"
+                      }`}
+                      title="Bra svar"
+                    >
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDislikedId((prev) => (prev === msg.id ? null : msg.id))}
+                      className={`p-1.5 rounded-lg hover:bg-[#222228] transition cursor-pointer ${
+                        dislikedId === msg.id ? "text-rose-400" : "hover:text-slate-200"
+                      }`}
+                      title="Dårlig svar"
+                    >
+                      <ThumbsDown className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const lastUser = [...messages].reverse().find((m) => m.role === "user");
+                        if (lastUser && onQuickReply) onQuickReply(lastUser.content);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      title="Kjør på nytt"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof navigator !== "undefined" && navigator.share) {
+                          navigator.share({ title: projectName || "AI Program", text: msg.content }).catch(() => {});
+                        } else {
+                          handleCopy(msg.id, msg.content);
+                        }
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      title="Del"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onOpenPreview}
+                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      title="Flere valg"
+                    >
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -421,10 +427,10 @@ export function AgentChatView({
 
         {/* Real-time Streaming Loading Indicator */}
         {isLoading && (
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#212121] border border-[#2e2e2e] text-xs text-slate-300 w-fit animate-in fade-in duration-200 shadow-md">
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#1e1e24] border border-[#2e2e36] text-xs text-slate-300 w-fit animate-in fade-in duration-200 shadow-md">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A78BFA]" />
             <span>{currentThought || "Bygger og oppdaterer kildekode..."}</span>
-            <span className="text-[10px] text-[#71717a] font-mono ml-1">{elapsedSeconds.toFixed(1)}s</span>
+            <span className="text-[10px] text-slate-500 font-mono ml-1">{elapsedSeconds.toFixed(1)}s</span>
           </div>
         )}
 

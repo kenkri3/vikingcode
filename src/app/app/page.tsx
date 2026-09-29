@@ -719,6 +719,7 @@ function BuilderContent() {
         onTogglePreview={() => setIsPreviewOpen((prev) => !prev)}
         onResetToStart={() => setViewMode("start")}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Deploy & Export Notification Banner */}
@@ -777,6 +778,7 @@ function BuilderContent() {
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenTasks={() => setIsTasksOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenPricing={() => setIsPricingOpen(true)}
           onNewProject={() => setIsNewProjectModalOpen(true)}
           onDeleteProject={handleDeleteProject}
           isOpen={isSidebarOpen}
@@ -801,6 +803,13 @@ function BuilderContent() {
             onTogglePreview={setIsPreviewOpen}
             mobileTab={mobileTab}
             onSetMobileTab={setMobileTab}
+            user={user}
+            onOpenPricing={() => setIsPricingOpen(true)}
+            onDeployRailway={handleDeployRailway}
+            onDownloadZip={handleDownloadZip}
+            onPushGithub={handlePushGithub}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onNewConversation={handleNewConversation}
           />
         )}
       </div>
