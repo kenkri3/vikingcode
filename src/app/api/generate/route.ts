@@ -12,72 +12,64 @@ interface GeminiGenerationResult {
   files: ProjectFile[];
 }
 
-async function callGeminiApi(
-  prompt: string,
-  projectName: string,
-  existingFiles: ProjectFile[],
-  apiKey: string
-): Promise<GeminiGenerationResult | null> {
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    
-    const systemInstruction = `Du er AI Program - en autonom, produksjonsklar fullstack-utvikler for det norske markedet (aiprogram.no).
-Du hjelper brukeren med å bygge moderne, responsive og interaktive webapplikasjoner i Next.js App Router (React 18/19), Tailwind CSS, TypeScript, Prisma (PostgreSQL) og Railway Nixpacks.
+const SYSTEM_INSTRUCTION = `Du er «AI Program Ultra» — en prisvinnende sjefsdesigner og senior fullstack-utvikler for det moderne skandinaviske markedet (aiprogram.no).
+Du koder som et førsteklasses digitalt designbyrå (f.eks. Bleed, Anti, Netlife eller Bakken & Bæck).
 
-VIKTIG:
-1. Skriv ALLTID fungerende, interaktiv kode i app/page.tsx og eventuelle nye komponenter (bruk 'use client', useState, interaktive knapper, forms, kalkulatorer, etc.).
-2. Opprett ALLTID backend API-ruter (f.eks. app/api/data/route.ts eller relevante domeneruter) med GET og POST handlere.
-3. Opprett eller oppdater prisma/schema.prisma med relevante PostgreSQL modeller for prosjektet.
-4. Koden må være på norsk, tilpasset norske standarder (TEK17, Vipps, norske kroner kr, m², telefonnumre).
-5. Returner svaret KUN som et gyldig JSON-objekt med følgende struktur:
-{
-  "message": "Norsk forklaring på hva som er bygget, hvilke filer som er opprettet, og hvordan forhåndsvisningen er oppdatert.",
-  "thought": "Teknisk resonnering og arkitekturvalg...",
-  "actions": [
-    { "type": "analyze", "fileName": "app/page.tsx", "title": "Analyserte komponentstruktur", "lineRange": "#L1-250" },
-    { "type": "create", "fileName": "app/api/data/route.ts", "title": "Opprettet backend REST API" }
-  ],
-  "files": [
-    { "path": "app/page.tsx", "content": "..." },
-    { "path": "app/api/data/route.ts", "content": "..." },
-    { "path": "prisma/schema.prisma", "content": "..." },
-    { "path": "railway.json", "content": "..." }
-  ]
-}`;
+ABSOLUTTE KRAV TIL DESIGN, KVALITET OG ARKITEKTUR:
+1. UNIK OG BRANSJETILPASSET VISUELL IDENTITET (IKKE LAG ALLE SIDER LIKE!):
+   - Hver nettside MÅ ha en distinkt, profesjonell og skreddersydd visuell stil som passer nøyaktig til bransjen og konseptet:
+     * Håndverker / Snekker / Bygg: Varm skandinavisk håndverksestetikk. Naturlig treverk (varme gyldne eiketoner, rav, dype skifer- og steintoner, varm hvit/krem, dempet skoggrønn tillitsfarge). Ekte håndverksgarantier, TEK17, StartBANK, Mesterbedrift.
+     * SaaS / Teknologi / Dashboard: Slank Bento grid, diskret glassmorphism, levende interaktive metrikk-widgets, ren moderne sans-serif typografi.
+     * Helse / Klinikk / Lege: Lyst, tillitsvekkende og beroligende (hvit, lys skifer, myk turkis/cyan), timebestillingskalender, behandlerprofiler.
+     * Butikk / E-handel: Produktruter med filterkategorier, handlekurv-skuff, hurtigvisning, Vipps-kasse.
+     * Restaurant / Kafe / Mat: Dype, stemningsfulle farger, matkategorier med allergener, bordreservasjons-modul.
 
-    const userMessage = `Prosjekt: ${projectName}
-Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
-Brukerens forespørsel: "${prompt}"
+2. FULLSTENDIG OG GJENNOMFØRT NETTSIDE-ARKITEKTUR:
+   Siden må ALDRI bare være en enkel boks eller et ensomt skjema. Den må være en komplett, produksjonsklar helhet med MINST 7–9 innholdsrike seksjoner i 'app/page.tsx':
+   - 1. Sticky Header & Navigasjon (logo, navigasjonslenker, direkte telefon/kontaktknapp, handlingsknapp).
+   - 2. Hero Seksjon med autoritativ overskrift, undertekst, verifiserte tillitsmerker (f.eks. Mesterbedrift, Sentralt Godkjent), stjernevurdering (4.9/5) og doble handlingknapper (CTA).
+   - 3. Tjeneste-utforsker (Services Grid) med detaljerte kort, priser, omfang og ikoner.
+   - 4. Interaktivt Kjerne-Verktøy (f.eks. en avansert priskalkulator med kvadratmeter-slider, materialvalg og umiddelbar kostnadsberegning).
+   - 5. Prosjektgalleri / Portefølje med filterknapper (f.eks. Terrasse, Tilbygg, Kledning, Interiør) og realistiske norske stedsreferanser (Oslo, Asker, Bærum, etc.).
+   - 6. 4-Trinns Prosess («Slik jobber vi: Befaring -> Fastpristilbud -> Gjennomføring -> Overtakelse»).
+   - 7. Verifiserte Kundereferanser / Anmeldelser med ekte sitater, stjerner og stedsangivelser.
+   - 8. FAQ Trekkspill (interaktiv accordion med ofte stilte spørsmål).
+   - 9. Fullt kontaktskjema / Timebestilling med interaktive felter, dato, adresse og bekreftelse.
+   - 10. Omfattende bunntekst (footer) med org.nr, åpningstider, adresse, sertifiseringer og lenker.
 
-Konstruer eller oppdater kildekoden, opprett nødvendige filer, og returner JSON.`;
+3. KODING SOM EN PROFESJONELL KODER (TEKNISK GJENNOMFØRING):
+   - Skriv alltid ren, modulær og typesikker TypeScript i 'app/page.tsx' med 'use client'.
+   - Bruk rike React states (useState, useMemo) for alle interaksjoner: aktive faner, filtere, kalkulatorer, accordions, modaler, skjema-innsendinger med suksessmeldinger.
+   - Bruk Tailwind CSS med sofistikerte detaljer: backdrop-blur, subtile gradienter, border-effekter, hover-transisjoner, ring-1, og balansert padding (p-6 sm:p-10 md:p-16).
+   - Bruk Lucide-react ikoner med omhu.
+   - INGEN «Lorem ipsum» eller engelske placeholders. Alt innhold må være på flytende, profesjonelt norsk med realistiske tall, priser og firmanavn.
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: `${systemInstruction}\n\n${userMessage}` }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json",
-        },
-      }),
-    });
+4. FULLSTACK STRUKTUR:
+   - Opprett backend REST API-ruter (f.eks. 'app/api/data/route.ts' eller relevante domeneruter) med fungerende GET og POST handlere.
+   - Opprett eller oppdater 'prisma/schema.prisma' med relevante PostgreSQL modeller for prosjektet.
 
-    if (res.ok) {
-      const data = await res.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
-        if (parsed.message && Array.isArray(parsed.files)) {
-          // Sikre at backend API og prisma schema alltid er til stede for fullstack tabs
-          if (!parsed.files.some((f: any) => f.path?.includes("api/"))) {
-            parsed.files.push({
-              path: "app/api/data/route.ts",
-              content: `import { NextResponse } from 'next/server';
+5. JSON FORMAT:
+   Returner svaret KUN som et gyldig JSON-objekt:
+   {
+     "message": "Norsk forklaring på hva som er bygget...",
+     "thought": "Arkitekturvurdering...",
+     "actions": [
+       { "type": "create", "fileName": "app/page.tsx", "title": "Bygget komplett nettside" },
+       { "type": "create", "fileName": "app/api/data/route.ts", "title": "Opprettet backend REST API" }
+     ],
+     "files": [
+       { "path": "app/page.tsx", "content": "..." },
+       { "path": "app/api/data/route.ts", "content": "..." },
+       { "path": "prisma/schema.prisma", "content": "..." }
+     ]
+   }
+`;
+
+function ensureFullstackFiles(files: ProjectFile[], projectName: string) {
+  if (!files.some((f) => f.path?.includes("api/"))) {
+    files.push({
+      path: "app/api/data/route.ts",
+      content: `import { NextResponse } from 'next/server';
 
 export async function GET() {
   return NextResponse.json({
@@ -96,12 +88,12 @@ export async function POST(req: Request) {
   }
 }
 `,
-            });
-          }
-          if (!parsed.files.some((f: any) => f.path?.includes("schema.prisma"))) {
-            parsed.files.push({
-              path: "prisma/schema.prisma",
-              content: `datasource db {
+    });
+  }
+  if (!files.some((f) => f.path?.includes("schema.prisma"))) {
+    files.push({
+      path: "prisma/schema.prisma",
+      content: `datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
@@ -117,8 +109,104 @@ model Item {
   createdAt DateTime @default(now())
 }
 `,
-            });
-          }
+    });
+  }
+}
+
+async function callDeepSeekApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const url = "https://api.deepseek.com/chat/completions";
+    const userMessage = `Prosjekt: ${projectName}
+Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
+Brukerens forespørsel: "${prompt}"
+
+Konstruer en komplett, profesjonell løsning og returner KUN det spesifiserte JSON-objektet.`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userMessage },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 8192,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      if (rawText) {
+        const parsed = JSON.parse(rawText);
+        if (parsed.message && Array.isArray(parsed.files)) {
+          ensureFullstackFiles(parsed.files, projectName);
+          return {
+            message: parsed.message,
+            thought: parsed.thought || "Konstruerte arkitektur og kildekode med AI Program Ultra.",
+            actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+            files: parsed.files,
+          };
+        }
+      }
+    } else {
+      const errText = await res.text();
+      console.warn("DeepSeek API error:", res.status, errText);
+    }
+  } catch (err) {
+    console.warn("DeepSeek API call failed:", err);
+  }
+  return null;
+}
+
+async function callGeminiApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const userMessage = `Prosjekt: ${projectName}
+Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
+Brukerens forespørsel: "${prompt}"
+
+Konstruer eller oppdater kildekoden, opprett nødvendige filer, og returner JSON.`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: `${SYSTEM_INSTRUCTION}\n\n${userMessage}` }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+        },
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText) {
+        const parsed = JSON.parse(rawText);
+        if (parsed.message && Array.isArray(parsed.files)) {
+          ensureFullstackFiles(parsed.files, projectName);
           return {
             message: parsed.message,
             thought: parsed.thought || "Konstruerte arkitektur og kildekode.",
@@ -129,8 +217,100 @@ model Item {
       }
     }
   } catch (err) {
-    console.warn("Gemini API call failed, switching to autonomous engine:", err);
+    console.warn("Gemini API call failed:", err);
   }
+  return null;
+}
+
+async function callOpenAiApi(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  apiKey: string
+): Promise<GeminiGenerationResult | null> {
+  try {
+    const url = "https://api.openai.com/v1/chat/completions";
+    const userMessage = `Prosjekt: ${projectName}
+Eksisterende filer: ${existingFiles.map((f) => f.path).join(", ")}
+Brukerens forespørsel: "${prompt}"
+
+Konstruer en komplett, profesjonell løsning og returner KUN det spesifiserte JSON-objektet.`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userMessage },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 8192,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.choices?.[0]?.message?.content;
+      if (rawText) {
+        const parsed = JSON.parse(rawText);
+        if (parsed.message && Array.isArray(parsed.files)) {
+          ensureFullstackFiles(parsed.files, projectName);
+          return {
+            message: parsed.message,
+            thought: parsed.thought || "Konstruerte arkitektur og kildekode.",
+            actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+            files: parsed.files,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("OpenAI API call failed:", err);
+  }
+  return null;
+}
+
+async function callAiModel(
+  prompt: string,
+  projectName: string,
+  existingFiles: ProjectFile[],
+  clientApiKey?: string
+): Promise<GeminiGenerationResult | null> {
+  const deepseekKey =
+    process.env.DEEPSEEK_API_KEY ||
+    process.env.AI_API_KEY ||
+    (clientApiKey && clientApiKey.startsWith("sk-") ? clientApiKey : null);
+
+  const geminiKey =
+    process.env.GEMINI_API_KEY ||
+    (clientApiKey && !clientApiKey.startsWith("sk-") ? clientApiKey : null);
+
+  const openaiKey = process.env.OPENAI_API_KEY;
+
+  // 1. Try DeepSeek (AI Program Ultra model engine)
+  if (deepseekKey && deepseekKey.trim() !== "") {
+    const res = await callDeepSeekApi(prompt, projectName, existingFiles, deepseekKey.trim());
+    if (res) return res;
+  }
+
+  // 2. Try Gemini
+  if (geminiKey && geminiKey.trim() !== "") {
+    const res = await callGeminiApi(prompt, projectName, existingFiles, geminiKey.trim());
+    if (res) return res;
+  }
+
+  // 3. Try OpenAI
+  if (openaiKey && openaiKey.trim() !== "") {
+    const res = await callOpenAiApi(prompt, projectName, existingFiles, openaiKey.trim());
+    if (res) return res;
+  }
+
   return null;
 }
 
@@ -670,282 +850,902 @@ export default function HealthPortalApp() {
     pageContent = `'use client';
 
 import React, { useState } from 'react';
-import { Hammer, Ruler, ShieldCheck, Clock, CheckCircle2, Phone, Star, Sparkles, ChevronRight, MapPin, Award, Check } from 'lucide-react';
+import {
+  Hammer,
+  Ruler,
+  ShieldCheck,
+  Clock,
+  CheckCircle2,
+  Phone,
+  Mail,
+  Star,
+  Sparkles,
+  ChevronRight,
+  MapPin,
+  Award,
+  Check,
+  ChevronDown,
+  Layers,
+  ArrowRight,
+  FileCheck,
+  HardHat,
+  Home,
+  CheckCircle
+} from 'lucide-react';
 
-export default function CarpenterWebsite() {
+export default function NordicCraftsmanApp() {
   const [selectedService, setSelectedService] = useState('terrasse');
-  const [squareMeters, setSquareMeters] = useState(35);
-  const [woodType, setWoodType] = useState('impregnert');
-  const [inspectionAddress, setInspectionAddress] = useState('');
+  const [squareMeters, setSquareMeters] = useState(38);
+  const [woodType, setWoodType] = useState('termo');
+  const [hasHiddenFasteners, setHasHiddenFasteners] = useState(true);
+  const [hasIntegratedLed, setHasIntegratedLed] = useState(false);
+  const [hasPermitHelp, setHasPermitHelp] = useState(false);
+  const [galleryFilter, setGalleryFilter] = useState<'all' | 'terrasse' | 'tilbygg' | 'fasade' | 'interior'>('all');
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  
+  // Booking Form State
+  const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [projectNotes, setProjectNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const services: Record<string, { title: string; rate: number; desc: string }> = {
-    terrasse: { title: 'Terrasse & Veranda', rate: 850, desc: 'Skreddersydd platting, rekkverk og trapper i kvalitetsvirke.' },
-    tilbygg: { title: 'Tilbygg & Rehabilitering', rate: 950, desc: 'Utvidelse av stue, råloft-innredning eller ny etasje i henhold til TEK17.' },
-    kledning: { title: 'Kledning & Etterisolering', rate: 890, desc: 'Ny utvendig fasadekledning med 10-15cm ekstra isolasjon og vindsperre.' },
-    innvendig: { title: 'Innvendig Snekring & Spiler', rate: 920, desc: 'Spesialtilpassede garderober, spilevegger i eik, listverk og dørmontering.' },
-    tak: { title: 'Tak & Vinduer', rate: 880, desc: 'Utskifting av takstein, undertak og montering av 3-lags lavenergivinduer.' },
+  const services = {
+    terrasse: {
+      title: 'Terrasser & Uterom',
+      rate: 850,
+      leadTime: '1–2 uker',
+      tagline: 'Skreddersydde plattinger, rekkverk, trappeløp og pergolaer',
+      desc: 'Vi bygger slitesterke uterom tilpasset nordiske værforhold. Velg mellom varmebehandlet termofuru, MøreRoyal eller eksklusiv Kebony med millimeterpresisjon og usynlig innfesting.',
+      features: ['Usynlig kantskrue/CAMO-system', 'Integrert LED-trinnbelysning', 'Frostsikre fundamenter & søylesko', 'Bygges etter TEK17 toleransekrav'],
+    },
+    tilbygg: {
+      title: 'Tilbygg & Påbygg',
+      rate: 960,
+      leadTime: '4–8 uker',
+      tagline: 'Utvidelse av stue, takløft, ny etasje eller vinterhage',
+      desc: 'Komplett prosjektering og oppføring av moderne tilbygg. Vi ivaretar alt fra arkitekttegninger og søknad til nøkkelferdig overlevering med fukt- og vindsperrer.',
+      features: ['Søknadspliktig bistand til kommunen', 'Sømløs overgang mot eksisterende hus', 'Klimatilpasset isolasjon (Lavenergi)', '100% fastpriskontrakt'],
+    },
+    fasade: {
+      title: 'Fasade & Etterisolering',
+      rate: 890,
+      leadTime: '2–4 uker',
+      tagline: 'Ny kledning, 10-15cm etterisolering og energioppgradering',
+      desc: 'Reduser strømregningen og gi huset et moderne løft. Vi skifter råteskadet kledning, etterisolerer og monterer moderne dobbelfals eller stående låvekledning.',
+      features: ['Enova-tilskuddsberettiget energitiltak', 'Montering av vindsperre og lusing', 'Valgfrie ferdiggrunnet/beisede kledninger', '10 års produktgaranti på virke'],
+    },
+    interior: {
+      title: 'Innvendig Finsnekring',
+      rate: 920,
+      leadTime: '1–3 uker',
+      tagline: 'Eikespilevegger, plassbygde garderober og listefrie løsninger',
+      desc: 'Eksklusive spesialinnredninger for stue, gang og kjøkken. Vi skaper sømløse overganger med akustiske spilepaneler, skjulte dører og skreddersøm.',
+      features: ['Akustikk-godkjente eikespiler', 'Listefri gips- og karmoverganger', 'Integrert indirekte LED-belysning', 'Lakkert eller oljet etter fargeønske'],
+    },
+    tak: {
+      title: 'Tak, Vinduer & Dører',
+      rate: 880,
+      leadTime: '2–3 uker',
+      tagline: 'Utskifting av undertak, lekter, takstein og lavenergiglass',
+      desc: 'Beskytt boligen mot vær og vind. Vi skifter takstein, legger nytt undertak og monterer 3-lags lavenergivinduer som tilfredsstiller moderne krav.',
+      features: ['3-lags lavenergivinduer (U-verdi 0.8)', 'Takrenner i sink eller aluminium', 'Velux takvinduer med solskjerming', 'Dokumentert fuktkontroll'],
+    },
   };
 
-  const woodMultipliers: Record<string, { name: string; mult: number }> = {
-    impregnert: { name: 'Furu Impregnert kl. AB', mult: 1.0 },
-    termo: { name: 'Varmebehandlet Termofuru', mult: 1.25 },
-    moreroyal: { name: 'MøreRoyal Grå / Brun', mult: 1.45 },
-    kebony: { name: 'Kebony Clear Premium', mult: 1.75 },
+  const woodMultipliers = {
+    impregnert: { name: 'Furu Impregnert kl. AB', pricePerSqm: 380, desc: 'Klassisk, rimelig og impregnert mot råte' },
+    termo: { name: 'Varmebehandlet Termofuru', pricePerSqm: 560, desc: 'Miljøvennlig, formstabil og naturlig gråning' },
+    moreroyal: { name: 'MøreRoyal Oljebehandlet Grå/Brun', pricePerSqm: 680, desc: 'Dobbeltbehandlet furu med minimalt vedlikehold' },
+    kebony: { name: 'Kebony Clear Premium', pricePerSqm: 940, desc: 'Eksklusivt hardtre-alternativ med 30 års garanti' },
   };
 
-  const currentService = services[selectedService] || services.terrasse;
-  const currentWood = woodMultipliers[woodType] || woodMultipliers.impregnert;
+  const galleryItems = [
+    {
+      id: 1,
+      category: 'terrasse',
+      title: 'Funkisterrasse med Utekjøkken & Pergola',
+      location: 'Holmenkollen, Oslo',
+      size: '92 m²',
+      wood: 'MøreRoyal Grå',
+      completion: 'August 2026',
+      quote: '«Utrolig presist utført snekkerarbeid. Plattingen har sømløse skjøter og LED-sporene i trappetrinnene er magiske på kveldstid.»',
+      author: 'Henrik & Camilla W.'
+    },
+    {
+      id: 2,
+      category: 'tilbygg',
+      title: 'Moderne Stueutvidelse med Sedumtak',
+      location: 'Snarøya, Bærum',
+      size: '42 m²',
+      wood: 'Malmfuru & 3-lags Glass',
+      completion: 'Juni 2026',
+      quote: '«De holdt både tidsplan og fastpris på kronen. Ryddet byggeplassen hver eneste dag. Anbefales på det varmeste!»',
+      author: 'Lars Petter E.'
+    },
+    {
+      id: 3,
+      category: 'interior',
+      title: 'Plassbygget Eikespilevegg & Mediamøbel',
+      location: 'Bekkestua, Bærum',
+      size: '18 m²',
+      wood: 'Norsk Hvitpigmentert Eik',
+      completion: 'September 2026',
+      quote: '«Et kunstverk i stuen vår. Akustikken ble fantastisk mye bedre og de integrerte dørene er helt usynlige.»',
+      author: 'Marianne S.'
+    },
+    {
+      id: 4,
+      category: 'fasade',
+      title: 'Fasaderenovering & Ekstra Isolering',
+      location: 'Nordstrand, Oslo',
+      size: '185 m²',
+      wood: 'Dobbelfals Kledning m/Spor',
+      completion: 'Juli 2026',
+      quote: '«Huset fremstår som flunkende nytt og strømforbruket sank merkbart allerede første måned.»',
+      author: 'Knut Arild T.'
+    },
+    {
+      id: 5,
+      category: 'terrasse',
+      title: 'Sjønær Bryggeplatting & Trappeløp',
+      location: 'Nesøya, Asker',
+      size: '64 m²',
+      wood: 'Kebony Clear',
+      completion: 'Mai 2026',
+      quote: '«Håndverkerne var punktlige og holdt en millimeterpresisjon som imponerte både oss og naboene.»',
+      author: 'Cecilie M.'
+    },
+    {
+      id: 6,
+      category: 'tilbygg',
+      title: 'Arkitekttegnet Inngangsparti & Carport',
+      location: 'Grefsen, Oslo',
+      size: '28 m²',
+      wood: 'Termofuru & Sort Stål',
+      completion: 'April 2026',
+      quote: '«Utrolig god kommunikasjon underveis med ukentlige oppdateringer og ingen overraskelser på sluttoppgjøret.»',
+      author: 'Fredrik B.'
+    }
+  ];
 
-  const estHours = Math.round(squareMeters * 0.6 + 8);
+  const faqs = [
+    {
+      q: 'Er befaringen virkelig 100 % uforpliktende og gratis?',
+      a: 'Ja! En autorisert tømrermester kommer hjem til deg på avtalt tidspunkt, måler opp arealet, diskuterer løsninger og gir råd om materialvalg. Du mottar et skriftlig fastpristilbud innen 48 timer.'
+    },
+    {
+      q: 'Hvordan fungerer fastprisgarantien deres?',
+      a: 'Når tilbudet er godkjent, låses prisen skriftlig i en standard Norsk Standard (NS) kontrakt. Eventuelle uforutsette merkostnader dekkes av oss, med mindre du eksplisitt bestiller tilleggsarbeid skriftlig underveis.'
+    },
+    {
+      q: 'Hva slags garanti får jeg på snekkerarbeidet?',
+      a: 'Vi gir 5 års full håndverkergaranti i henhold til Bustadoppføringslova og TEK17. Alle materialer leveres med produsentgarantier på opptil 30 år mot råte.'
+    },
+    {
+      q: 'Trenger jeg byggetillatelse for terrasse eller tilbygg?',
+      a: 'Frittliggende terrasser under 0.5 meters høyde er som regel unntatt søknadsplikt. For tilbygg inntil 15 m² eller terrasser høyere enn 0.5 meter kan andre regler gjelde. Vi bistår med søknadstegninger og nabovarsel.'
+    }
+  ];
+
+  const currentService = services[selectedService as keyof typeof services] || services.terrasse;
+  const currentWood = woodMultipliers[woodType as keyof typeof woodMultipliers] || woodMultipliers.termo;
+
+  // Real-world accurate calculation
+  const estHours = Math.round(squareMeters * 0.75 + 12);
   const laborCost = estHours * currentService.rate;
-  const materialCost = Math.round(squareMeters * 420 * currentWood.mult);
-  const totalEstimate = laborCost + materialCost;
+  const materialBase = squareMeters * currentWood.pricePerSqm;
+  const fastenersAddon = hasHiddenFasteners ? squareMeters * 85 : 0;
+  const ledAddon = hasIntegratedLed ? 8500 : 0;
+  const permitAddon = hasPermitHelp ? 9500 : 0;
+  const materialCost = Math.round(materialBase + fastenersAddon + ledAddon + permitAddon);
+  const subtotal = laborCost + materialCost;
+  const vat = Math.round(subtotal * 0.25);
+  const totalEstimate = subtotal + vat;
 
-  const handleBooking = (e: React.FormEvent) => {
+  const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone.trim()) {
-      alert('Vennligst oppgi et gyldig telefonnummer for befaringsavtale.');
+      alert('Vennligst oppgi et gyldig telefonnummer så vi kan avtale tidspunkt.');
       return;
     }
     setSubmitted(true);
   };
 
+  const filteredGallery = galleryFilter === 'all'
+    ? galleryItems
+    : galleryItems.filter((item) => item.category === galleryFilter);
+
   return (
-    <div className="min-h-screen bg-[#0A0D12] text-slate-100 font-sans p-4 sm:p-8 md:p-10 selection:bg-[#7C3AED] selection:text-white">
-      {/* Top Banner */}
-      <header className="max-w-5xl mx-auto flex items-center justify-between pb-6 border-b border-[#1F2937] mb-8">
+    <div className="min-h-screen bg-[#0C0E14] text-slate-100 font-sans selection:bg-amber-600 selection:text-white">
+      {/* 1. TOP TRUST STRIP */}
+      <div className="bg-[#11141C] border-b border-[#1E2330] py-2 px-4 text-center text-[11px] font-medium text-amber-300/90 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+        <span className="flex items-center gap-1.5">
+          <Award className="w-3.5 h-3.5 text-amber-400" />
+          Mesterbedrift i Tømrerfaget
+        </span>
+        <span className="hidden sm:inline text-slate-600">•</span>
+        <span className="flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          Sentralt Godkjent Tiltaksklasse 2
+        </span>
+        <span className="hidden sm:inline text-slate-600">•</span>
+        <span className="flex items-center gap-1.5">
+          <FileCheck className="w-3.5 h-3.5 text-cyan-400" />
+          5 Års TEK17-Garanti
+        </span>
+        <span className="hidden sm:inline text-slate-600">•</span>
+        <span className="flex items-center gap-1.5 text-emerald-400">
+          <Clock className="w-3.5 h-3.5" />
+          Gratis befaring innen 48 timer
+        </span>
+      </div>
+
+      {/* 2. STICKY MODERN NAVIGATION */}
+      <header className="sticky top-0 z-40 bg-[#0C0E14]/90 backdrop-blur-md border-b border-[#1E2330] px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#A78BFA] flex items-center justify-center font-bold text-white shadow-lg shadow-purple-900/40">
-            <Hammer className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 flex items-center justify-center text-white shadow-lg shadow-amber-950/50">
+            <Hammer className="w-5 h-5 text-amber-100" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              MesterSnekker'n AS
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/80 text-[#C4B5FD] border border-purple-800/40 flex items-center gap-1">
-                <Award className="w-3 h-3 text-[#A78BFA]" />
-                Mesterbrev & TEK17
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-white text-base tracking-tight">Nordic Tre & Håndverk</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/40">
+                Mesterbedrift
               </span>
-            </h1>
-            <p className="text-xs text-slate-400">Tradisjonshåndverk, nybygg og moderne snekkerarbeid</p>
+            </div>
+            <p className="text-[11px] text-slate-400">Arkitektur, nybygg og snekkerarbeid i Viken</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-950/50 border border-emerald-800/50 px-3 py-1.5 rounded-full">
-          <ShieldCheck className="w-4 h-4" />
-          <span>5 års håndverkergaranti</span>
+
+        <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-300">
+          <a href="#tjenester" className="hover:text-amber-400 transition">Tjenester</a>
+          <a href="#kalkulator" className="hover:text-amber-400 transition">Priskalkulator</a>
+          <a href="#prosjekter" className="hover:text-amber-400 transition">Prosjekter</a>
+          <a href="#garanti" className="hover:text-amber-400 transition">Garanti</a>
+          <a href="#referanser" className="hover:text-amber-400 transition">Kundeomtaler</a>
+          <a href="#kontakt" className="hover:text-amber-400 transition">Kontakt</a>
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="tel:22140000"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141822] hover:bg-[#1A202E] border border-[#242C3D] text-xs font-semibold text-slate-200 transition"
+          >
+            <Phone className="w-3.5 h-3.5 text-amber-400" />
+            <span>22 14 00 00</span>
+          </a>
+          <a
+            href="#kalkulator"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-semibold text-xs shadow-md shadow-amber-950/40 transition cursor-pointer"
+          >
+            Bestill Befaring
+          </a>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="max-w-5xl mx-auto mb-8 bg-gradient-to-r from-[#12161F] via-[#161B26] to-[#12161F] border border-[#1F2937] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        <div className="max-w-2xl space-y-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#A78BFA]">
-            ✦ Kvalitetsarbeid som varer
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
-            Skal du bygge terrasse, tilbygg eller pusse opp?
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Vi leverer solid norsk snekker- og tømrerarbeid med millimeterpresisjon. Få et umiddelbart kostnadsestimat nedenfor eller bestill gratis befaring.
+      {/* 3. HERO SECTION */}
+      <section className="relative px-4 sm:px-8 py-16 sm:py-24 max-w-6xl mx-auto overflow-hidden">
+        <div className="max-w-3xl space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/50 border border-amber-800/40 text-xs font-semibold text-amber-300">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Norsk Håndverkstradisjon med Millimeterpresisjon</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+            Skreddersydde terrasser og tilbygg som hever boligens verdi.
+          </h1>
+
+          <p className="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl font-normal">
+            Vi prosjekterer og bygger arkitekttegnede uterom, tilbygg og spesialtilpasset interiørsnekring for kresne huseiere i Oslo, Bærum og Asker. Med 100 % fastprisavtale og 5 års TEK17-garanti.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <a
+              href="#kalkulator"
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-sm shadow-xl shadow-amber-950/50 flex items-center gap-2 transition cursor-pointer"
+            >
+              <span>Beregn Prosjektpris i Sanntid</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="#prosjekter"
+              className="px-6 py-3.5 rounded-xl bg-[#141822] hover:bg-[#1A202E] border border-[#242C3D] text-slate-200 font-bold text-sm transition flex items-center gap-2"
+            >
+              <span>Se Referanseprosjekter (6)</span>
+            </a>
+          </div>
+
+          {/* Social Proof Strip */}
+          <div className="pt-6 border-t border-[#1E2330] flex flex-wrap items-center gap-6 text-xs text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400" />
+                ))}
+              </div>
+              <span className="font-bold text-white">4.9 / 5.0</span>
+              <span className="text-slate-400">(142 verifiserte oppdrag)</span>
+            </div>
+            <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+              <CheckCircle className="w-4 h-4" />
+              <span>100 % Skriftlig Fastprisgaranti</span>
+            </div>
+            <div className="flex items-center gap-2 text-cyan-400 font-semibold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>5 Års Garanti iht. Norsk Lov</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. KEY METRICS GRID */}
+      <section className="px-4 sm:px-8 max-w-6xl mx-auto mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="p-5 rounded-2xl bg-[#121620] border border-[#1E2433] space-y-1">
+            <span className="text-2xl sm:text-3xl font-black text-amber-400">15+ År</span>
+            <p className="text-xs font-bold text-white">Mestererfaring</p>
+            <p className="text-[11px] text-slate-400">Tradisjonelt norsk tømrerfag</p>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#121620] border border-[#1E2433] space-y-1">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-400">160+</span>
+            <p className="text-xs font-bold text-white">Fullførte Prosjekter</p>
+            <p className="text-[11px] text-slate-400">I Oslo, Asker og Bærum</p>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#121620] border border-[#1E2433] space-y-1">
+            <span className="text-2xl sm:text-3xl font-black text-cyan-400">100 %</span>
+            <p className="text-xs font-bold text-white">Fastprisavtale</p>
+            <p className="text-[11px] text-slate-400">Ingen skjulte sluttoppgjør</p>
+          </div>
+          <div className="p-5 rounded-2xl bg-[#121620] border border-[#1E2433] space-y-1">
+            <span className="text-2xl sm:text-3xl font-black text-purple-400">5 År</span>
+            <p className="text-xs font-bold text-white">TEK17-Garanti</p>
+            <p className="text-[11px] text-slate-400">Dokumentert med FDV-perm</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. SERVICES EXPLORER */}
+      <section id="tjenester" className="px-4 sm:px-8 max-w-6xl mx-auto mb-20">
+        <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Hva vi kan bygge for deg</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Spesialisert Tømrer- & Snekkerarbeid</h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Fra enkle plattinger til komplekse arkitekttegnede tilbygg. Vi leverer alt med egne faglærte håndverkere.
           </p>
         </div>
-      </div>
 
-      {/* Main Grid: Calculator & Quote */}
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {/* Left: Calculator form */}
-        <div className="md:col-span-2 bg-[#12161F] border border-[#1F2937] rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#A78BFA]" />
-              <span>1. Velg snekkertjeneste</span>
-            </h3>
-            <span className="text-[11px] font-mono text-slate-400">Fast timeprisgaranti</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {Object.entries(services).map(([key, s]) => {
+            const isHighlighted = selectedService === key;
+            return (
+              <div
+                key={key}
+                onClick={() => setSelectedService(key)}
+                className={\`p-6 rounded-2xl transition cursor-pointer border flex flex-col justify-between \${
+                  isHighlighted
+                    ? 'bg-[#161B26] border-amber-500 shadow-xl shadow-amber-950/30 ring-1 ring-amber-500'
+                    : 'bg-[#11151E] border-[#1E2433] hover:border-slate-600'
+                }\`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 font-mono">Timepris {s.rate} kr/t</span>
+                    <span className="text-[10px] font-medium text-slate-400 bg-[#0C0E14] px-2 py-0.5 rounded border border-[#1E2433]">
+                      Est. {s.leadTime}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-white">{s.title}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">{s.desc}</p>
+                  
+                  <div className="space-y-1.5 pt-2 border-t border-[#1E2433]">
+                    {s.features.map((feat, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-[11px] text-slate-400">
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-[#1E2433] flex items-center justify-between text-xs font-semibold text-amber-400">
+                  <span>Velg for priskalkulator</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 6. INTERACTIVE 4-STEP PRICE CALCULATOR */}
+      <section id="kalkulator" className="px-4 sm:px-8 max-w-6xl mx-auto mb-20">
+        <div className="bg-[#121622] border border-[#21293A] rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="max-w-2xl mb-8 space-y-2">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Ruler className="w-4 h-4" />
+              <span>Interaktiv Kostnadskalkulator</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Beregn veiledende prosjektkostnad på sekunder
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400">
+              Juster parametere nedenfor basert på dine ønsker. Kalkulatoren tar utgangspunkt i faktiske norske materialpriser og standard TEK17 arbeidstimer for 2026.
+            </p>
           </div>
 
-          {/* Service grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {Object.entries(services).map(([key, s]) => {
-              const active = selectedService === key;
-              return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left: Input Form Controls (7 cols) */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Step 1: Select Service */}
+              <div>
+                <label className="text-xs font-bold text-white block mb-2">1. Prosjekttype:</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Object.entries(services).map(([key, s]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedService(key)}
+                      className={\`px-3 py-2 rounded-xl text-left text-xs font-semibold transition border cursor-pointer \${
+                        selectedService === key
+                          ? 'bg-amber-600 text-white border-amber-500 shadow-md'
+                          : 'bg-[#0E121B] text-slate-300 border-[#202838] hover:border-slate-500'
+                      }\`}
+                    >
+                      {s.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 2: Area Slider */}
+              <div className="space-y-2 pt-4 border-t border-[#1E2433]">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">2. Areal / Omfang:</span>
+                  <span className="text-sm font-black text-amber-400 font-mono bg-amber-950/60 px-2.5 py-0.5 rounded border border-amber-800/40">
+                    {squareMeters} m²
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="12"
+                  max="140"
+                  step="2"
+                  value={squareMeters}
+                  onChange={(e) => setSquareMeters(Number(e.target.value))}
+                  className="w-full accent-amber-500 bg-[#0E121B] h-2.5 rounded-lg cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <span>12 m² (lite prosjekt)</span>
+                  <span>75 m²</span>
+                  <span>140 m² (stort prosjekt)</span>
+                </div>
+              </div>
+
+              {/* Step 3: Material Quality Tier */}
+              <div className="space-y-2 pt-4 border-t border-[#1E2433]">
+                <label className="text-xs font-bold text-white block">3. Materialkvalitet:</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {Object.entries(woodMultipliers).map(([key, w]) => {
+                    const active = woodType === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setWoodType(key)}
+                        className={\`p-3 rounded-xl text-left transition border cursor-pointer \${
+                          active
+                            ? 'bg-amber-950/60 border-amber-500 ring-1 ring-amber-500'
+                            : 'bg-[#0E121B] border-[#202838] hover:border-slate-600'
+                        }\`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-white">{w.name}</span>
+                          <span className="text-[10px] font-mono text-amber-400">{w.pricePerSqm} kr/m²</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{w.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Step 4: Optional Addons */}
+              <div className="space-y-2 pt-4 border-t border-[#1E2433]">
+                <label className="text-xs font-bold text-white block">4. Tilleggsvalg:</label>
+                <div className="space-y-2 text-xs">
+                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0E121B] border border-[#202838] cursor-pointer hover:border-slate-500 transition">
+                    <input
+                      type="checkbox"
+                      checked={hasHiddenFasteners}
+                      onChange={(e) => setHasHiddenFasteners(e.target.checked)}
+                      className="accent-amber-500 w-4 h-4 rounded"
+                    />
+                    <span className="text-slate-200 font-medium">Skjult innfesting (CAMO kantskruer uten synlige skruehoder)</span>
+                    <span className="text-slate-400 text-[10px] font-mono ml-auto">+85 kr/m²</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0E121B] border border-[#202838] cursor-pointer hover:border-slate-500 transition">
+                    <input
+                      type="checkbox"
+                      checked={hasIntegratedLed}
+                      onChange={(e) => setHasIntegratedLed(e.target.checked)}
+                      className="accent-amber-500 w-4 h-4 rounded"
+                    />
+                    <span className="text-slate-200 font-medium">Integrert 12V LED-belysning i trinn og rekkverk</span>
+                    <span className="text-slate-400 text-[10px] font-mono ml-auto">+8 500 kr</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#0E121B] border border-[#202838] cursor-pointer hover:border-slate-500 transition">
+                    <input
+                      type="checkbox"
+                      checked={hasPermitHelp}
+                      onChange={(e) => setHasPermitHelp(e.target.checked)}
+                      className="accent-amber-500 w-4 h-4 rounded"
+                    />
+                    <span className="text-slate-200 font-medium">Komplett byggesøknad m/nabovarsel og situasjonskart</span>
+                    <span className="text-slate-400 text-[10px] font-mono ml-auto">+9 500 kr</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Summary Box & Booking Request (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col justify-between bg-[#0E121B] border border-[#242C3D] rounded-2xl p-6 shadow-xl space-y-6">
+              <div>
+                <div className="flex items-center justify-between border-b border-[#1E2433] pb-3 mb-4">
+                  <span className="text-xs uppercase font-bold tracking-wider text-slate-400">Kostnadsoverslag</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/40">
+                    Fastprisgaranti
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-300">
+                    <span>Valgt tjeneste:</span>
+                    <span className="font-semibold text-white">{currentService.title}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Beregnet areal:</span>
+                    <span className="font-mono text-white">{squareMeters} m²</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Materialklasse:</span>
+                    <span className="font-medium text-amber-300">{currentWood.name}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Fagarbeid (ca. {estHours} timer):</span>
+                    <span className="font-mono text-white">kr {laborCost.toLocaleString('no-NO')}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Materialer & tilvalg:</span>
+                    <span className="font-mono text-white">kr {materialCost.toLocaleString('no-NO')}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 text-[11px] pt-1 border-t border-[#1E2433]">
+                    <span>MVA (25 %):</span>
+                    <span className="font-mono">kr {vat.toLocaleString('no-NO')}</span>
+                  </div>
+                </div>
+
+                {/* Big Total Price */}
+                <div className="mt-5 p-4 rounded-xl bg-[#141824] border border-[#242C3D] text-center space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    Totalpris Inkl. MVA & Materialer
+                  </span>
+                  <div className="text-3xl font-black text-amber-400 tracking-tight font-sans">
+                    kr {totalEstimate.toLocaleString('no-NO')} ,-
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Leveres nøkkelferdig med 5 års TEK17-garanti
+                  </p>
+                </div>
+              </div>
+
+              {/* Direct Booking Form */}
+              <form onSubmit={handleBookingSubmit} className="space-y-3 pt-3 border-t border-[#1E2433]">
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                  Bestill Gratis Befaring for dette anslaget
+                </h4>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Ditt fulle navn..."
+                    className="w-full bg-[#121622] border border-[#242C3D] focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Mobilnummer..."
+                      className="w-full bg-[#121622] border border-[#242C3D] focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition"
+                    />
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Adresse / Postnr..."
+                      className="w-full bg-[#121622] border border-[#242C3D] focus:border-amber-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition"
+                    />
+                  </div>
+                </div>
+
                 <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedService(key)}
-                  className={\`p-3 rounded-xl text-left transition cursor-pointer border \${
-                    active
-                      ? 'bg-purple-950/60 border-[#7C3AED] ring-1 ring-[#7C3AED]'
-                      : 'bg-[#0E121A] border-[#1F2937] hover:border-slate-600'
+                  type="submit"
+                  className={\`w-full py-3 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer \${
+                    submitted
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white shadow-amber-950/40'
                   }\`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">{s.title}</span>
-                    <span className="text-[11px] font-mono text-[#A78BFA]">{s.rate} kr/t</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{s.desc}</p>
+                  {submitted ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Befaring bekreftet! Vi ringer deg innen 24t.</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Få Skriftlig Tilbud & Gratis Befaring</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
-              );
-            })}
-          </div>
-
-          {/* Area Slider */}
-          <div className="space-y-2 pt-2 border-t border-[#1F2937]">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-300 font-medium">Areal / Omfang:</span>
-              <span className="font-bold text-[#A78BFA] text-sm">{squareMeters} m²</span>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="150"
-              value={squareMeters}
-              onChange={(e) => setSquareMeters(Number(e.target.value))}
-              className="w-full accent-[#7C3AED] bg-[#0A0D12] h-2.5 rounded-lg cursor-pointer border border-slate-800"
-            />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-              <span>10 m² (lite prosjekt)</span>
-              <span>75 m²</span>
-              <span>150 m² (stort prosjekt)</span>
+              </form>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Wood selector */}
-          <div className="space-y-2 pt-2 border-t border-[#1F2937]">
-            <span className="text-xs text-slate-300 font-medium">Materialvalg:</span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {Object.entries(woodMultipliers).map(([key, w]) => {
-                const active = woodType === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setWoodType(key)}
-                    className={\`px-2.5 py-2 rounded-xl text-left text-xs transition cursor-pointer border \${
-                      active
-                        ? 'bg-purple-950/70 border-[#7C3AED] text-white'
-                        : 'bg-[#0E121A] border-[#1F2937] text-slate-400 hover:text-white'
-                    }\`}
-                  >
-                    <p className="font-semibold text-[11px]">{w.name}</p>
-                  </button>
-                );
-              })}
-            </div>
+      {/* 7. PORTFOLIO & REFERENCE GALLERY */}
+      <section id="prosjekter" className="px-4 sm:px-8 max-w-6xl mx-auto mb-20">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Verifiserte Referanser</span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">Fullførte Prosjekter i Viken</h2>
           </div>
 
-          {/* Inspection Form */}
-          <form onSubmit={handleBooking} className="space-y-3 pt-3 border-t border-[#1F2937]">
-            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-emerald-400" />
-              Bestill uforpliktende gratis befaring
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                type="text"
-                value={inspectionAddress}
-                onChange={(e) => setInspectionAddress(e.target.value)}
-                placeholder="Adresse / Postnummer..."
-                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
-              />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Telefonnummer..."
-                className="w-full bg-[#0A0D12] border border-[#1F2937] focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition"
-              />
-            </div>
-            <button
-              type="submit"
-              className={\`w-full py-3 px-6 rounded-xl font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer \${
-                submitted
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gradient-to-r from-[#7C3AED] to-[#8B5CF6] hover:from-[#6D28D9] text-white shadow-purple-900/40'
-              }\`}
+          {/* Filter Pills */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { id: 'all', label: 'Alle Prosjekter' },
+              { id: 'terrasse', label: 'Terrasser' },
+              { id: 'tilbygg', label: 'Tilbygg' },
+              { id: 'interior', label: 'Innvendig Snekring' },
+              { id: 'fasade', label: 'Fasader' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setGalleryFilter(f.id as any)}
+                className={\`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer border \${
+                  galleryFilter === f.id
+                    ? 'bg-amber-600 border-amber-500 text-white font-bold'
+                    : 'bg-[#121622] border-[#202838] text-slate-300 hover:text-white'
+                }\`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGallery.map((p) => (
+            <div
+              key={p.id}
+              className="bg-[#11151E] border border-[#1E2433] hover:border-amber-500/50 rounded-2xl overflow-hidden transition-all group flex flex-col justify-between"
             >
-              {submitted ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Befaring registrert! Mesteren kontakter deg innen 24 timer.</span>
-                </>
-              ) : (
-                <>
-                  <span>Send befaringsforespørsel for {currentService.title}</span>
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
+              <div className="p-5 space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                  <span className="flex items-center gap-1 text-amber-400">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {p.location}
+                  </span>
+                  <span>{p.completion}</span>
+                </div>
+
+                <h3 className="text-base font-bold text-white group-hover:text-amber-300 transition">
+                  {p.title}
+                </h3>
+
+                <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                  <span className="px-2 py-0.5 rounded bg-[#181E2B] text-slate-300 border border-[#242C3D]">
+                    Areal: {p.size}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#181E2B] text-amber-300 border border-[#242C3D]">
+                    Material: {p.wood}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#0D1017] border border-[#1C2230] text-[11px] text-slate-300 italic">
+                  {p.quote}
+                  <p className="text-[10px] font-bold text-amber-400 not-italic mt-1.5">— {p.author}</p>
+                </div>
+              </div>
+
+              <div className="px-5 py-3 border-t border-[#1C2230] bg-[#0E121B] flex items-center justify-between text-xs text-slate-400 font-semibold">
+                <span className="text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  TEK17 Sluttbefart
+                </span>
+                <span className="group-hover:text-amber-400 transition">Se detaljer →</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 8. 4-STEP QUALITY PROCESS */}
+      <section id="garanti" className="px-4 sm:px-8 max-w-6xl mx-auto mb-20">
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Trygghet fra start til slutt</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Slik Bygger Vi for Deg</h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Forutsigbarhet, ryddighet og strenge standarder i hvert ledd.
+          </p>
         </div>
 
-        {/* Right: Price Summary Card */}
-        <div className="space-y-4">
-          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 shadow-xl space-y-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
-                Estimert Totalpris (inkl. mva)
-              </p>
-              <div className="text-2xl font-extrabold text-white">
-                kr {totalEstimate.toLocaleString('no-NO')} ,-
-              </div>
-              <p className="text-[10px] text-slate-400 mt-0.5">Veiledende anslag inkl. arbeid og materialer</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-6 rounded-2xl bg-[#11151E] border border-[#1E2433] space-y-2 relative">
+            <div className="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-800/40 text-amber-400 font-black text-sm flex items-center justify-center">
+              01
             </div>
-
-            <div className="space-y-2 text-xs text-slate-300 border-t border-[#1F2937] pt-3 font-mono">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Valgt fag:</span>
-                <span className="font-medium text-white">{currentService.title}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Timepris:</span>
-                <span className="font-medium text-white">{currentService.rate} kr/t</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Est. arbeidstimer:</span>
-                <span className="font-medium text-white">ca. {estHours} timer</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Materialklasse:</span>
-                <span className="font-medium text-white">{currentWood.name}</span>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-[#1F2937] space-y-2 text-[11px] text-slate-400">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                <Check className="w-3.5 h-3.5" />
-                <span>Skriftlig tilbud før oppstart</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                <Check className="w-3.5 h-3.5" />
-                <span>TEK17 og HMS-sertifisert</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                <Check className="w-3.5 h-3.5" />
-                <span>Fastprisavtale tilbys</span>
-              </div>
-            </div>
+            <h3 className="text-sm font-bold text-white pt-1">Gratis Befaring</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Mesteren møter opp på tomten, gjør oppmåling med lasermåler og diskuterer tekniske løsninger.
+            </p>
           </div>
 
-          {/* Reference Projects */}
-          <div className="bg-[#12161F] border border-[#1F2937] rounded-2xl p-5 text-xs space-y-3">
-            <h4 className="font-bold text-white flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              Referanseprosjekter
-            </h4>
+          <div className="p-6 rounded-2xl bg-[#11151E] border border-[#1E2433] space-y-2 relative">
+            <div className="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-800/40 text-amber-400 font-black text-sm flex items-center justify-center">
+              02
+            </div>
+            <h3 className="text-sm font-bold text-white pt-1">Skriftlig Fastpris</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Du mottar et komplett spesifisert tilbud basert på standard NS-kontrakt. Prisen er 100 % låst.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#11151E] border border-[#1E2433] space-y-2 relative">
+            <div className="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-800/40 text-amber-400 font-black text-sm flex items-center justify-center">
+              03
+            </div>
+            <h3 className="text-sm font-bold text-white pt-1">Presis Utførelse</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Faste håndverkere bygger med millimeterpresisjon. Byggeplassen ryddes og sikres hver ettermiddag.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#11151E] border border-[#1E2433] space-y-2 relative">
+            <div className="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-800/40 text-amber-400 font-black text-sm flex items-center justify-center">
+              04
+            </div>
+            <h3 className="text-sm font-bold text-white pt-1">Overlevering & Garanti</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Sluttbefaring gjennomføres sammen med deg. Du mottar full FDV-dokumentasjon og 5 års garanti.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FAQ ACCORDION */}
+      <section className="px-4 sm:px-8 max-w-4xl mx-auto mb-20">
+        <div className="text-center mb-10 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Svar på vanlige spørsmål</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Ofte Stilte Spørsmål</h2>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={idx}
+                className="bg-[#11151E] border border-[#1E2433] rounded-2xl overflow-hidden transition"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="w-full p-4 sm:p-5 flex items-center justify-between text-left transition cursor-pointer hover:bg-[#161B26]"
+                >
+                  <span className="text-xs sm:text-sm font-bold text-white pr-4">{faq.q}</span>
+                  <ChevronDown
+                    className={\`w-4 h-4 text-amber-400 shrink-0 transition-transform \${
+                      isOpen ? 'rotate-180' : ''
+                    }\`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-4 sm:px-5 pb-5 pt-1 text-xs text-slate-300 leading-relaxed border-t border-[#1C2230]">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 10. FOOTER */}
+      <footer id="kontakt" className="bg-[#0A0C10] border-t border-[#1C2230] pt-12 pb-8 px-4 sm:px-8 text-xs text-slate-400">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center text-white font-bold">
+                <Hammer className="w-4 h-4" />
+              </div>
+              <span className="text-base font-bold text-white">Nordic Tre & Håndverk AS</span>
+            </div>
+            <p className="text-[11px] leading-relaxed">
+              Spesialister på skreddersydde uterom, tilbygg og arkitektur i tre. Autorisert mesterbedrift med Sentral Godkjenning.
+            </p>
+            <p className="text-[10px] font-mono text-slate-500">Org.nr: 928 471 204 MVA</p>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-3">Tjenester</h4>
+            <ul className="space-y-2 text-[11px]">
+              <li><a href="#tjenester" className="hover:text-amber-400">Terrasser & Plattinger</a></li>
+              <li><a href="#tjenester" className="hover:text-amber-400">Tilbygg & Påbygg</a></li>
+              <li><a href="#tjenester" className="hover:text-amber-400">Fasaderenovering & ENØK</a></li>
+              <li><a href="#tjenester" className="hover:text-amber-400">Eikespilevegger & Interiør</a></li>
+              <li><a href="#tjenester" className="hover:text-amber-400">Tak, Vinduer & Dører</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-3">Godkjenninger & Garantier</h4>
+            <ul className="space-y-2 text-[11px]">
+              <li className="flex items-center gap-1.5 text-amber-300">
+                <Award className="w-3 h-3 text-amber-400" />
+                Mesterbrev i Tømrerfaget
+              </li>
+              <li className="flex items-center gap-1.5 text-emerald-400">
+                <ShieldCheck className="w-3 h-3" />
+                Sentralt Godkjent Tiltaksklasse 2
+              </li>
+              <li className="flex items-center gap-1.5 text-cyan-400">
+                <FileCheck className="w-3 h-3" />
+                StartBANK ID: 10428
+              </li>
+              <li className="flex items-center gap-1.5 text-slate-300">
+                <Check className="w-3 h-3 text-emerald-400" />
+                5 Års TEK17 Garanti
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-3">Direkte Kontakt</h4>
             <div className="space-y-2 text-[11px]">
-              <div className="p-2.5 rounded-lg bg-[#0E121A] border border-[#1F2937]">
-                <p className="font-semibold text-white">Funkis tilbygg 42 m² – Bærum</p>
-                <p className="text-slate-400 text-[10px]">Utvidelse av helårsstue med sedumtak og eikespiler.</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#0E121A] border border-[#1F2937]">
-                <p className="font-semibold text-white">Terrasse 85 m² – Tønsberg</p>
-                <p className="text-slate-400 text-[10px]">MøreRoyal terrasse i to nivåer med integrert LED.</p>
-              </div>
+              <p className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-amber-400" />
+                <a href="tel:22140000" className="hover:text-white">22 14 00 00</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <a href="mailto:post@nordictre.no" className="hover:text-white">post@nordictre.no</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <span>Verkstedveien 12, 0277 Oslo</span>
+              </p>
+              <p className="text-[10px] text-slate-500 pt-1">Åpningstider: Mandag – Fredag: 07:00 – 17:00</p>
             </div>
           </div>
         </div>
-      </div>
+
+        <div className="max-w-6xl mx-auto pt-6 border-t border-[#1C2230] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+          <p>© 2026 Nordic Tre & Håndverk AS. Alle rettigheter reservert.</p>
+          <div className="flex gap-4">
+            <span className="hover:text-slate-400 cursor-pointer">Personvern</span>
+            <span className="hover:text-slate-400 cursor-pointer">Brukervilkår</span>
+            <span className="hover:text-slate-400 cursor-pointer">FDV-Dokumentasjon</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -2667,13 +3467,11 @@ export async function POST(req: NextRequest) {
       Math.floor(estimateTokenCount(prompt) * 8 + 3800)
     );
 
-    // 2. Generer kildekode enten via Gemini eller autonom motor
-    const effectiveGeminiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+    // 2. Generer kildekode via AI Program Ultra (DeepSeek / Gemini / OpenAI) eller autonom motor
     let result: GeminiGenerationResult | null = null;
+    const clientKey = geminiApiKey || (body as any).apiKey;
 
-    if (effectiveGeminiKey && effectiveGeminiKey.trim() !== "") {
-      result = await callGeminiApi(prompt, projectName, currentFiles, effectiveGeminiKey);
-    }
+    result = await callAiModel(prompt, projectName, currentFiles, clientKey);
 
     if (!result) {
       result = generateAutonomousCode(prompt, projectName, currentFiles);

@@ -680,22 +680,55 @@ function BuilderContent() {
     setIsTestingApiKey(true);
     setTestKeyStatus(null);
     try {
-      const testRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKeyInput.trim()}`,
-        {
+      const key = geminiApiKeyInput.trim();
+      let ok = false;
+      let errMsg = "";
+
+      if (key.startsWith("sk-")) {
+        // DeepSeek API test (AI Program Ultra engine)
+        const res = await fetch("https://api.deepseek.com/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${key}`,
+          },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: "Svar med ordet 'OK' på norsk." }] }],
+            model: "deepseek-chat",
+            messages: [{ role: "user", content: "Hi" }],
+            max_tokens: 5,
           }),
+        });
+        if (res.ok) {
+          ok = true;
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          errMsg = errData.error?.message || `Feilkode ${res.status}`;
         }
-      );
-      if (testRes.ok) {
-        setTestKeyStatus("✓ Tilkobling vellykket! API svarer i sanntid.");
-        localStorage.setItem("aiprogram_gemini_key", geminiApiKeyInput.trim());
       } else {
-        const errData = await testRes.json();
-        setTestKeyStatus(`Tilkobling feilet: ${errData.error?.message || "Ugyldig API-nøkkel"}`);
+        // Google Gemini API test
+        const testRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: "Svar med ordet 'OK' på norsk." }] }],
+            }),
+          }
+        );
+        if (testRes.ok) {
+          ok = true;
+        } else {
+          const errData = await testRes.json().catch(() => ({}));
+          errMsg = errData.error?.message || `Feilkode ${testRes.status}`;
+        }
+      }
+
+      if (ok) {
+        setTestKeyStatus("✓ Tilkobling vellykket! AI Program Ultra er koblet til og svarer i sanntid.");
+        localStorage.setItem("aiprogram_gemini_key", key);
+      } else {
+        setTestKeyStatus(`Tilkobling feilet: ${errMsg || "Ugyldig API-nøkkel"}`);
       }
     } catch (e: any) {
       setTestKeyStatus(`Tilkoblingsfeil: ${e.message}`);
