@@ -327,6 +327,28 @@ export const CURATED_UNSPLASH_GALLERY: Record<
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
     ],
   },
+  florist: {
+    hero: [
+      "https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&w=1600&q=80", // Luksuriøs peon- og rosebukett i naturlig lys
+      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1600&q=80", // Friske sesongblomster og pasteller
+      "https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&w=1600&q=80", // Botanisk blomsterbutikk og binderi
+    ],
+    services: [
+      "https://images.unsplash.com/photo-1522057384400-681b4213fb52?auto=format&fit=crop&w=800&q=80", // Brudebukett & bryllupsblomster
+      "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80", // Kondolanse & bårekrans
+      "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=800&q=80", // Sesongbuketter & hverdagsglede
+      "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=800&q=80", // Grønne inneplanter & terrakotta
+    ],
+    portfolio: [
+      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1558350315-8aa00e8e4590?auto=format&fit=crop&w=800&q=80",
+    ],
+    avatars: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", // Mesterbinder
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80", // Blomsterdekoratør
+    ],
+  },
 };
 
 /**
@@ -334,6 +356,19 @@ export const CURATED_UNSPLASH_GALLERY: Record<
  */
 export function detectCategory(text: string): keyof typeof CURATED_UNSPLASH_GALLERY {
   const lower = (text || "").toLowerCase();
+  if (
+    lower.includes("florist") ||
+    lower.includes("blomst") ||
+    lower.includes("bukett") ||
+    lower.includes("blomsterhandler") ||
+    lower.includes("binderi") ||
+    lower.includes("plante") ||
+    lower.includes("hage") ||
+    lower.includes("botanikk") ||
+    lower.includes("bryllupsblomster")
+  ) {
+    return "florist";
+  }
   if (
     lower.includes("sjømat") ||
     lower.includes("sjomat") ||

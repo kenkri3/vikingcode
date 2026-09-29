@@ -400,18 +400,150 @@ export function WorkspaceLayout({
             : "hidden"
         } ${mobileTab !== "agent" ? "flex !w-full" : ""}`}
       >
-        {/* Right Pane Header: Box Icon + "Web Dev" on Left, Deploy Button + Close "X" on Right (Image 2) */}
-        <div className="h-11 bg-[#1a1a20] border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative">
-          {/* Left: Box Icon + Web Dev */}
-          <div className="flex items-center gap-2 min-w-0">
-            <Box className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="text-sm font-semibold text-white truncate">
-              {activeProject.name || "Web Dev"}
-            </span>
+        {/* Unified Right Pane Header: Project + [ Preview | Code ] on Left, [ AI-Bilder | Reload | Fullscreen | Tools | Deploy | X ] on Right */}
+        <div className="h-11 bg-[#181820] border-b border-[#26262e] px-3.5 flex items-center justify-between select-none shrink-0 relative">
+          {/* Left: Box Icon + Project Name + [ Preview | Code ] Segmented Switcher */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Box className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[110px] sm:max-w-[180px]">
+                {activeProject.name || "Web Dev"}
+              </span>
+            </div>
+
+            <div className="h-4 w-[1px] bg-[#2a2a36] shrink-0 hidden sm:block" />
+
+            {/* Segmented Switcher [ Preview ] [ Code ] */}
+            <div className="flex items-center gap-1 bg-[#121215] p-0.5 rounded-lg border border-[#24242c] shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("preview");
+                  if (onSetMobileTab) onSetMobileTab("preview");
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === "preview"
+                    ? "bg-[#25252e] text-white shadow-sm font-semibold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5 text-purple-400" />
+                <span>Preview</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("editor");
+                  if (onSetMobileTab) onSetMobileTab("code");
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === "editor"
+                    ? "bg-[#25252e] text-white shadow-sm font-semibold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Code</span>
+              </button>
+            </div>
           </div>
 
-          {/* Right: Deploy Button (White Pill) + Close Button "X" (Image 2) */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right: AI-Bilder + Reload + Fullscreen + More + Deploy + Close */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsImageModalOpen(true)}
+              className="px-2.5 py-1 text-slate-300 hover:text-white bg-[#20202a] hover:bg-[#2a2a36] border border-[#2e2e3e] rounded-lg transition cursor-pointer flex items-center gap-1.5 text-xs shadow-xs"
+              title="Generer AI-bilder med 1min.AI eller Unsplash"
+            >
+              <Sparkles className="w-3 h-3 text-purple-400" />
+              <span className="hidden md:inline">AI-Bilder</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab((prev) => prev)}
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer"
+              title="Last inn på nytt"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer hidden sm:block"
+              title={isFullscreen ? "Avslutt fullskjerm" : "Fullskjerm"}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {/* Three Dots dropdown for extra tabs (Backend, Database, Terminal) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsPreviewMoreOpen(!isPreviewMoreOpen)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer"
+                title="Flere utviklerverktøy"
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+
+              {isPreviewMoreOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsPreviewMoreOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
+                    <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
+                      Utviklerverktøy
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("backend");
+                        setIsPreviewMoreOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                    >
+                      <Server className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Backend & API Explorer</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("database");
+                        setIsPreviewMoreOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                    >
+                      <Database className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Database Studio</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("terminal");
+                        setIsPreviewMoreOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                    >
+                      <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Terminal & Logger</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="h-4 w-[1px] bg-[#2a2a36] shrink-0" />
+
             {/* Deploy Button */}
             <div className="relative">
               <button
@@ -554,139 +686,6 @@ export function WorkspaceLayout({
             >
               <X className="w-4 h-4" />
             </button>
-          </div>
-        </div>
-
-        {/* Sub-toolbar: Segmented Switcher [ Preview ] [ Code ] + Refresh + Fullscreen + Three Dots Menu */}
-        <div className="h-9 bg-[#16161c] border-b border-[#24242c] px-3.5 flex items-center justify-between select-none shrink-0">
-          {/* Left: Segmented Switcher [ Preview ] [ Code ] (Exact Image 2) */}
-          <div className="flex items-center gap-1 bg-[#121215] p-0.5 rounded-lg border border-[#24242c]">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("preview");
-                if (onSetMobileTab) onSetMobileTab("preview");
-              }}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
-                activeTab === "preview"
-                  ? "bg-[#25252e] text-white shadow-sm font-semibold"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Preview
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("editor");
-                if (onSetMobileTab) onSetMobileTab("code");
-              }}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
-                activeTab === "editor"
-                  ? "bg-[#25252e] text-white shadow-sm font-semibold"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Code
-            </button>
-          </div>
-
-          {/* Right: AI-Bilder + Refresh + Fullscreen + Three Dots menu for extra tools */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsImageModalOpen(true)}
-              className="px-2.5 py-1 text-slate-300 hover:text-white bg-[#1e1e26] hover:bg-[#282834] border border-[#2e2e3e] rounded-md transition cursor-pointer flex items-center gap-1.5 text-xs shadow-xs"
-              title="Generer AI-bilder med 1min.AI (Flux Schnell) eller Unsplash"
-            >
-              <Sparkles className="w-3 h-3 text-purple-400" />
-              <span className="hidden sm:inline">AI-Bilder</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                // Trigger reload in iframe by touching key
-                setActiveTab((prev) => prev);
-              }}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-md transition cursor-pointer"
-              title="Last inn på nytt"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-md transition cursor-pointer"
-              title={isFullscreen ? "Avslutt fullskjerm" : "Fullskjerm"}
-            >
-              {isFullscreen ? (
-                <Minimize2 className="w-3.5 h-3.5" />
-              ) : (
-                <Maximize2 className="w-3.5 h-3.5" />
-              )}
-            </button>
-
-            {/* Three Dots dropdown for extra tabs (Backend, Database, Terminal) */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsPreviewMoreOpen(!isPreviewMoreOpen)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-md transition cursor-pointer"
-                title="Flere utviklerverktøy"
-              >
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </button>
-
-              {isPreviewMoreOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setIsPreviewMoreOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
-                    <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
-                      Utviklerverktøy
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab("backend");
-                        setIsPreviewMoreOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
-                    >
-                      <Server className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Backend API Explorer</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab("database");
-                        setIsPreviewMoreOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
-                    >
-                      <Database className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Database Studio</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab("terminal");
-                        setIsPreviewMoreOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
-                    >
-                      <Terminal className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Terminal</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
           </div>
         </div>
 

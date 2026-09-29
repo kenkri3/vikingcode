@@ -15,6 +15,8 @@ import {
   Eye,
   ThumbsUp,
   ThumbsDown,
+  CheckCircle2,
+  Sparkles,
   Share2,
   MoreHorizontal,
   ExternalLink,
@@ -425,12 +427,66 @@ export function AgentChatView({
           );
         })}
 
-        {/* Real-time Streaming Loading Indicator */}
+        {/* Real-time Streaming Multi-Step Progress HUD (Punktvis fremdrift) */}
         {isLoading && (
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#1e1e24] border border-[#2e2e36] text-xs text-slate-300 w-fit animate-in fade-in duration-200 shadow-md">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A78BFA]" />
-            <span>{currentThought || "Bygger og oppdaterer kildekode..."}</span>
-            <span className="text-[10px] text-slate-500 font-mono ml-1">{elapsedSeconds.toFixed(1)}s</span>
+          <div className="w-full max-w-lg rounded-2xl bg-[#1b1b22] border border-[#2e2e3a] p-4 text-xs shadow-2xl animate-in fade-in duration-200 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#292934]">
+              <div className="flex items-center gap-2 font-semibold text-white">
+                <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+                <span>{currentThought || "Bygger og designer løsning..."}</span>
+              </div>
+              <span className="text-[11px] font-mono text-purple-300 bg-purple-950/70 border border-purple-800/40 px-2.5 py-0.5 rounded-full shrink-0">
+                {elapsedSeconds.toFixed(1)}s
+              </span>
+            </div>
+
+            {/* Checklist of Real-Time Steps */}
+            <div className="space-y-2 pt-1">
+              {[
+                { label: "Analyserer forretningskonsept og bransjekrav", doneAfter: 2.2 },
+                { label: "Utformer designprofil, fargeharmoni og typografi", doneAfter: 4.8 },
+                { label: "Henter høyoppløselige bransjefotografier og innhold", doneAfter: 7.8 },
+                { label: "Konstruerer responsive seksjoner, skjemaer og interaktivitet", doneAfter: 11.2 },
+                { label: "Kompilerer kildekode og oppdaterer sanntidsvisning", doneAfter: 999 },
+              ].map((step, idx, arr) => {
+                const isDone = elapsedSeconds >= step.doneAfter;
+                const isCurrent = !isDone && (idx === 0 || elapsedSeconds >= arr[idx - 1].doneAfter);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-2.5 transition-all duration-300 ${
+                      isDone
+                        ? "text-slate-300"
+                        : isCurrent
+                        ? "text-white font-medium"
+                        : "text-slate-500 opacity-50"
+                    }`}
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                      {isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      ) : isCurrent ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                      ) : (
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                      )}
+                    </div>
+                    <span className="text-xs leading-snug">{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Live Progress Bar */}
+            <div className="w-full h-1.5 bg-[#252530] rounded-full overflow-hidden mt-2">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.min(95, Math.max(12, (elapsedSeconds / 13) * 100))}%`,
+                }}
+              />
+            </div>
           </div>
         )}
 
