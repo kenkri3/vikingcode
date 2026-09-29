@@ -315,10 +315,10 @@ async function callAiModel(
 }
 
 // Autonom lokal kodegenerator som lager 100% fungerende, rike kildekodefiler
-function generateAutonomousCode(
+export function generateAutonomousCode(
   prompt: string,
   projectName: string,
-  existingFiles: ProjectFile[]
+  existingFiles: ProjectFile[] = []
 ): GeminiGenerationResult {
   const pLower = prompt.toLowerCase();
   const createdFiles: ProjectFile[] = [];

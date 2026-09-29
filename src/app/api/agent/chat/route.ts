@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { extractFilesFromAgentReply } from "@/lib/code-extractor";
+import { prisma } from "@/lib/prisma";
 
 /**
- * 🤖 AIProgram Headless Agent Proxy
+ * 🤖 AI Program Headless Agent Proxy
  * Kommuniserer med AI-agent via REST API.
+ * Fanger opp all kode som agenten spytter ut og ruter det direkte til prosjektfiler.
  */
 
 const BOT_API_KEY =
@@ -28,8 +31,14 @@ export async function POST(req: NextRequest) {
     const demoHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 12);
     const fbId = `v${demoHash}`;
 
-    const contextHeader = `[AI Program Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]`;
-    const enrichedMessage = `${contextHeader}\n${message}`;
+    const contextHeader = `[AI Program Autonom Kodebygger | Bruker: ${userName || "Utvikler"} | Aktivt prosjekt: ${projectName || "Mitt Prosjekt"}]
+VIKTIG: Du er en toppleder fullstack-arkitekt som bygger produksjonsklare applikasjoner for kunden.
+Når brukeren ber deg lage, designe eller oppdatere koden:
+1. Skriv ferdig, komplett Next.js (React + Tailwind CSS + Lucide ikoner) kildekode i en kodeblokk merket \`\`\`tsx (med // app/page.tsx på første linje).
+2. Eller kall MCP-verktøyet 'build_project' eller 'update_file'.
+Systemet fanger automatisk opp koden du spytter ut, lagrer den i de riktige prosjektfilene, og viser den umiddelbart i forhåndsvisningen (live preview) for kunden!`;
+
+    const enrichedMessage = `${contextHeader}\n\nBrukerens instruks: ${message}`;
 
     const payload = {
       type: "message",
@@ -98,10 +107,46 @@ export async function POST(req: NextRequest) {
         .replace(/Viking/gi, "Nordic");
     }
 
+    // 🎯 Ekstraher automatisk alle kodefiler som agenten spyttet ut
+    const { files: extractedFiles, cleanedReply } = extractFilesFromAgentReply(replyText);
+
+    // Hvis koden inneholdt filer, lagre til database hvis prosjekt finnes
+    if (extractedFiles.length > 0 && projectName) {
+      try {
+        const query = userId
+          ? { userId, name: projectName }
+          : { name: projectName };
+
+        const project = await prisma.project.findFirst({
+          where: query,
+          orderBy: { updatedAt: "desc" },
+        });
+
+        if (project) {
+          const currentFiles: Array<{ path: string; content: string }> =
+            (project.filesJson as any) || [];
+          const map = new Map(currentFiles.map((f) => [f.path, f]));
+          extractedFiles.forEach((f) => map.set(f.path, f));
+
+          await prisma.project.update({
+            where: { id: project.id },
+            data: {
+              filesJson: Array.from(map.values()) as any,
+              updatedAt: new Date(),
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn("Automatisk lagring av agent-filer i DB fallback:", dbErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       sessionId: fbId,
-      reply: replyText,
+      reply: cleanedReply,
+      rawReply: replyText,
+      files: extractedFiles,
       quickReplies: quickReplies,
       raw: data,
     });

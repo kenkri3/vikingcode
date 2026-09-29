@@ -15,6 +15,7 @@ import {
 } from "@/lib/projects-data";
 import { PLAN_CONFIGS, TOP_UP_OFFER, verifyTokenQuota } from "@/lib/tokens";
 import { UserSession, Project, ChatMessage, PlanTier, ProjectFile, AgentAction } from "@/lib/types";
+import { extractFilesFromAgentReply } from "@/lib/code-extractor";
 import {
   CheckCircle2,
   ExternalLink,
@@ -303,7 +304,12 @@ function BuilderContent() {
         pLower.includes("booking_system") ||
         pLower.trim().length > 2;
 
-      // 1. Spør brukerens ekte AI Agent (Botsify Converse API)
+      // 1. Variabler for filer og handlinger
+      let filesGenerated: ProjectFile[] = [];
+      let actionsGenerated: AgentAction[] = [];
+      let tokensUsed = 250;
+
+      // Spør brukerens ekte AI Agent (Botsify Converse API / DeepSeek)
       let botReply = "";
       let botQuickReplies: Array<{ title: string; payload: string }> = [];
       const storedSession =
@@ -335,17 +341,80 @@ function BuilderContent() {
           if (chatData.sessionId && typeof window !== "undefined") {
             localStorage.setItem("aiprogram_agent_session", chatData.sessionId);
           }
+          // 🎯 Sjekk om agenten allerede har generert eller oppdatert filer!
+          if (chatData.files && Array.isArray(chatData.files) && chatData.files.length > 0) {
+            filesGenerated = chatData.files;
+          }
         }
       } catch (chatErr) {
         console.warn("Kunne ikke nå agent/chat:", chatErr);
       }
 
-      // 2. Hvis brukeren ba om å bygge/endre kode, kjør kodegeneratoren
-      let filesGenerated: ProjectFile[] = [];
-      let actionsGenerated: AgentAction[] = [];
-      let tokensUsed = 250;
+      // 2. Hvis agenten ikke returnerte ferdige fil-objekter, sjekk om teksten inneholder kodeblokker
+      if (filesGenerated.length === 0 && botReply) {
+        const extracted = extractFilesFromAgentReply(botReply);
+        if (extracted.files.length > 0) {
+          filesGenerated = extracted.files;
+          botReply = extracted.cleanedReply;
+        }
+      }
 
-      if (isBuildIntent) {
+      // 3. Sjekk om agenten opprettet/oppdaterte prosjektet via MCP i bakgrunnen
+      if (filesGenerated.length === 0 && isBuildIntent) {
+        try {
+          const syncRes = await fetch("/api/projects");
+          if (syncRes.ok) {
+            const syncData = await syncRes.json();
+            const matching = syncData.projects?.find(
+              (p: any) => p.name === activeProject.name || p.id === activeProject.id
+            );
+            if (matching?.files && Array.isArray(matching.files) && matching.files.length > 0) {
+              const localPage = activeProject.files.find((f) => f.path.includes("page.tsx"))?.content;
+              const serverPage = matching.files.find((f: any) => f.path.includes("page.tsx"))?.content;
+              if (serverPage && serverPage !== localPage) {
+                filesGenerated = matching.files;
+              }
+            }
+          }
+        } catch {}
+      }
+
+      // 4. Hvis agenten produserte kode: Flett inn filene, lagre og åpne forhåndsvisning!
+      if (filesGenerated.length > 0) {
+        setActiveProject((prev) => {
+          const map = new Map(prev.files.map((f) => [f.path, f]));
+          filesGenerated.forEach((nf) => {
+            map.set(nf.path, nf);
+          });
+          const mergedFiles = Array.from(map.values());
+          const updatedProj = {
+            ...prev,
+            files: mergedFiles,
+            updatedAt: new Date().toISOString(),
+          };
+
+          setProjects((all) => {
+            const exists = all.some((p) => p.id === updatedProj.id);
+            const nextAll = exists
+              ? all.map((p) => (p.id === updatedProj.id ? updatedProj : p))
+              : [updatedProj, ...all];
+            saveStoredProjects(nextAll);
+            return nextAll;
+          });
+
+          fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "update", project: updatedProj }),
+          }).catch(() => {});
+
+          return updatedProj;
+        });
+
+        setIsPreviewOpen(true);
+        setMobileTab("preview");
+      } else if (isBuildIntent) {
+        // Fallback: Kun dersom agenten ikke leverte kodefiler, kjør intern generator
         const keyToUse =
           geminiApiKeyInput ||
           (typeof window !== "undefined" ? localStorage.getItem("aiprogram_gemini_key") : null);
@@ -381,7 +450,6 @@ function BuilderContent() {
             }));
           }
 
-          // Flett inn de nye filene og oppdater aktivt prosjekt
           if (filesGenerated.length > 0) {
             setActiveProject((prev) => {
               const map = new Map(prev.files.map((f) => [f.path, f]));
@@ -395,7 +463,6 @@ function BuilderContent() {
                 updatedAt: new Date().toISOString(),
               };
 
-              // Oppdater i prosjektlisten og lagre
               setProjects((all) => {
                 const exists = all.some((p) => p.id === updatedProj.id);
                 const nextAll = exists
@@ -405,7 +472,6 @@ function BuilderContent() {
                 return nextAll;
               });
 
-              // Synkroniser med backend
               fetch("/api/projects", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -419,7 +485,6 @@ function BuilderContent() {
           }
         }
       } else {
-        // Enkel samtale: trekk fra minimale tokens
         setUser((prev) => ({
           ...prev,
           tokensRemaining: Math.max(0, prev.tokensRemaining - 150),
