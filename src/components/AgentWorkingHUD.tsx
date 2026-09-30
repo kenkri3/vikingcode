@@ -200,17 +200,31 @@ export function AgentWorkingHUD({
     }
   }, [visibleLineCount]);
 
-  // Completion trigger when isGenerating turns false
+  // Completion trigger when isGenerating turns false - transition to live preview
+  const completeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    if (!isGenerating && elapsed > 1.5 && !isCompleted) {
+    if (!isGenerating) {
       setIsCompleted(true);
-      // Brief 750ms delay so user sees "✓ Completed", then smoothly transition to live preview
-      const timer = setTimeout(() => {
-        if (onComplete) onComplete();
-      }, 750);
-      return () => clearTimeout(timer);
+      if (!completeTimerRef.current) {
+        completeTimerRef.current = setTimeout(() => {
+          if (onComplete) onComplete();
+        }, 500);
+      }
+    } else {
+      setIsCompleted(false);
+      if (completeTimerRef.current) {
+        clearTimeout(completeTimerRef.current);
+        completeTimerRef.current = null;
+      }
     }
-  }, [isGenerating, elapsed, isCompleted, onComplete]);
+    return () => {
+      if (completeTimerRef.current) {
+        clearTimeout(completeTimerRef.current);
+        completeTimerRef.current = null;
+      }
+    };
+  }, [isGenerating, onComplete]);
 
   // Phase calculation:
   // Phase 1 (0 to 3.2s): Checklist Screen (Exact Image 2)
@@ -363,9 +377,13 @@ export function AgentWorkingHUD({
 
           {/* Bottom helper */}
           {isCompleted && (
-            <div className="pt-2 text-center text-xs font-mono text-emerald-400 animate-pulse">
-              ✓ Kildekode kompilert og verifisert. Viser forhåndsvisning...
-            </div>
+            <button
+              type="button"
+              onClick={() => onComplete?.()}
+              className="pt-2 text-center text-xs font-mono text-emerald-400 hover:text-emerald-300 animate-pulse transition cursor-pointer w-full flex items-center justify-center gap-1.5"
+            >
+              <span>✓ Kildekode kompilert og verifisert. Viser forhåndsvisning...</span>
+            </button>
           )}
         </div>
       )}

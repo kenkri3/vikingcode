@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     locale: "nb_NO",
     type: "website",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AIProgram",
+  },
   icons: {
     icon: "/favicon.ico",
   },

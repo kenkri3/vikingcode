@@ -11,7 +11,6 @@ import {
   MoreHorizontal,
   Zap,
   LayoutDashboard,
-  Rocket,
   Github,
   Download,
   Lock,
@@ -23,7 +22,6 @@ interface HeaderProps {
   user: UserSession;
   activeProject: Project;
   onOpenPricing: () => void;
-  onDeployRailway: () => void;
   onDownloadZip: () => void;
   onPushGithub: () => void;
   isDeploying?: boolean;
@@ -38,7 +36,6 @@ export function Header({
   user,
   activeProject,
   onOpenPricing,
-  onDeployRailway,
   onDownloadZip,
   onPushGithub,
   isPreviewOpen = false,
@@ -156,20 +153,6 @@ export function Header({
                   <span>Dashboard / SuperAdmin</span>
                 </Link>
 
-                <button
-                  onClick={() => {
-                    setCornerMenuOpen(false);
-                    if (isTrial) onOpenPricing();
-                    else onDeployRailway();
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-200 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Rocket className="w-3.5 h-3.5 text-amber-400" />
-                    Deploy på Railway (1-Klikk)
-                  </span>
-                  {isTrial && <Lock className="w-3 h-3 text-amber-400" />}
-                </button>
 
                 <button
                   onClick={() => {

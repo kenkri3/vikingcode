@@ -66,7 +66,7 @@ function renderInlineText(raw: string): React.ReactNode[] {
       parts.push(
         <code
           key={match.index}
-          className="px-1.5 py-0.5 rounded bg-[#1e1e24] text-[#C4B5FD] font-mono text-[11px] border border-[#2e2e34]"
+          className="px-2 py-0.5 rounded-md bg-[#22222a] text-[#C4B5FD] font-mono text-sm border border-[#32323c]"
         >
           {token.slice(1, -1)}
         </code>
@@ -88,20 +88,20 @@ function formatChatMarkdown(text: string): React.ReactNode {
   const lines = text.split("\n");
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2.5">
       {lines.map((line, lineIdx) => {
         const trimmed = line.trim();
         if (!trimmed) {
-          return <div key={lineIdx} className="h-1" />;
+          return <div key={lineIdx} className="h-1.5" />;
         }
 
         if (trimmed.startsWith("---")) {
-          return <hr key={lineIdx} className="border-[#2e2e34] my-2" />;
+          return <hr key={lineIdx} className="border-[#2e2e34] my-3" />;
         }
 
         if (trimmed.startsWith("### ")) {
           return (
-            <h4 key={lineIdx} className="text-xs font-bold text-white pt-1">
+            <h4 key={lineIdx} className="text-base sm:text-lg font-bold text-white pt-2">
               {renderInlineText(trimmed.slice(4))}
             </h4>
           );
@@ -110,7 +110,7 @@ function formatChatMarkdown(text: string): React.ReactNode {
         if (trimmed.startsWith("## ") || trimmed.startsWith("# ")) {
           const content = trimmed.startsWith("## ") ? trimmed.slice(3) : trimmed.slice(2);
           return (
-            <h3 key={lineIdx} className="text-sm font-bold text-white pt-1.5">
+            <h3 key={lineIdx} className="text-lg sm:text-xl font-bold text-white pt-2.5">
               {renderInlineText(content)}
             </h3>
           );
@@ -120,9 +120,9 @@ function formatChatMarkdown(text: string): React.ReactNode {
         const bulletMatch = trimmed.match(/^[-*•]\s+(.*)/);
         if (bulletMatch) {
           return (
-            <div key={lineIdx} className="flex items-start gap-2 pl-1 leading-relaxed">
-              <span className="text-[#A78BFA] font-bold text-xs select-none mt-0.5">•</span>
-              <div className="flex-1">{renderInlineText(bulletMatch[1])}</div>
+            <div key={lineIdx} className="flex items-start gap-2.5 pl-1.5 leading-relaxed text-[15px] sm:text-base">
+              <span className="text-[#A78BFA] font-bold text-base select-none mt-0.5">•</span>
+              <div className="flex-1 text-slate-100">{renderInlineText(bulletMatch[1])}</div>
             </div>
           );
         }
@@ -131,17 +131,17 @@ function formatChatMarkdown(text: string): React.ReactNode {
         const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
         if (numberMatch) {
           return (
-            <div key={lineIdx} className="flex items-start gap-2 pl-1 leading-relaxed">
-              <span className="text-[#C4B5FD] font-mono text-[11px] font-bold select-none mt-0.5">
+            <div key={lineIdx} className="flex items-start gap-2.5 pl-1.5 leading-relaxed text-[15px] sm:text-base">
+              <span className="text-[#C4B5FD] font-mono text-sm font-bold select-none mt-0.5">
                 {numberMatch[1]}.
               </span>
-              <div className="flex-1">{renderInlineText(numberMatch[2])}</div>
+              <div className="flex-1 font-normal text-slate-100">{renderInlineText(numberMatch[2])}</div>
             </div>
           );
         }
 
         return (
-          <p key={lineIdx} className="leading-relaxed">
+          <p key={lineIdx} className="leading-[1.7] text-[15px] sm:text-base text-slate-100">
             {renderInlineText(line)}
           </p>
         );
@@ -200,17 +200,17 @@ export function AgentChatView({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 font-sans select-text">
-      <div className={`w-full ${isPreviewOpen ? "" : "max-w-3xl mx-auto"} space-y-6 transition-all duration-300`}>
+    <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 font-sans select-text">
+      <div className={`w-full ${isPreviewOpen ? "" : "max-w-4xl lg:max-w-5xl mx-auto"} space-y-6 transition-all duration-300`}>
         {messages.map((msg) => {
           const isUser = msg.role === "user";
 
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end">
-                <div className="max-w-[85%] bg-[#24242a] border border-[#303038] text-slate-100 text-xs sm:text-sm rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
+                <div className="max-w-[85%] sm:max-w-[75%] bg-[#282a2e] border border-[#383a44] text-slate-100 text-[15px] sm:text-base rounded-3xl rounded-tr-md px-5 py-3.5 shadow-md">
                   <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                  <div className="mt-1 text-[10px] text-slate-500 text-right">
+                  <div className="mt-1.5 text-xs text-slate-400 text-right font-mono">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>
@@ -222,31 +222,31 @@ export function AgentChatView({
           const hasFiles = msg.filesCreated && msg.filesCreated.length > 0;
 
           return (
-            <div key={msg.id} className="space-y-2.5 max-w-full">
+            <div key={msg.id} className="space-y-3 max-w-full">
               {/* 1. Thinking completed collapsible pill (Exact Qwen style) */}
               {msg.actions && msg.actions.length > 0 && (
                 <div>
                   <button
                     type="button"
                     onClick={() => toggleThought(msg.id)}
-                    className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer font-sans py-0.5"
+                    className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition cursor-pointer font-sans py-1"
                   >
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
+                    <Lightbulb className="w-4 h-4 text-amber-300" />
                     <span className="font-medium">Thinking completed</span>
                     {expandedThoughts[msg.id] ? (
-                      <ChevronDown className="w-3 h-3 text-slate-500" />
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     ) : (
-                      <ChevronRight className="w-3 h-3 text-slate-500" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                     )}
                   </button>
 
                   {expandedThoughts[msg.id] && (
-                    <div className="mt-2 ml-1 pl-3 border-l border-[#2e2e36] space-y-1.5 py-1 text-[11px] font-mono text-slate-400">
+                    <div className="mt-2 ml-1 pl-3.5 border-l border-[#2e2e36] space-y-2 py-1.5 text-xs font-mono text-slate-400">
                       {msg.actions.map((act) => (
-                        <div key={act.id} className="flex items-center gap-2">
+                        <div key={act.id} className="flex items-center gap-2.5">
                           {act.type === "analyze" && (
                             <>
-                              <Atom className="w-3 h-3 text-cyan-400 shrink-0" />
+                              <Atom className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                               <span className="text-slate-500">Analysert</span>
                               <button
                                 type="button"
@@ -256,20 +256,20 @@ export function AgentChatView({
                                 {act.fileName || act.title}
                               </button>
                               {act.lineRange && (
-                                <span className="text-slate-500 text-[10px]">{act.lineRange}</span>
+                                <span className="text-slate-500 text-[11px]">{act.lineRange}</span>
                               )}
                             </>
                           )}
                           {act.type === "search" && (
                             <>
-                              <Search className="w-3 h-3 text-amber-400 shrink-0" />
+                              <Search className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                               <span className="text-slate-500">Søk</span>
                               <span className="text-slate-300 truncate">{act.title}</span>
                             </>
                           )}
                           {act.type === "thought" && (
                             <>
-                              <Brain className="w-3 h-3 text-[#A78BFA] shrink-0" />
+                              <Brain className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
                               <span className="text-slate-300">{act.title}</span>
                             </>
                           )}
@@ -282,38 +282,38 @@ export function AgentChatView({
 
               {/* 2. Assistant Response Text */}
               {msg.content && (
-                <div className="text-slate-200 text-xs sm:text-sm leading-relaxed max-w-3xl">
+                <div className="text-slate-100 text-[15px] sm:text-base leading-[1.7] max-w-3xl">
                   {formatChatMarkdown(msg.content)}
                 </div>
               )}
 
               {/* 3. Sleek Qwen-Style Web Dev Artifact Card (Image 1) */}
               {hasFiles && (
-                <div className="pt-1 space-y-2">
+                <div className="pt-2 space-y-2.5">
                   <div
                     onClick={onOpenPreview}
-                    className="w-full max-w-sm rounded-xl bg-[#1e1e24] hover:bg-[#25252d] border border-[#2d2d36] hover:border-[#3f3f4c] p-3 transition-all duration-150 flex items-center justify-between gap-3 shadow-md group cursor-pointer"
+                    className="w-full max-w-md rounded-2xl bg-[#1e1e24] hover:bg-[#25252d] border border-[#2d2d36] hover:border-[#4f4f60] p-3.5 transition-all duration-150 flex items-center justify-between gap-3.5 shadow-lg group cursor-pointer"
                     title="Klikk for å åpne forhåndsvisning"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3.5 min-w-0">
                       {/* Mini Window Frame Mockup Icon */}
-                      <div className="w-13 h-13 rounded-lg bg-[#272730] border border-[#353542] flex flex-col justify-between shrink-0 p-1.5 shadow-inner">
-                        <div className="w-full h-2 bg-[#333340] rounded-xs flex items-center px-1 gap-0.5">
-                          <div className="w-1 h-1 rounded-full bg-slate-500" />
-                          <div className="w-1 h-1 rounded-full bg-slate-500" />
-                          <div className="w-1 h-1 rounded-full bg-slate-500" />
+                      <div className="w-14 h-14 rounded-xl bg-[#272730] border border-[#353542] flex flex-col justify-between shrink-0 p-2 shadow-inner">
+                        <div className="w-full h-2.5 bg-[#333340] rounded-xs flex items-center px-1 gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                         </div>
-                        <div className="w-full h-4 bg-[#1a1a20] rounded-xs flex items-center justify-center">
-                          <Eye className="w-2.5 h-2.5 text-slate-500 group-hover:text-slate-300 transition" />
+                        <div className="w-full h-5 bg-[#1a1a20] rounded-xs flex items-center justify-center">
+                          <Eye className="w-3 h-3 text-slate-400 group-hover:text-white transition" />
                         </div>
-                        <div className="w-full h-1 bg-[#333340] rounded-xs" />
+                        <div className="w-full h-1.5 bg-[#333340] rounded-xs" />
                       </div>
 
                       <div className="flex flex-col min-w-0 justify-center">
-                        <span className="text-sm font-semibold text-white truncate group-hover:text-purple-300 transition">
+                        <span className="text-base font-semibold text-white truncate group-hover:text-purple-300 transition">
                           {projectName || "Web Dev"}
                         </span>
-                        <span className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                        <span className="text-xs text-slate-400 mt-1 font-mono">
                           {new Date(msg.timestamp).toLocaleDateString("no-NO", {
                             day: "2-digit",
                             month: "2-digit",
@@ -324,65 +324,65 @@ export function AgentChatView({
                       </div>
                     </div>
 
-                    {/* Eye icon on right side of card (User: "trykker jeg på øyet på web dev så kommer preview rett opp") */}
+                    {/* Eye icon on right side of card */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenPreview?.();
                       }}
-                      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#30303c] transition cursor-pointer"
+                      className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#30303c] transition cursor-pointer"
                       title="Åpne forhåndsvisning"
                     >
-                      <Eye className="w-4 h-4 text-slate-300 group-hover:text-white" />
+                      <Eye className="w-5 h-5 text-slate-300 group-hover:text-white" />
                     </button>
                   </div>
 
                   {/* 4. Action Bar under Artifact Card: [ 👁️ Preview ] + Copy + Thumbs + Regenerate */}
-                  <div className="flex items-center gap-1.5 text-slate-400">
+                  <div className="flex items-center gap-2 text-slate-400">
                     <button
                       type="button"
                       onClick={onOpenPreview}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e1e24] hover:bg-[#282832] text-slate-200 hover:text-white border border-[#2d2d36] text-xs font-medium transition cursor-pointer shadow-sm"
+                      className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1e1e24] hover:bg-[#282832] text-slate-200 hover:text-white border border-[#2d2d36] text-sm font-medium transition cursor-pointer shadow-sm"
                       title="Åpne forhåndsvisning på høyre side"
                     >
-                      <Eye className="w-3.5 h-3.5 text-[#A78BFA]" />
+                      <Eye className="w-4 h-4 text-[#A78BFA]" />
                       <span>Preview</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleCopy(msg.id, msg.content)}
-                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      className="p-2 rounded-xl hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
                       title="Kopier svar"
                     >
                       {copiedId === msg.id ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-4 h-4 text-emerald-400" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-4 h-4" />
                       )}
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setLikedId((prev) => (prev === msg.id ? null : msg.id))}
-                      className={`p-1.5 rounded-lg hover:bg-[#222228] transition cursor-pointer ${
+                      className={`p-2 rounded-xl hover:bg-[#222228] transition cursor-pointer ${
                         likedId === msg.id ? "text-purple-400" : "hover:text-slate-200"
                       }`}
                       title="Bra svar"
                     >
-                      <ThumbsUp className="w-3.5 h-3.5" />
+                      <ThumbsUp className="w-4 h-4" />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setDislikedId((prev) => (prev === msg.id ? null : msg.id))}
-                      className={`p-1.5 rounded-lg hover:bg-[#222228] transition cursor-pointer ${
+                      className={`p-2 rounded-xl hover:bg-[#222228] transition cursor-pointer ${
                         dislikedId === msg.id ? "text-rose-400" : "hover:text-slate-200"
                       }`}
                       title="Dårlig svar"
                     >
-                      <ThumbsDown className="w-3.5 h-3.5" />
+                      <ThumbsDown className="w-4 h-4" />
                     </button>
 
                     <button
@@ -391,10 +391,10 @@ export function AgentChatView({
                         const lastUser = [...messages].reverse().find((m) => m.role === "user");
                         if (lastUser && onQuickReply) onQuickReply(lastUser.content);
                       }}
-                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      className="p-2 rounded-xl hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
                       title="Kjør på nytt"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="w-4 h-4" />
                     </button>
 
                     <button
@@ -406,19 +406,19 @@ export function AgentChatView({
                           handleCopy(msg.id, msg.content);
                         }
                       }}
-                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      className="p-2 rounded-xl hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
                       title="Del"
                     >
-                      <Share2 className="w-3.5 h-3.5" />
+                      <Share2 className="w-4 h-4" />
                     </button>
 
                     <button
                       type="button"
                       onClick={onOpenPreview}
-                      className="p-1.5 rounded-lg hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
+                      className="p-2 rounded-xl hover:bg-[#222228] hover:text-slate-200 transition cursor-pointer"
                       title="Flere valg"
                     >
-                      <MoreHorizontal className="w-3.5 h-3.5" />
+                      <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -429,19 +429,19 @@ export function AgentChatView({
 
         {/* Real-time Streaming Multi-Step Progress HUD (Punktvis fremdrift) */}
         {isLoading && (
-          <div className="w-full max-w-lg rounded-2xl bg-[#1b1b22] border border-[#2e2e3a] p-4 text-xs shadow-2xl animate-in fade-in duration-200 space-y-3">
+          <div className="w-full max-w-lg rounded-2xl bg-[#1b1b22] border border-[#2e2e3a] p-4 text-sm shadow-2xl animate-in fade-in duration-200 space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[#292934]">
               <div className="flex items-center gap-2 font-semibold text-white">
-                <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+                <Sparkles className="w-4.5 h-4.5 text-purple-400 animate-pulse" />
                 <span>{currentThought || "Bygger og designer løsning..."}</span>
               </div>
-              <span className="text-[11px] font-mono text-purple-300 bg-purple-950/70 border border-purple-800/40 px-2.5 py-0.5 rounded-full shrink-0">
+              <span className="text-xs font-mono text-purple-300 bg-purple-950/70 border border-purple-800/40 px-2.5 py-0.5 rounded-full shrink-0">
                 {elapsedSeconds.toFixed(1)}s
               </span>
             </div>
 
             {/* Checklist of Real-Time Steps */}
-            <div className="space-y-2 pt-1">
+            <div className="space-y-2.5 pt-1">
               {[
                 { label: "Analyserer forretningskonsept og bransjekrav", doneAfter: 2.2 },
                 { label: "Utformer designprofil, fargeharmoni og typografi", doneAfter: 4.8 },
@@ -463,16 +463,16 @@ export function AgentChatView({
                         : "text-slate-500 opacity-50"
                     }`}
                   >
-                    <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                    <div className="w-4.5 h-4.5 flex items-center justify-center shrink-0">
                       {isDone ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
                       ) : isCurrent ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                        <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
                       ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                        <div className="w-2 h-2 rounded-full bg-slate-600" />
                       )}
                     </div>
-                    <span className="text-xs leading-snug">{step.label}</span>
+                    <span className="text-sm leading-snug">{step.label}</span>
                   </div>
                 );
               })}

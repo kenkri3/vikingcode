@@ -8,6 +8,7 @@ import { StartScreen } from "@/components/StartScreen";
 import { WorkspaceLayout } from "@/components/WorkspaceLayout";
 import { PricingModal } from "@/components/PricingModal";
 import { IntegrationsModal, AiProviderId } from "@/components/IntegrationsModal";
+import { GitHubExportModal } from "@/components/GitHubExportModal";
 import {
   INITIAL_PROJECTS,
   getStoredProjects,
@@ -24,7 +25,6 @@ import {
   History,
   Clock,
   Settings,
-  Rocket,
   Shield,
   Key,
   Database,
@@ -121,7 +121,7 @@ function BuilderContent() {
   const [isTasksOpen, setIsTasksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeProvider, setActiveProvider] = useState<AiProviderId>("gemini");
-  const [isRailwayGuideOpen, setIsRailwayGuideOpen] = useState(false);
+  const [isGithubModalOpen, setIsGithubModalOpen] = useState(false);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
@@ -141,7 +141,7 @@ function BuilderContent() {
   }, []);
 
   const [deployNotification, setDeployNotification] = useState<{
-    type: "railway" | "github" | "zip";
+    type: "github" | "zip" | "info";
     title: string;
     message: string;
     url?: string;
@@ -618,11 +618,6 @@ function BuilderContent() {
     }));
   };
 
-  // 1-Klikks Railway Template Deploy
-  const handleDeployRailway = async () => {
-    setIsRailwayGuideOpen(true);
-  };
-
   // Last ned ZIP
   const handleDownloadZip = async () => {
     try {
@@ -648,35 +643,16 @@ function BuilderContent() {
       setDeployNotification({
         type: "zip",
         title: "ZIP-arkiv lastet ned",
-        message: "Prosjektet og railway.json er pakket og lastet ned til din maskin.",
+        message: "Prosjektet og alle kildekodefiler er pakket og lastet ned til din maskin.",
       });
     } catch (e) {
       alert("Kunne ikke laste ned ZIP.");
     }
   };
 
-  // Push til GitHub
-  const handlePushGithub = async () => {
-    try {
-      const res = await fetch("/api/export/github", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectName: activeProject.name,
-          files: activeProject.files,
-        }),
-      });
-      const data = await res.json();
-      setDeployNotification({
-        type: "github",
-        title: "Kildekode forberedt for GitHub!",
-        message: `Kildekoden og railway.json er synkronisert for ${data.repoUrl}.`,
-        url: data.repoUrl,
-        buttonText: "Åpne GitHub Repository",
-      });
-    } catch (e) {
-      alert("Kunne ikke eksportere til GitHub.");
-    }
+  // Push til GitHub (åpner dedikert modal med ekte GitHub-integrasjon)
+  const handlePushGithub = () => {
+    setIsGithubModalOpen(true);
   };
 
   // Ny samtale (starter i full-bredde ren chat som Qwen)
@@ -760,7 +736,7 @@ function BuilderContent() {
   // Kjør en planlagt oppgave umiddelbart
   const handleRunTaskNow = (taskId: string, title: string) => {
     setDeployNotification({
-      type: "railway",
+      type: "info",
       title: `Oppgave fullført: ${title}`,
       message: "Optimaliseringen ble utført. Database og SEO-indeksering er oppdatert.",
     });
@@ -806,7 +782,7 @@ function BuilderContent() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#141416]">
+    <div className="flex h-[100dvh] h-screen w-screen overflow-hidden bg-[#141416]">
       {/* 1. Antigravity-style Sidebar (Full-height left panel matching Qwen) */}
       <Sidebar
         user={user}
@@ -823,7 +799,7 @@ function BuilderContent() {
           } else {
             setActiveProject((prev) => ({ ...prev, name }));
           }
-          setIsPreviewOpen(false);
+          setIsPreviewOpen(true);
           setViewMode("workspace");
         }}
         onNewConversation={handleNewConversation}
@@ -841,9 +817,9 @@ function BuilderContent() {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Deploy & Export Notification Banner */}
         {deployNotification && (
-          <div className="bg-gradient-to-r from-purple-950/90 to-slate-900 border-b border-[#7C3AED]/40 px-4 py-2 flex items-center justify-between text-xs z-30 animate-in fade-in duration-200 shrink-0">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="bg-gradient-to-r from-purple-950/90 to-slate-900 border-b border-[#7C3AED]/40 px-5 py-3 flex items-center justify-between text-sm sm:text-base z-30 animate-in fade-in duration-200 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <span className="font-bold text-white">{deployNotification.title}</span>
               <span className="text-slate-300 hidden sm:inline">{deployNotification.message}</span>
             </div>
@@ -854,17 +830,17 @@ function BuilderContent() {
                   href={deployNotification.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-md transition"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-sm shadow-md transition"
                 >
                   <span>{deployNotification.buttonText || "Åpne"}</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-4 h-4" />
                 </a>
               )}
               <button
                 onClick={() => setDeployNotification(null)}
-                className="p-1 text-slate-400 hover:text-white cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -890,7 +866,6 @@ function BuilderContent() {
             onSetMobileTab={setMobileTab}
             user={user}
             onOpenPricing={() => setIsPricingOpen(true)}
-            onDeployRailway={handleDeployRailway}
             onDownloadZip={handleDownloadZip}
             onPushGithub={handlePushGithub}
             onOpenSettings={() => setIsSettingsOpen(true)}
@@ -900,36 +875,37 @@ function BuilderContent() {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation Bar (App-like native dock) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0E121A]/95 backdrop-blur-lg border-t border-[#1F2937] z-40 flex items-center justify-around px-1 select-none">
+      {/* Mobile Bottom Navigation Bar (App-like native dock with iOS safe area and touch feedback) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 bg-[#0e1017]/95 backdrop-blur-xl border-t border-[#1e2230] z-40 flex items-center justify-around px-2 select-none shadow-[0_-8px_30px_rgba(0,0,0,0.5)]">
         <button
           onClick={() => {
             setViewMode("workspace");
             setMobileTab("agent");
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all cursor-pointer ${
             viewMode === "workspace" && mobileTab === "agent"
-              ? "text-[#A78BFA]"
+              ? "text-white bg-[#7C3AED]/25 border border-[#7C3AED]/40 shadow-sm"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Agent</span>
+          <MessageSquare className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Agent</span>
         </button>
 
         <button
           onClick={() => {
             setViewMode("workspace");
+            setIsPreviewOpen(true);
             setMobileTab("preview");
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all cursor-pointer ${
             viewMode === "workspace" && mobileTab === "preview"
-              ? "text-[#A78BFA]"
+              ? "text-white bg-[#7C3AED]/25 border border-[#7C3AED]/40 shadow-sm"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Eye className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Frontend</span>
+          <Eye className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Frontend</span>
         </button>
 
         <button
@@ -937,14 +913,14 @@ function BuilderContent() {
             setViewMode("workspace");
             setMobileTab("backend");
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all cursor-pointer ${
             viewMode === "workspace" && mobileTab === "backend"
-              ? "text-cyan-400 font-bold"
+              ? "text-cyan-300 bg-cyan-950/40 border border-cyan-800/40 shadow-sm font-bold"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Server className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Backend</span>
+          <Server className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Backend</span>
         </button>
 
         <button
@@ -952,14 +928,14 @@ function BuilderContent() {
             setViewMode("workspace");
             setMobileTab("database");
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all cursor-pointer ${
             viewMode === "workspace" && mobileTab === "database"
-              ? "text-emerald-400 font-bold"
+              ? "text-emerald-300 bg-emerald-950/40 border border-emerald-800/40 shadow-sm font-bold"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Database className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Database</span>
+          <Database className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Database</span>
         </button>
 
         <button
@@ -967,22 +943,22 @@ function BuilderContent() {
             setViewMode("workspace");
             setMobileTab("code");
           }}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all cursor-pointer ${
             viewMode === "workspace" && mobileTab === "code"
-              ? "text-[#A78BFA]"
+              ? "text-white bg-[#7C3AED]/25 border border-[#7C3AED]/40 shadow-sm"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          <Code2 className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Kode</span>
+          <Code2 className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Kode</span>
         </button>
 
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="flex flex-col items-center justify-center flex-1 py-1 transition text-slate-400 hover:text-white cursor-pointer"
+          className="flex flex-col items-center justify-center flex-1 py-1 rounded-xl transition-all text-slate-400 hover:text-white cursor-pointer"
         >
-          <FolderGit2 className="w-4 h-4" />
-          <span className="text-[9px] font-semibold mt-0.5">Filer</span>
+          <FolderGit2 className="w-5 h-5" />
+          <span className="text-[11px] font-semibold mt-0.5">Filer</span>
         </button>
       </nav>
 
@@ -998,40 +974,40 @@ function BuilderContent() {
       {/* 4. Samtalehistorikk Modal (Ekte persistent historikk) */}
       {isHistoryOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Samtalehistorikk</h3>
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-3xl w-full max-w-2xl p-7 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-4">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-lg sm:text-xl">Samtalehistorikk</h3>
               </div>
               <button
                 onClick={() => setIsHistoryOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-sm sm:text-base text-slate-300">
               Oversikt over tidligere bygge-sesjoner. Klikk for å hente frem en tidligere samtale og fortsette å bygge.
             </p>
 
-            <div className="space-y-2.5 max-h-72 overflow-y-auto">
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {savedConversations.map((c) => (
                 <div
                   key={c.id}
-                  className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] hover:border-purple-600/50 transition flex items-center justify-between group"
+                  className="p-4 sm:p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] hover:border-purple-600/50 transition flex items-center justify-between group"
                 >
-                  <div className="min-w-0 pr-2">
-                    <h4 className="text-xs font-bold text-white truncate">{c.title}</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                  <div className="min-w-0 pr-3">
+                    <h4 className="text-sm sm:text-base font-bold text-white truncate">{c.title}</h4>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 truncate">
                       {c.projectName} • {c.timestamp} • {c.tokens}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleLoadConversation(c)}
-                      className="px-2.5 py-1 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[11px] font-semibold text-[#C4B5FD] hover:text-white transition cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-xs sm:text-sm font-bold text-[#C4B5FD] hover:text-white transition cursor-pointer"
                     >
                       Åpne
                     </button>
@@ -1043,20 +1019,20 @@ function BuilderContent() {
                           localStorage.setItem("aiprogram_conversations", JSON.stringify(next));
                         }
                       }}
-                      className="p-1 text-slate-500 hover:text-red-400 transition cursor-pointer"
+                      className="p-2 text-slate-500 hover:text-red-400 transition cursor-pointer rounded-lg hover:bg-red-950/30"
                       title="Slett samtale"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="pt-2 border-t border-[#1F2937] flex justify-end">
+            <div className="pt-3 border-t border-[#1F2937] flex justify-end">
               <button
                 onClick={() => setIsHistoryOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#181E2B] hover:bg-[#222B3D] text-slate-200 hover:text-white text-sm font-semibold transition cursor-pointer"
               >
                 Lukk
               </button>
@@ -1068,46 +1044,46 @@ function BuilderContent() {
       {/* 5. Planlagte Oppgaver Modal (Ekte funksjonelle oppgaver) */}
       {isTasksOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Planlagte Oppgaver & Cron-jobber</h3>
+          <div className="bg-[#0E121A] border border-[#1F2937] rounded-3xl w-full max-w-2xl p-7 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-[#1F2937] pb-4">
+              <div className="flex items-center gap-3">
+                <Clock className="w-6 h-6 text-[#A78BFA]" />
+                <h3 className="font-bold text-white text-lg sm:text-xl">Planlagte Oppgaver & Cron-jobber</h3>
               </div>
               <button
                 onClick={() => setIsTasksOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-sm sm:text-base text-slate-300">
               Autonome bakgrunnsoppgaver som holder databasen synkronisert, sjekker Railway-helse og forbedrer SEO.
             </p>
 
-            <div className="space-y-2.5 max-h-72 overflow-y-auto">
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {scheduledTasks.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3.5 rounded-xl bg-[#12161F] border border-[#1F2937] flex items-center justify-between"
+                  className="p-4 sm:p-5 rounded-2xl bg-[#12161F] border border-[#1F2937] flex items-center justify-between"
                 >
                   <div>
-                    <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <h4 className="text-sm sm:text-base font-bold text-white">{t.title}</h4>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1">
                       Frekvens: {t.schedule} • Mål: {t.target}
                     </p>
                     {t.lastRun && (
-                      <p className="text-[10px] text-emerald-400 mt-0.5">Sist kjørt: {t.lastRun}</p>
+                      <p className="text-xs text-emerald-400 mt-1 font-medium">Sist kjørt: {t.lastRun}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <button
                       onClick={() => handleRunTaskNow(t.id, t.title)}
-                      className="p-1.5 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[#C4B5FD] hover:text-white transition cursor-pointer"
+                      className="p-2 rounded-xl bg-purple-950/70 hover:bg-purple-900 border border-purple-700/50 text-[#C4B5FD] hover:text-white transition cursor-pointer"
                       title="Kjør oppgave umiddelbart"
                     >
-                      <Play className="w-3.5 h-3.5" />
+                      <Play className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
@@ -1119,7 +1095,7 @@ function BuilderContent() {
                           localStorage.setItem("aiprogram_tasks", JSON.stringify(next));
                         }
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition cursor-pointer ${
                         t.active
                           ? "bg-emerald-950/60 border-emerald-700/40 text-emerald-300"
                           : "bg-[#0A0D12] border-slate-800 text-slate-500"
@@ -1132,7 +1108,7 @@ function BuilderContent() {
               ))}
             </div>
 
-            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
+            <div className="pt-3 border-t border-[#1F2937] flex items-center justify-between">
               <button
                 onClick={() => {
                   const title = prompt("Navn på ny planlagt oppgave:");
@@ -1150,14 +1126,14 @@ function BuilderContent() {
                     localStorage.setItem("aiprogram_tasks", JSON.stringify(next));
                   }
                 }}
-                className="px-3 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-bold flex items-center gap-2 cursor-pointer shadow-md"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>Legg til oppgave</span>
               </button>
               <button
                 onClick={() => setIsTasksOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#181E2B] hover:bg-[#222B3D] text-slate-200 hover:text-white text-sm font-semibold cursor-pointer"
               >
                 Lukk
               </button>
@@ -1236,69 +1212,23 @@ function BuilderContent() {
         </div>
       )}
 
-      {/* 8. Railway Deploy & Testing Guide Modal */}
-      {isRailwayGuideOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#0E121A] border border-[#1F2937] rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#1F2937] pb-3">
-              <div className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-[#A78BFA]" />
-                <h3 className="font-bold text-white text-base">Deploy på Railway (1-Klikk)</h3>
-              </div>
-              <button
-                onClick={() => setIsRailwayGuideOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#181E2B] transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs leading-relaxed text-slate-300">
-              <div className="p-3.5 bg-purple-950/40 border border-purple-800/50 rounded-xl space-y-1">
-                <p className="font-bold text-white flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Produksjons-URL på Railway
-                </p>
-                <a
-                  href="https://vikingcode-production.up.railway.app/app"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-purple-300 hover:text-white underline font-mono text-[11px] block truncate"
-                >
-                  https://vikingcode-production.up.railway.app/app
-                </a>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-semibold text-white">Produksjonsinnstillinger i railway.json:</h4>
-                <div className="bg-[#0A0D12] p-3 rounded-xl border border-slate-800 font-mono text-[11px] space-y-1">
-                  <p className="text-slate-400">Builder: <span className="text-cyan-400">NIXPACKS</span></p>
-                  <p className="text-slate-400">Start Command: <span className="text-emerald-400">npx prisma migrate deploy && npm run start</span></p>
-                  <p className="text-slate-400">Database: <span className="text-purple-400">PostgreSQL Plugin</span></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-[#1F2937] flex items-center justify-between">
-              <a
-                href="https://railway.com/new"
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-purple-900/40"
-              >
-                <span>Deploy direkte på Railway</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-              <button
-                onClick={() => setIsRailwayGuideOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#181E2B] text-slate-300 hover:text-white text-xs font-medium cursor-pointer"
-              >
-                Lukk
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 8. GitHub Export & Account Connection Modal */}
+      <GitHubExportModal
+        isOpen={isGithubModalOpen}
+        onClose={() => setIsGithubModalOpen(false)}
+        projectName={activeProject.name}
+        files={activeProject.files}
+        onExportSuccess={(repoUrl) => {
+          setActiveProject((prev) => ({ ...prev, githubRepo: repoUrl }));
+          setDeployNotification({
+            type: "github",
+            title: "Repository opprettet på GitHub!",
+            message: `Kildekoden er pushet til ${repoUrl}`,
+            url: repoUrl,
+            buttonText: "Åpne på GitHub",
+          });
+        }}
+      />
     </div>
   );
 }

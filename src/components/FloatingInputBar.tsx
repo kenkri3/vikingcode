@@ -142,7 +142,7 @@ export function FloatingInputBar({
   };
 
   return (
-    <div className="p-3 sm:p-4 bg-[#18181c]/95 border-t border-[#26262e] backdrop-blur-md">
+    <div className="p-3 pb-20 md:pb-4 sm:p-4 bg-[#18181c]/95 border-t border-[#26262e] backdrop-blur-md">
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -152,7 +152,7 @@ export function FloatingInputBar({
         className="hidden"
       />
 
-      <div className="relative max-w-3xl mx-auto bg-[#212128] border border-[#2e2e38] focus-within:border-[#424250] rounded-2xl p-2.5 sm:p-3 transition-all shadow-xl">
+      <div className="relative max-w-4xl lg:max-w-5xl mx-auto bg-[#212128] border border-[#2e2e38] focus-within:border-[#424250] rounded-3xl p-3 sm:p-4 transition-all shadow-xl">
         {/* Model dropdown overlay */}
         {modelDropdownOpen && (
           <>
@@ -214,43 +214,43 @@ export function FloatingInputBar({
         )}
 
         {/* Quick Vibe-Action Chips for 1-click micro-edits */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none text-[10px] text-slate-300">
-          <span className="text-[10px] text-slate-500 font-medium shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-purple-400" />
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs text-slate-300">
+          <span className="text-xs text-slate-500 font-medium shrink-0 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
             <span>Raske justeringer:</span>
           </span>
           <button
             type="button"
             onClick={() => onSendMessage("Gjør ikonene mindre og elegante (w-5 h-5)", selectedModel)}
-            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+            className="px-2.5 py-1 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] text-xs font-medium transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
           >
             📐 Små ikoner
           </button>
           <button
             type="button"
             onClick={() => onSendMessage("Endre fargen til dyp maritim blå", selectedModel)}
-            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+            className="px-2.5 py-1 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] text-xs font-medium transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
           >
             🎨 Dyp Blå
           </button>
           <button
             type="button"
             onClick={() => onSendMessage("Endre fargen til frisk smaragdgrønn", selectedModel)}
-            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+            className="px-2.5 py-1 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] text-xs font-medium transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
           >
             🌿 Smaragdgrønn
           </button>
           <button
             type="button"
             onClick={() => onSendMessage("Endre fargen til varm gyllen rav", selectedModel)}
-            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+            className="px-2.5 py-1 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] text-xs font-medium transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
           >
             ✨ Varm Rav
           </button>
           <button
             type="button"
             onClick={() => onSendMessage("Optimaliser design og layout for mobilskjermer", selectedModel)}
-            className="px-2 py-0.5 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
+            className="px-2.5 py-1 rounded-full bg-[#181a24] hover:bg-[#232736] border border-[#2b3042] text-xs font-medium transition shrink-0 whitespace-nowrap cursor-pointer hover:text-white"
           >
             📱 Mobiloptimer
           </button>
@@ -265,20 +265,20 @@ export function FloatingInputBar({
           onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder="Describe the page you want to build... / Beskriv hva du vil bygge eller endre..."
-          className="w-full bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-400 outline-none resize-none px-2 py-1 max-h-36 font-sans leading-relaxed"
+          className="w-full bg-transparent text-[15px] sm:text-base text-slate-100 placeholder-slate-400 outline-none resize-none px-2.5 py-1.5 max-h-40 font-sans leading-relaxed"
         />
 
         {/* Action bar inside input box */}
-        <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-[#2a2a34] text-xs">
-          <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-[#2a2a34] text-xs sm:text-sm">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Pill 1: Re-imagine from URL (Exact Image 1) */}
             <button
               type="button"
               onClick={() => setIsUrlModalOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-xs font-medium text-slate-200 hover:text-white transition cursor-pointer"
               title="Gjenskap nettside fra URL"
             >
-              <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
               <span>Re-imagine from URL</span>
             </button>
 
@@ -286,25 +286,25 @@ export function FloatingInputBar({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1b202c] hover:bg-[#262c3c] border border-[#2d3748] text-xs font-medium text-slate-200 hover:text-white transition cursor-pointer"
               title="Legg til skjermbilde / bilde"
             >
-              <ImageIcon className="w-3 h-3 text-sky-400 shrink-0" />
+              <ImageIcon className="w-3.5 h-3.5 text-sky-400 shrink-0" />
               <span>Add Image</span>
             </button>
 
             {/* Context Tag Pill: [ </> Web Dev  ✕ ] */}
             {hasContextPill && (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1b2536] border border-[#2b3a54] text-purple-300 text-[11px] font-medium transition select-none">
-                <Code2 className="w-3 h-3 text-[#A78BFA]" />
-                <span className="max-w-[100px] truncate">{projectName || "Web Dev"}</span>
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1b2536] border border-[#2b3a54] text-purple-300 text-xs font-medium transition select-none">
+                <Code2 className="w-3.5 h-3.5 text-[#A78BFA]" />
+                <span className="max-w-[120px] truncate">{projectName || "Web Dev"}</span>
                 <button
                   type="button"
                   onClick={() => setHasContextPill(false)}
                   className="p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
                   title="Fjern kontekst"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
@@ -315,10 +315,10 @@ export function FloatingInputBar({
             <button
               type="button"
               onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-              className="h-7 px-2.5 rounded-full bg-[#2a2a34] hover:bg-[#343442] border border-[#383846] text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 select-none shadow-sm"
+              className="h-8 px-3 rounded-full bg-[#2a2a34] hover:bg-[#343442] border border-[#383846] text-xs font-medium text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 select-none shadow-sm"
             >
-              <span className="whitespace-nowrap font-medium text-[11px]">{selectedModel}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="whitespace-nowrap font-medium text-xs">{selectedModel}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </button>
 
             {/* Send or Stop Button */}
@@ -326,24 +326,24 @@ export function FloatingInputBar({
               <button
                 type="button"
                 onClick={onStop}
-                className="w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white transition flex items-center justify-center cursor-pointer shadow-md"
+                className="w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-500 text-white transition flex items-center justify-center cursor-pointer shadow-md"
                 title="Stopp generering"
               >
-                <Square className="w-3 h-3 fill-current" />
+                <Square className="w-3.5 h-3.5 fill-current" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={!text.trim() && !attachedUrl && !attachedImage}
-                className={`w-7 h-7 rounded-full transition flex items-center justify-center shadow-md ${
+                className={`w-8 h-8 rounded-full transition flex items-center justify-center shadow-md ${
                   text.trim() || attachedUrl || attachedImage
                     ? "bg-[#7C3AED] hover:bg-[#6D28D9] text-white cursor-pointer"
                     : "bg-[#2a2a34] text-slate-500 cursor-not-allowed"
                 }`}
                 title="Send instruks"
               >
-                <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
               </button>
             )}
           </div>

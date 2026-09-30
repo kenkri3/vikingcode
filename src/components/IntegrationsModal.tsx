@@ -286,41 +286,41 @@ export function IntegrationsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-150 select-none">
-      <div className="bg-[#0b0c10] border border-[#1e222d] rounded-3xl w-full max-w-4xl p-6 sm:p-8 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-black/85 backdrop-blur-md animate-in fade-in duration-150 select-none">
+      <div className="bg-[#0b0c10] border border-[#1e222d] rounded-3xl w-full max-w-5xl lg:max-w-6xl p-8 sm:p-10 lg:p-12 shadow-2xl space-y-8 relative max-h-[92vh] overflow-y-auto">
         {/* Top Header matching exact screenshot */}
-        <div className="flex items-start justify-between pb-2 border-b border-[#1a1e29]">
+        <div className="flex items-start justify-between pb-4 border-b border-[#1a1e29]">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-sans">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
               Integrations
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            <p className="text-base sm:text-lg text-slate-300 mt-2 font-normal">
               Connect and configure your favorite tools and services
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#1a1e29] transition cursor-pointer"
+            className="p-2.5 rounded-2xl text-slate-400 hover:text-white hover:bg-[#1a1e29] transition cursor-pointer"
             title="Lukk"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Section Heading: AI */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-wide uppercase font-mono">
               AI
             </h3>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-sm sm:text-base text-slate-400 font-mono">
               6 modeller tilgjengelig for produksjon
             </span>
           </div>
 
-          {/* Grid of 6 Provider Cards (Exact match to Image 1) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* Grid of 6 Provider Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {AI_PROVIDERS.map((prov) => {
               const isConnected = Boolean(keys[prov.id] && keys[prov.id].trim().length > 5);
               const isActive = selectedProvider === prov.id;
@@ -329,42 +329,42 @@ export function IntegrationsModal({
                 <div
                   key={prov.id}
                   onClick={() => handleOpenConfig(prov)}
-                  className={`relative p-4 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[105px] ${
+                  className={`relative p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[120px] ${
                     isConnected
-                      ? "bg-[#14161f] border-[#222838] hover:border-[#3b445c] shadow-lg shadow-black/40"
-                      : "bg-[#0f1117] border-[#1a1e28] hover:border-[#2a3040]"
+                      ? "bg-[#14161f] border-[#222838] hover:border-[#3b445c] shadow-lg shadow-black/40 hover:scale-[1.01]"
+                      : "bg-[#0f1117] border-[#1a1e28] hover:border-[#2a3040] hover:scale-[1.01]"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <ProviderLogo id={prov.id} size={36} />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-4">
+                      <ProviderLogo id={prov.id} size={42} />
                       <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-white text-sm">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-white text-base sm:text-lg">
                             {prov.name}
                           </span>
                           {prov.badge === "Recommended" && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FEF08A] text-[#854D0E] shadow-xs">
+                            <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-[#FEF08A] text-[#854D0E] shadow-sm">
                               Recommended
                             </span>
                           )}
                           {prov.badge === "Default" && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#BFDBFE] text-[#1E40AF] shadow-xs">
+                            <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-[#BFDBFE] text-[#1E40AF] shadow-sm">
                               Default
                             </span>
                           )}
                         </div>
 
                         {/* Status label: Connected or Configure */}
-                        <div className="flex items-center gap-1.5 mt-1 text-xs">
+                        <div className="flex items-center gap-2 mt-1.5">
                           <Wifi
-                            className={`w-3 h-3 ${
+                            className={`w-3.5 h-3.5 ${
                               isConnected ? "text-emerald-400" : "text-slate-500"
                             }`}
                           />
                           <span
-                            className={`text-[11px] font-medium ${
-                              isConnected ? "text-slate-300" : "text-slate-500"
+                            className={`text-xs sm:text-sm font-semibold ${
+                              isConnected ? "text-slate-200" : "text-slate-400"
                             }`}
                           >
                             {isConnected ? "Connected" : "Configure"}
@@ -373,26 +373,26 @@ export function IntegrationsModal({
                       </div>
                     </div>
 
-                    {/* Green checkmark circle matching Image 1 */}
+                    {/* Green checkmark circle */}
                     <div className="shrink-0 mt-0.5">
                       {isConnected ? (
-                        <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-md shadow-[#22c55e]/25">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <div className="w-6 h-6 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-md shadow-[#22c55e]/30">
+                          <Check className="w-4 h-4 stroke-[3]" />
                         </div>
                       ) : (
-                        <div className="w-5 h-5 rounded-full border border-slate-700/60 group-hover:border-slate-500 transition" />
+                        <div className="w-6 h-6 rounded-full border border-slate-700/60 group-hover:border-slate-500 transition" />
                       )}
                     </div>
                   </div>
 
                   {/* Active selection pill */}
                   {isConnected && (
-                    <div className="pt-2 mt-2 border-t border-[#1c2130] flex items-center justify-between text-[10px]">
-                      <span className="text-slate-400 font-mono truncate max-w-[120px]">
+                    <div className="pt-3 mt-3 border-t border-[#1c2130] flex items-center justify-between text-xs sm:text-sm">
+                      <span className="text-slate-400 font-mono truncate max-w-[150px]">
                         {prov.model}
                       </span>
                       {isActive ? (
-                        <span className="text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800/40">
+                        <span className="text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-800/40">
                           Aktiv
                         </span>
                       ) : (
@@ -402,7 +402,7 @@ export function IntegrationsModal({
                             e.stopPropagation();
                             handleSetAsActive(prov.id);
                           }}
-                          className="text-purple-400 hover:text-purple-300 font-medium underline cursor-pointer"
+                          className="text-purple-400 hover:text-purple-300 font-semibold underline cursor-pointer"
                         >
                           Bruk som aktiv
                         </button>
@@ -416,14 +416,14 @@ export function IntegrationsModal({
         </div>
 
         {/* Bottom Subscription & BYOK Notice */}
-        <div className="p-4 rounded-2xl bg-[#12151f] border border-[#1f2536] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-purple-400 shrink-0" />
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#12151f] border border-[#1f2536] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <ShieldCheck className="w-7 h-7 text-purple-400 shrink-0" />
             <div>
-              <p className="font-semibold text-white">
+              <p className="font-bold text-white text-base sm:text-lg">
                 Produksjonsklar BYOK (Bring Your Own Key)
               </p>
-              <p className="text-slate-400 text-[11px] mt-0.5">
+              <p className="text-slate-300 text-sm sm:text-base mt-1">
                 Dine API-nøkler lagres kryptert i din nettleser og sendes direkte til den valgte modellen. Ubegrenset bygging.
               </p>
             </div>
@@ -435,10 +435,10 @@ export function IntegrationsModal({
                 onClose();
                 onOpenPricing();
               }}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-bold text-sm sm:text-base transition flex items-center justify-center gap-2 shadow-lg shadow-purple-950/40 shrink-0 cursor-pointer"
             >
               <span>Oppgrader til Pro</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -446,16 +446,16 @@ export function IntegrationsModal({
 
       {/* Modal: Configure Specific Provider Key */}
       {configModalProvider && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-100">
-          <div className="bg-[#14161f] border border-[#262c3e] rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#202536]">
-              <div className="flex items-center gap-3">
-                <ProviderLogo id={configModalProvider.id} size={32} />
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-100">
+          <div className="bg-[#14161f] border border-[#262c3e] rounded-3xl w-full max-w-lg p-7 sm:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-[#202536]">
+              <div className="flex items-center gap-3.5">
+                <ProviderLogo id={configModalProvider.id} size={40} />
                 <div>
-                  <h4 className="text-base font-bold text-white">
+                  <h4 className="text-xl font-bold text-white">
                     {configModalProvider.name}
                   </h4>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-xs sm:text-sm text-slate-400 font-mono mt-0.5">
                     Modell: {configModalProvider.model}
                   </p>
                 </div>
@@ -463,35 +463,35 @@ export function IntegrationsModal({
 
               <button
                 onClick={() => setConfigModalProvider(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#202536] transition cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#202536] transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
               {configModalProvider.description}
             </p>
 
-            <form onSubmit={handleSaveKey} className="space-y-4">
+            <form onSubmit={handleSaveKey} className="space-y-5">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-300">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-slate-200">
                     API-nøkkel:
                   </label>
                   <a
                     href={configModalProvider.dashboardUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium underline"
+                    className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium underline"
                   >
                     <span>Hent nøkkel her</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
 
-                <div className="flex items-center gap-2 bg-[#0c0d12] border border-[#282f42] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
-                  <Key className="w-4 h-4 text-slate-500 shrink-0" />
+                <div className="flex items-center gap-2.5 bg-[#0c0d12] border border-[#282f42] focus-within:border-purple-500 rounded-2xl px-4 py-3 text-sm sm:text-base">
+                  <Key className="w-5 h-5 text-slate-500 shrink-0" />
                   <input
                     type="password"
                     value={keyInput}
@@ -504,50 +504,50 @@ export function IntegrationsModal({
               </div>
 
               {/* Set as active checkbox */}
-              <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-sm text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={selectedProvider === configModalProvider.id}
                   onChange={() => handleSetAsActive(configModalProvider.id)}
-                  className="rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-purple-500"
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-purple-500"
                 />
                 <span>Sett som standard modell for koding</span>
               </label>
 
               {savedSuccess && (
-                <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 text-xs flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>API-nøkkel lagret og tilkoblet!</span>
+                <div className="p-3 rounded-2xl bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 text-sm flex items-center gap-2.5">
+                  <Check className="w-5 h-5 text-emerald-400" />
+                  <span className="font-semibold">API-nøkkel lagret og tilkoblet!</span>
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-3">
                 {keys[configModalProvider.id] ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveKey(configModalProvider.id)}
-                    className="px-3 py-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 text-sm font-semibold transition flex items-center gap-2 cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                     <span>Fjern nøkkel</span>
                   </button>
                 ) : (
                   <div />
                 )}
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setConfigModalProvider(null)}
-                    className="px-3.5 py-2 rounded-xl bg-[#1e2332] hover:bg-[#282f42] text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                    className="px-5 py-3 rounded-xl bg-[#1e2332] hover:bg-[#282f42] text-sm text-slate-300 hover:text-white transition font-medium cursor-pointer"
                   >
                     Avbryt
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-lg shadow-purple-950/50 cursor-pointer"
+                    className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-sm font-bold text-white transition flex items-center gap-2 shadow-lg shadow-purple-950/50 cursor-pointer"
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-4 h-4" />
                     <span>Koble til</span>
                   </button>
                 </div>

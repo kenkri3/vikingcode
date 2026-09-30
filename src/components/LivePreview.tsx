@@ -200,7 +200,14 @@ export function LivePreview({
   const [isHudActive, setIsHudActive] = useState(isGenerating);
 
   useEffect(() => {
-    if (isGenerating) setIsHudActive(true);
+    if (isGenerating) {
+      setIsHudActive(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsHudActive(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }
   }, [isGenerating]);
   const [reloadKey, setReloadKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -724,13 +731,181 @@ export function LivePreview({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#121215] relative overflow-hidden">
-      {/* Frame Container */}
-      <div className="flex-1 p-2 sm:p-3 flex items-start justify-center overflow-auto bg-[#121215]">
-        <div
-          className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl transition-all duration-300 bg-[#16161c] flex flex-col"
-          style={{ width: isGenerating ? "100%" : deviceWidths[device], maxWidth: "100%" }}
-        >
-          {isHudActive ? (
+      {/* 1. Global Preview Toolbar (Always 100% width across the preview panel) */}
+      {!isHudActive && (
+        <div className="h-10 bg-[#171722] border-b border-[#252532] px-3 flex items-center justify-between gap-2 select-none shrink-0 z-30">
+          {/* Left: Back / Forward / Reload Navigation */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              disabled={historyIndex <= 0}
+              onClick={handleGoBack}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
+              title="Gå tilbake"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={historyIndex >= routeHistory.length - 1}
+              onClick={handleGoForward}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
+              title="Gå frem"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
+              title="Last inn på nytt"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Center: Address Bar with Route Dropdown Selector */}
+          <div className="flex-1 max-w-sm sm:max-w-md mx-auto relative min-w-0">
+            <div
+              onClick={() => setIsRouteDropdownOpen(!isRouteDropdownOpen)}
+              className="flex items-center justify-between gap-2 px-3 py-1 bg-[#101016] hover:bg-[#15151e] border border-[#2a2a38] rounded-lg text-xs font-mono cursor-pointer transition shadow-inner group"
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="text-slate-400 font-semibold truncate">
+                  localhost:3000
+                </span>
+                <span className="text-purple-400 font-bold">{currentRoute}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] text-slate-300 group-hover:text-white bg-[#20202c] px-1.5 py-0.5 rounded font-sans font-medium">
+                  {pageRoutes.find((r) => r.route === currentRoute)?.title || "Side"}
+                </span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </div>
+            </div>
+
+            {/* Route Dropdown Menu */}
+            {isRouteDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsRouteDropdownOpen(false)}
+                />
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#1a1a26] border border-[#2e2e42] rounded-xl shadow-2xl p-2 z-50 text-xs animate-in fade-in duration-100 space-y-1">
+                  <div className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 flex items-center justify-between">
+                    <span>Sider i prosjektet ({pageRoutes.length})</span>
+                    <span className="text-[9px] text-purple-400 font-mono">Next.js App Router</span>
+                  </div>
+
+                  <div className="max-h-52 overflow-y-auto space-y-0.5">
+                    {pageRoutes.map((pr) => (
+                      <button
+                        key={pr.route}
+                        type="button"
+                        onClick={() => handleNavigateToRoute(pr.route)}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
+                          currentRoute === pr.route
+                            ? "bg-purple-600/30 text-white font-medium border border-purple-500/40"
+                            : "text-slate-300 hover:bg-[#252536] hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-purple-400 font-mono text-[11px] font-bold">
+                            {pr.route}
+                          </span>
+                          <span className="text-slate-400 text-[11px]">
+                            ({pr.title})
+                          </span>
+                        </div>
+                        {currentRoute === pr.route && (
+                          <Check className="w-3 h-3 text-purple-400 shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-1.5 mt-1 border-t border-[#262638]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRouteDropdownOpen(false);
+                        setIsNewPageModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-left text-purple-300 hover:bg-purple-950/40 hover:text-purple-200 transition cursor-pointer font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Opprett ny underside...</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right: Device Switcher (Desktop, Tablet, Mobile) + Popout */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center bg-[#101016] border border-[#2a2a38] rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setDevice("desktop")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md transition cursor-pointer text-xs ${
+                  device === "desktop"
+                    ? "bg-[#252538] text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="Desktop / Fullskjerm (100%)"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Full</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevice("tablet")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md transition cursor-pointer text-xs ${
+                  device === "tablet"
+                    ? "bg-[#252538] text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="Nettbrett (768px)"
+              >
+                <Tablet className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Tablet</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevice("mobile")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md transition cursor-pointer text-xs ${
+                  device === "mobile"
+                    ? "bg-[#252538] text-white font-semibold shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="Mobiltelefon (375px)"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Mobil</span>
+              </button>
+            </div>
+
+            <div className="w-px h-3.5 bg-[#252532] mx-0.5" />
+
+            <button
+              type="button"
+              onClick={handlePopout}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
+              title="Åpne i nytt vindu"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Main Preview Canvas */}
+      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center overflow-auto bg-[#0d0d11]">
+        {isHudActive ? (
+          <div className="h-full w-full border border-[#26262e] rounded-xl overflow-hidden shadow-2xl bg-[#16161c]">
             <AgentWorkingHUD
               projectName={projectName}
               files={files}
@@ -738,189 +913,33 @@ export function LivePreview({
               onComplete={() => setIsHudActive(false)}
               onSwitchToCode={onSwitchToCode}
             />
-          ) : (
-            <>
-              {/* Mini-Browser Address Bar & Route Navigator */}
-              <div className="h-10 bg-[#171722] border-b border-[#252532] px-3 flex items-center justify-between gap-2 select-none shrink-0 z-30">
-                {/* Left: Back / Forward / Reload Navigation */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    disabled={historyIndex <= 0}
-                    onClick={handleGoBack}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
-                    title="Gå tilbake"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={historyIndex >= routeHistory.length - 1}
-                    onClick={handleGoForward}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer"
-                    title="Gå frem"
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReloadKey((k) => k + 1)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
-                    title="Last inn på nytt"
-                  >
-                    <RotateCw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Center: Address Bar with Route Dropdown Selector */}
-                <div className="flex-1 max-w-md mx-auto relative">
-                  <div
-                    onClick={() => setIsRouteDropdownOpen(!isRouteDropdownOpen)}
-                    className="flex items-center justify-between gap-2 px-3 py-1 bg-[#101016] hover:bg-[#15151e] border border-[#2a2a38] rounded-lg text-xs font-mono cursor-pointer transition shadow-inner group"
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="text-slate-500">https://</span>
-                      <span className="text-slate-300 font-semibold truncate">
-                        {(projectName || "app").toLowerCase().replace(/[^a-z0-9]/g, "-")}.aiprogram.site
-                      </span>
-                      <span className="text-purple-400 font-bold">{currentRoute}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-300 group-hover:text-white bg-[#20202c] px-1.5 py-0.5 rounded font-sans font-medium">
-                        {pageRoutes.find((r) => r.route === currentRoute)?.title || "Side"}
-                      </span>
-                      <ChevronDown className="w-3 h-3 text-slate-400" />
-                    </div>
-                  </div>
-
-                  {/* Route Dropdown Menu */}
-                  {isRouteDropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsRouteDropdownOpen(false)}
-                      />
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#1a1a26] border border-[#2e2e42] rounded-xl shadow-2xl p-2 z-50 text-xs animate-in fade-in duration-100 space-y-1">
-                        <div className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 flex items-center justify-between">
-                          <span>Sider i prosjektet ({pageRoutes.length})</span>
-                          <span className="text-[9px] text-purple-400 font-mono">Next.js App Router</span>
-                        </div>
-
-                        <div className="max-h-52 overflow-y-auto space-y-0.5">
-                          {pageRoutes.map((pr) => (
-                            <button
-                              key={pr.route}
-                              type="button"
-                              onClick={() => handleNavigateToRoute(pr.route)}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition cursor-pointer ${
-                                currentRoute === pr.route
-                                  ? "bg-purple-600/30 text-white font-medium border border-purple-500/40"
-                                  : "text-slate-300 hover:bg-[#252536] hover:text-white"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                <span className="text-purple-400 font-mono text-[11px] font-bold">
-                                  {pr.route}
-                                </span>
-                                <span className="text-slate-400 text-[11px]">
-                                  ({pr.title})
-                                </span>
-                              </div>
-                              {currentRoute === pr.route && (
-                                <Check className="w-3 h-3 text-purple-400 shrink-0" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="pt-1.5 mt-1 border-t border-[#262638]">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsRouteDropdownOpen(false);
-                              setIsNewPageModalOpen(true);
-                            }}
-                            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-left text-purple-300 hover:bg-purple-950/40 hover:text-purple-200 transition cursor-pointer font-medium"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>+ Opprett ny underside...</span>
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Right: Device Switcher + Popout Window Button */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="flex items-center bg-[#101016] border border-[#2a2a38] rounded-lg p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setDevice("desktop")}
-                      className={`p-1 rounded-md transition cursor-pointer ${
-                        device === "desktop"
-                          ? "bg-[#252538] text-white shadow-sm"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                      title="Desktop (100%)"
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDevice("tablet")}
-                      className={`p-1 rounded-md transition cursor-pointer ${
-                        device === "tablet"
-                          ? "bg-[#252538] text-white shadow-sm"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                      title="Nettbrett (768px)"
-                    >
-                      <Tablet className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDevice("mobile")}
-                      className={`p-1 rounded-md transition cursor-pointer ${
-                        device === "mobile"
-                          ? "bg-[#252538] text-white shadow-sm"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                      title="Mobil (375px)"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="w-px h-3.5 bg-[#252532] mx-0.5" />
-
-                  <button
-                    type="button"
-                    onClick={handlePopout}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#252532] transition cursor-pointer"
-                    title="Åpne i nytt vindu"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+          </div>
+        ) : (
+          <div
+            className={`transition-all duration-300 flex flex-col bg-[#141414] overflow-hidden ${
+              device === "mobile"
+                ? "w-[375px] h-[780px] max-h-full rounded-[32px] border-[6px] border-[#22222a] shadow-2xl ring-1 ring-slate-800"
+                : device === "tablet"
+                ? "w-[768px] h-full max-w-full rounded-xl border border-[#26262e] shadow-2xl"
+                : "w-full h-full rounded-xl border border-[#26262e] shadow-2xl"
+            }`}
+          >
+            {/* Phone speaker pill if mobile */}
+            {device === "mobile" && (
+              <div className="h-4 bg-[#22222a] flex items-center justify-center shrink-0">
+                <div className="w-14 h-1 rounded-full bg-[#363644]" />
               </div>
-
-              {/* Iframe Viewport */}
-              <div className="flex-1 w-full h-full relative overflow-hidden bg-[#141414]">
-                <iframe
-                  ref={iframeRef}
-                  key={`${reloadKey}-${contentHash}`}
-                  srcDoc={iframeHtml}
-                  title="AI Program Live Sandbox Preview"
-                  className="w-full h-full border-none min-h-[500px]"
-                  sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
-                />
-              </div>
-            </>
-          )}
-        </div>
+            )}
+            <iframe
+              ref={iframeRef}
+              key={`${reloadKey}-${contentHash}`}
+              srcDoc={iframeHtml}
+              title="AI Program Live Sandbox Preview"
+              className="w-full flex-1 border-none min-h-[400px]"
+              sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal: Opprett ny underside */}

@@ -27,12 +27,12 @@ import {
   MoreHorizontal,
   Zap,
   LayoutDashboard,
-  Rocket,
   FolderGit2,
   Download,
   Settings,
   Plus,
   Loader2,
+  Github,
 } from "lucide-react";
 import { AgentChatView } from "./AgentChatView";
 import { FloatingInputBar } from "./FloatingInputBar";
@@ -60,7 +60,6 @@ interface WorkspaceLayoutProps {
   onSetMobileTab?: (tab: "agent" | "preview" | "backend" | "database" | "code" | "terminal") => void;
   user?: UserSession;
   onOpenPricing?: () => void;
-  onDeployRailway?: () => void;
   onDownloadZip?: () => void;
   onPushGithub?: () => void;
   onOpenSettings?: () => void;
@@ -82,7 +81,6 @@ export function WorkspaceLayout({
   onSetMobileTab,
   user,
   onOpenPricing,
-  onDeployRailway,
   onDownloadZip,
   onPushGithub,
   onOpenSettings,
@@ -103,6 +101,20 @@ export function WorkspaceLayout({
   const [selectedFileForEditor, setSelectedFileForEditor] = useState<string>("app/page.tsx");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Auto-switch to preview when generation starts or completes
+  const prevLoadingRef = useRef(isLoading);
+  useEffect(() => {
+    if (isLoading) {
+      setIsPreviewOpen(true);
+      setActiveTab("preview");
+    } else if (prevLoadingRef.current && !isLoading) {
+      setIsPreviewOpen(true);
+      setActiveTab("preview");
+      if (onSetMobileTab) onSetMobileTab("preview");
+    }
+    prevLoadingRef.current = isLoading;
+  }, [isLoading]);
+
   // Model Selection
   const [selectedModel, setSelectedModel] = useState("AI Program Ultra");
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
@@ -118,28 +130,7 @@ export function WorkspaceLayout({
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const [isPreviewMoreOpen, setIsPreviewMoreOpen] = useState(false);
 
-  // Deploy Popover State (Image 3)
-  const [isDeployPopoverOpen, setIsDeployPopoverOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const defaultSubdomain = (activeProject.name || "webdev")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-  const [deploySubdomain, setDeploySubdomain] = useState(defaultSubdomain);
-  const [deployVisibility, setDeployVisibility] = useState<"Public" | "Private">("Public");
-  const [deployState, setDeployState] = useState<"idle" | "deploying" | "deployed">("idle");
-  const [copiedDeployLink, setCopiedDeployLink] = useState(false);
-
-  useEffect(() => {
-    setDeploySubdomain(
-      (activeProject.name || "webdev")
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "")
-    );
-  }, [activeProject.name]);
 
   const handleInsertImageIntoProject = (imageUrl: string) => {
     const pageFile = activeProject.files.find((f) => f.path.includes("page.tsx"));
@@ -168,20 +159,6 @@ export function WorkspaceLayout({
     if (mobileTab === "terminal") setActiveTab("terminal");
   }, [mobileTab]);
 
-  const handleTriggerDeploy = () => {
-    setDeployState("deploying");
-    setTimeout(() => {
-      setDeployState("deployed");
-    }, 1800);
-  };
-
-  const deployedUrl = `https://${deploySubdomain || "app"}.aiprogram.site`;
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(deployedUrl);
-    setCopiedDeployLink(true);
-    setTimeout(() => setCopiedDeployLink(false), 2000);
-  };
 
   return (
     <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden bg-[#141416]">
@@ -194,7 +171,7 @@ export function WorkspaceLayout({
         } ${mobileTab === "agent" ? "flex" : "hidden md:flex"}`}
       >
         {/* Top Chat Header: Model Selector on Left, Three Dots Menu on Right (Exact Qwen layout) */}
-        <div className="h-11 bg-[#1a1a20]/90 border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative z-20">
+        <div className="h-12 bg-[#1a1a20]/90 border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative z-20">
           {/* Left: Mobile hamburger + Model Selector Dropdown */}
           <div className="flex items-center gap-2">
             {onToggleSidebar && (
@@ -204,7 +181,7 @@ export function WorkspaceLayout({
                 className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#25252e] transition cursor-pointer"
                 title="Åpne meny"
               >
-                <Menu className="w-4 h-4" />
+                <Menu className="w-4.5 h-4.5" />
               </button>
             )}
 
@@ -212,10 +189,10 @@ export function WorkspaceLayout({
               <button
                 type="button"
                 onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-white hover:bg-[#25252e] transition cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-white hover:bg-[#25252e] transition cursor-pointer"
               >
                 <span>{selectedModel}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
 
               {isModelDropdownOpen && (
@@ -303,16 +280,6 @@ export function WorkspaceLayout({
                     <span>Dashboard / SuperAdmin</span>
                   </a>
 
-                  <button
-                    onClick={() => {
-                      setIsChatMenuOpen(false);
-                      onDeployRailway?.();
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-200 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
-                  >
-                    <Rocket className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Deploy på Railway</span>
-                  </button>
 
                   <button
                     onClick={() => {
@@ -401,33 +368,33 @@ export function WorkspaceLayout({
         } ${mobileTab !== "agent" ? "flex !w-full" : ""}`}
       >
         {/* Unified Right Pane Header: Project + [ Preview | Code ] on Left, [ AI-Bilder | Reload | Fullscreen | Tools | Deploy | X ] on Right */}
-        <div className="h-11 bg-[#181820] border-b border-[#26262e] px-3.5 flex items-center justify-between select-none shrink-0 relative">
+        <div className="h-13 bg-[#181820] border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative">
           {/* Left: Box Icon + Project Name + [ Preview | Code ] Segmented Switcher */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Box className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[110px] sm:max-w-[180px]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Box className="w-4.5 h-4.5 text-slate-400 shrink-0" />
+              <span className="text-sm sm:text-base font-semibold text-white truncate max-w-[130px] sm:max-w-[220px]">
                 {activeProject.name || "Web Dev"}
               </span>
             </div>
 
-            <div className="h-4 w-[1px] bg-[#2a2a36] shrink-0 hidden sm:block" />
+            <div className="h-5 w-[1px] bg-[#2a2a36] shrink-0 hidden sm:block" />
 
             {/* Segmented Switcher [ Preview ] [ Code ] */}
-            <div className="flex items-center gap-1 bg-[#121215] p-0.5 rounded-lg border border-[#24242c] shrink-0">
+            <div className="flex items-center gap-1 bg-[#121215] p-1 rounded-xl border border-[#24242c] shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab("preview");
                   if (onSetMobileTab) onSetMobileTab("preview");
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-2 ${
                   activeTab === "preview"
                     ? "bg-[#25252e] text-white shadow-sm font-semibold"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Eye className="w-3.5 h-3.5 text-purple-400" />
+                <Eye className="w-4 h-4 text-purple-400" />
                 <span>Preview</span>
               </button>
 
@@ -437,49 +404,49 @@ export function WorkspaceLayout({
                   setActiveTab("editor");
                   if (onSetMobileTab) onSetMobileTab("code");
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-2 ${
                   activeTab === "editor"
                     ? "bg-[#25252e] text-white shadow-sm font-semibold"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Code2 className="w-4 h-4 text-cyan-400" />
                 <span>Code</span>
               </button>
             </div>
           </div>
 
           {/* Right: AI-Bilder + Reload + Fullscreen + More + Deploy + Close */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setIsImageModalOpen(true)}
-              className="px-2.5 py-1 text-slate-300 hover:text-white bg-[#20202a] hover:bg-[#2a2a36] border border-[#2e2e3e] rounded-lg transition cursor-pointer flex items-center gap-1.5 text-xs shadow-xs"
+              className="px-3 py-1.5 text-slate-300 hover:text-white bg-[#20202a] hover:bg-[#2a2a36] border border-[#2e2e3e] rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs sm:text-sm font-medium shadow-xs"
               title="Generer AI-bilder med 1min.AI eller Unsplash"
             >
-              <Sparkles className="w-3 h-3 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
               <span className="hidden md:inline">AI-Bilder</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab((prev) => prev)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer"
+              className="p-2 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-xl transition cursor-pointer"
               title="Last inn på nytt"
             >
-              <RotateCw className="w-3.5 h-3.5" />
+              <RotateCw className="w-4 h-4" />
             </button>
 
             <button
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer hidden sm:block"
+              className="p-2 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-xl transition cursor-pointer hidden sm:block"
               title={isFullscreen ? "Avslutt fullskjerm" : "Fullskjerm"}
             >
               {isFullscreen ? (
-                <Minimize2 className="w-3.5 h-3.5" />
+                <Minimize2 className="w-4 h-4" />
               ) : (
-                <Maximize2 className="w-3.5 h-3.5" />
+                <Maximize2 className="w-4 h-4" />
               )}
             </button>
 
@@ -488,10 +455,10 @@ export function WorkspaceLayout({
               <button
                 type="button"
                 onClick={() => setIsPreviewMoreOpen(!isPreviewMoreOpen)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer"
+                className="p-2 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-xl transition cursor-pointer"
                 title="Flere utviklerverktøy"
               >
-                <MoreHorizontal className="w-3.5 h-3.5" />
+                <MoreHorizontal className="w-4 h-4" />
               </button>
 
               {isPreviewMoreOpen && (
@@ -500,8 +467,8 @@ export function WorkspaceLayout({
                     className="fixed inset-0 z-30"
                     onClick={() => setIsPreviewMoreOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-1.5 z-40 text-xs animate-in fade-in duration-100">
-                    <p className="px-2.5 py-1 text-[10px] uppercase font-bold text-slate-400">
+                  <div className="absolute right-0 top-full mt-1.5 w-56 bg-[#1f1f26] border border-[#2e2e38] rounded-xl shadow-2xl p-2 z-40 text-sm animate-in fade-in duration-100">
+                    <p className="px-2.5 py-1 text-xs uppercase font-bold text-slate-400">
                       Utviklerverktøy
                     </p>
                     <button
@@ -510,9 +477,9 @@ export function WorkspaceLayout({
                         setActiveTab("backend");
                         setIsPreviewMoreOpen(false);
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left text-sm"
                     >
-                      <Server className="w-3.5 h-3.5 text-purple-400" />
+                      <Server className="w-4 h-4 text-purple-400" />
                       <span>Backend & API Explorer</span>
                     </button>
                     <button
@@ -521,9 +488,9 @@ export function WorkspaceLayout({
                         setActiveTab("database");
                         setIsPreviewMoreOpen(false);
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left text-sm"
                     >
-                      <Database className="w-3.5 h-3.5 text-emerald-400" />
+                      <Database className="w-4 h-4 text-emerald-400" />
                       <span>Database Studio</span>
                     </button>
                     <button
@@ -532,9 +499,9 @@ export function WorkspaceLayout({
                         setActiveTab("terminal");
                         setIsPreviewMoreOpen(false);
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-[#25252e] hover:text-white transition cursor-pointer text-left text-sm"
                     >
-                      <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                      <Terminal className="w-4 h-4 text-cyan-400" />
                       <span>Terminal & Logger</span>
                     </button>
                   </div>
@@ -542,137 +509,18 @@ export function WorkspaceLayout({
               )}
             </div>
 
-            <div className="h-4 w-[1px] bg-[#2a2a36] shrink-0" />
+            <div className="h-5 w-[1px] bg-[#2a2a36] shrink-0" />
 
-            {/* Deploy Button */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsDeployPopoverOpen(!isDeployPopoverOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-slate-200 text-slate-900 text-xs font-semibold transition cursor-pointer shadow-sm"
-                title="Rull ut applikasjonen"
-              >
-                <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Deploy</span>
-              </button>
-
-              {/* Exact Deploy Popover (Image 3) */}
-              {isDeployPopoverOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40 bg-black/30"
-                    onClick={() => setIsDeployPopoverOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-[#1f1f26] border border-[#2e2e38] rounded-2xl shadow-2xl p-5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-4">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-white">Deploy</h4>
-                      <span
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                          deployState === "deployed"
-                            ? "bg-emerald-950/80 text-emerald-400 border-emerald-800/50"
-                            : "bg-[#18181e] text-slate-400 border-[#2a2a34]"
-                        }`}
-                      >
-                        {deployState === "deployed" ? "● Live" : "Undeployed"}
-                      </span>
-                    </div>
-
-                    <p className="text-[11px] text-slate-400 leading-normal">
-                      Anyone with the link can access. Your chat messages will not be shared.
-                    </p>
-
-                    {/* Domain Input Field with Globe Icon */}
-                    <div className="flex items-center gap-2 bg-[#16161c] border border-[#2c2c36] focus-within:border-slate-400 rounded-xl px-3 py-2 text-slate-200">
-                      <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <input
-                        type="text"
-                        value={deploySubdomain}
-                        onChange={(e) => setDeploySubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                        placeholder="my-app"
-                        className="bg-transparent text-xs text-white outline-none w-full font-mono"
-                      />
-                      <span className="text-[11px] text-slate-500 font-mono">.aiprogram.site</span>
-                    </div>
-
-                    {/* Visibility Dropdown with Users Icon */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setDeployVisibility(deployVisibility === "Public" ? "Private" : "Public")}
-                        className="w-full flex items-center justify-between bg-[#16161c] border border-[#2c2c36] hover:border-slate-500 rounded-xl px-3 py-2 text-xs text-slate-200 transition cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Users className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{deployVisibility}</span>
-                        </span>
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                      </button>
-                    </div>
-
-                    {/* Legal / Policy Notice */}
-                    <p className="text-[10px] text-slate-500 leading-tight">
-                      By clicking "Deploy", you acknowledge and agree to use this feature in compliance with the{" "}
-                      <span className="text-slate-400 underline cursor-pointer">Usage Policy</span> and applicable laws and regulations.
-                    </p>
-
-                    {/* Action Button: Deploy or Live Options */}
-                    {deployState === "idle" && (
-                      <button
-                        type="button"
-                        onClick={handleTriggerDeploy}
-                        className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-200 text-slate-900 font-semibold text-xs transition cursor-pointer shadow-md"
-                      >
-                        Deploy
-                      </button>
-                    )}
-
-                    {deployState === "deploying" && (
-                      <div className="w-full py-2.5 rounded-xl bg-[#2a2a34] text-slate-300 font-medium text-xs flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-[#A78BFA]" />
-                        <span>Klargjør og ruller ut applikasjon...</span>
-                      </div>
-                    )}
-
-                    {deployState === "deployed" && (
-                      <div className="space-y-2 pt-1">
-                        <div className="p-2.5 bg-[#14141a] rounded-xl border border-emerald-900/40 text-[11px] font-mono text-emerald-400 truncate">
-                          {deployedUrl}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <a
-                            href={deployedUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="py-2 px-3 rounded-xl bg-white hover:bg-slate-200 text-slate-900 font-semibold text-center text-xs transition flex items-center justify-center gap-1.5"
-                          >
-                            <span>Åpne side</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                          <button
-                            type="button"
-                            onClick={handleCopyLink}
-                            className="py-2 px-3 rounded-xl bg-[#262630] hover:bg-[#30303c] text-white font-medium text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            {copiedDeployLink ? (
-                              <>
-                                <Check className="w-3 h-3 text-emerald-400" />
-                                <span>Kopiert!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3" />
-                                <span>Kopier lenke</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+            {/* Push til GitHub Button */}
+            <button
+              type="button"
+              onClick={onPushGithub}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs sm:text-sm font-semibold transition cursor-pointer shadow-md shadow-purple-950/40"
+              title="Push kildekoden direkte til din personlige GitHub-konto"
+            >
+              <Github className="w-4 h-4" />
+              <span>Push til GitHub</span>
+            </button>
 
             {/* Close Preview Button "X" (Returns chat to centered/full width) */}
             <button
@@ -681,10 +529,10 @@ export function WorkspaceLayout({
                 setIsPreviewOpen(false);
                 setIsFullscreen(false);
               }}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-lg transition cursor-pointer"
+              className="p-2 text-slate-400 hover:text-white hover:bg-[#25252e] rounded-xl transition cursor-pointer"
               title="Lukk forhåndsvisning"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4.5 h-4.5" />
             </button>
           </div>
         </div>
