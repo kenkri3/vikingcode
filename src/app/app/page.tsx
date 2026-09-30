@@ -84,12 +84,19 @@ function BuilderContent() {
     "agent" | "preview" | "backend" | "database" | "code" | "terminal"
   >("agent");
 
-  // Åpne sidepanelet automatisk på desktop
+  // Visningsmodus: "start" eller "workspace"
+  const [viewMode, setViewMode] = useState<"start" | "workspace">("workspace");
+
+  // Dynamisk sidepanel: Åpent på startskjerm, automatisk kollapset i workspace for å gi Chat og Forhåndsvisning maksimal plass
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 768) {
-      setIsSidebarOpen(true);
+      if (viewMode === "start") {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
     }
-  }, []);
+  }, [viewMode]);
 
   // Hent prosjekter fra localStorage først, deretter synkroniser med /api/projects
   useEffect(() => {
@@ -148,8 +155,6 @@ function BuilderContent() {
     buttonText?: string;
   } | null>(null);
 
-  // Visningsmodus: "start" eller "workspace"
-  const [viewMode, setViewMode] = useState<"start" | "workspace">("workspace");
 
   // Forhåndsvisning: kun synlig når kode er generert eller bruker åpner det (som Qwen)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -801,6 +806,7 @@ function BuilderContent() {
           }
           setIsPreviewOpen(true);
           setViewMode("workspace");
+          setIsSidebarOpen(false);
         }}
         onNewConversation={handleNewConversation}
         onOpenHistory={() => setIsHistoryOpen(true)}

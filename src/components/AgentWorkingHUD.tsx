@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Check, Loader2, Sparkles, Code2, CheckCircle2 } from "lucide-react";
+import { Check, Loader2, Sparkles, Code2, CheckCircle2, ArrowRight } from "lucide-react";
 import { ProjectFile } from "@/lib/types";
 
 interface AgentWorkingHUDProps {
@@ -243,6 +243,19 @@ export function AgentWorkingHUD({
 
   return (
     <div className="h-full w-full bg-[#0a0a0c] text-white flex flex-col items-center justify-center p-4 sm:p-8 select-none relative overflow-hidden font-sans">
+      {/* Top right quick skip to preview button */}
+      <div className="absolute top-3 right-3 z-30">
+        <button
+          type="button"
+          onClick={() => onComplete?.()}
+          className="px-3 py-1.5 rounded-xl bg-[#161622] hover:bg-[#202030] border border-[#2a2a3e] text-xs text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          title="Hopp over animasjon og vis forhåndsvisningen nå"
+        >
+          <span>Vis forhåndsvisning</span>
+          <ArrowRight className="w-3.5 h-3.5 text-purple-400" />
+        </button>
+      </div>
+
       {/* ============================================================== */}
       {/* PHASE 1: CHECKLIST SCREEN (Exact Image 2)                       */}
       {/* ============================================================== */}

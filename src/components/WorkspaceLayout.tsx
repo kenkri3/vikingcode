@@ -16,6 +16,7 @@ import {
   Maximize2,
   Minimize2,
   Menu,
+  PanelLeft,
   Box,
   Upload,
   Globe,
@@ -101,17 +102,14 @@ export function WorkspaceLayout({
   const [selectedFileForEditor, setSelectedFileForEditor] = useState<string>("app/page.tsx");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Auto-switch to preview when generation starts or completes
+  // Auto-switch to preview ONLY when generation initially transitions from false to true
   const prevLoadingRef = useRef(isLoading);
   useEffect(() => {
-    if (isLoading) {
+    if (!prevLoadingRef.current && isLoading) {
       setIsPreviewOpen(true);
       setActiveTab("preview");
-    } else if (prevLoadingRef.current && !isLoading) {
-      setIsPreviewOpen(true);
-      setActiveTab("preview");
-      if (onSetMobileTab) onSetMobileTab("preview");
     }
+    // Respect the user's tab choice when generation finishes (never force back if user clicked "Code")
     prevLoadingRef.current = isLoading;
   }, [isLoading]);
 
@@ -172,16 +170,16 @@ export function WorkspaceLayout({
       >
         {/* Top Chat Header: Model Selector on Left, Three Dots Menu on Right (Exact Qwen layout) */}
         <div className="h-12 bg-[#1a1a20]/90 border-b border-[#26262e] px-4 flex items-center justify-between select-none shrink-0 relative z-20">
-          {/* Left: Mobile hamburger + Model Selector Dropdown */}
+          {/* Left: Sidebar toggle + Model Selector Dropdown */}
           <div className="flex items-center gap-2">
             {onToggleSidebar && (
               <button
                 type="button"
                 onClick={onToggleSidebar}
-                className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#25252e] transition cursor-pointer"
-                title="Åpne meny"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#25252e] transition cursor-pointer"
+                title="Vis eller skjul sidepanel"
               >
-                <Menu className="w-4.5 h-4.5" />
+                <PanelLeft className="w-4 h-4" />
               </button>
             )}
 

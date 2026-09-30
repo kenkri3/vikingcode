@@ -273,8 +273,24 @@ function buildPromptContext(
     pageFile.content.includes("Velkommen til ditt nye prosjekt") ||
     pageFile.content.includes("Autonomt generert av AI Program Ultra");
 
+  const pLower = prompt.toLowerCase();
+  const isRebuildOrNewConcept =
+    pLower.startsWith("gjenskap") ||
+    pLower.includes("gjenskap og moderniser") ||
+    pLower.includes("inspirert av") ||
+    pLower.includes("re-imagine") ||
+    pLower.includes("reimagine") ||
+    pLower.startsWith("lag en ") ||
+    pLower.startsWith("lag et ") ||
+    pLower.startsWith("bygg en ") ||
+    pLower.startsWith("bygg et ") ||
+    pLower.includes("helt nytt prosjekt") ||
+    pLower.includes("start på nytt") ||
+    pLower.includes("vikingnet") ||
+    pLower.includes("ai-agent");
+
   let existingCodeSection = "";
-  if (!isDefaultPlaceholder && pageFile && pageFile.content) {
+  if (!isDefaultPlaceholder && !isRebuildOrNewConcept && pageFile && pageFile.content) {
     existingCodeSection = `\n\n--- 💻 EKSISTERENDE KILDEKODE (app/page.tsx - det du allerede har bygget for prosjektet) ---\n\`\`\`tsx\n${pageFile.content.slice(0, 32000)}\n\`\`\`\n
 KIRURGISK DETALJREDIGERING & PRESERVERINGSPROTOKOLL:
 1. DETALJERT TILPASNING: Hvis brukeren ber om en justering, tilføyelse eller endring på denne eksisterende nettsiden (f.eks. justere tekst, endre farge, ikonstørrelse, padding, knappestil, bilde, telefonnummer eller legge til en seksjon):
@@ -285,7 +301,7 @@ KIRURGISK DETALJREDIGERING & PRESERVERINGSPROTOKOLL:
    - Bygg en helt ny, komplett, storslått nettside for denne bransjen med kuraterte Unsplash-bilder og full WOW-effekt.
 3. Returner den oppdaterte, komplette koden for 'app/page.tsx' samt eventuelle nye undersider eller filer i JSON-formatet.`;
   } else {
-    existingCodeSection = `\n\nSTATUS FOR PROSJEKTET: Prosjektet er helt nytt uten eksisterende innhold. Brukeren ønsker å bygge en ny nettside / webapplikasjon. Bygg en komplett, overbevisende, hyperprofesjonell nettside fra bunnen av med ekte Unsplash-bilder, interaktive verktøy (f.eks. kalkulator eller booking) og full WOW-effekt tilpasset brukerens henvendelse!`;
+    existingCodeSection = `\n\nSTATUS FOR PROSJEKTET: Dette er en fullstendig gjenskaping/nybygging for konseptet og merkevaren beskrevet i brukerens henvendelse. Bygg en komplett, overbevisende, hyperprofesjonell nettside fra bunnen av med ekte Unsplash-bilder, interaktive verktøy (f.eks. agent-velger, kalkulator eller booking) og full WOW-effekt tilpasset brukerens henvendelse: "${prompt}"! Eksisterende kildekode fra et annet prosjekt skal IKKE brukes som mal.`;
   }
 
   return `Prosjekt: ${projectName}
@@ -719,12 +735,19 @@ export function generateAutonomousCode(
     pLower.startsWith("opprett ny ") ||
     pLower.startsWith("lag nettside for") ||
     pLower.startsWith("lag side for") ||
+    pLower.startsWith("gjenskap") ||
+    pLower.includes("gjenskap og moderniser") ||
+    pLower.includes("inspirert av") ||
+    pLower.includes("re-imagine") ||
+    pLower.includes("reimagine") ||
+    pLower.includes("vikingnet") ||
     pLower.includes("helt nytt prosjekt") ||
     pLower.includes("start på nytt") ||
     pLower.includes("slett alt") ||
     pLower.includes("bytt bransje") ||
-    pLower.startsWith("re-imagine") ||
-    pLower.startsWith("[gjenskap fra url");
+    pLower.startsWith("[gjenskap fra url") ||
+    // Hvis eksisterende side er en snekker/håndverker og forespørselen handler om et helt annet konsept (f.eks. AI/agenter):
+    (existingPage?.content?.includes("CraftServicePortal") && (pLower.includes("ai") || pLower.includes("agent") || pLower.includes("vikingnet")));
 
   // KUN hvis siden IKKE er en tom mal og brukeren IKKE ber om å bygge en helt ny nettside:
   if (!isDefaultPlaceholder && !isBuildOrNewProject && existingPage && existingPage.content) {
@@ -948,32 +971,59 @@ export function generateAutonomousCode(
   }
 
   // Analyser intent for nyopprettelse hvis ikke detaljredigering
+  const isVikingnet = pLower.includes("vikingnet");
+  const isAiAgency =
+    isVikingnet ||
+    pLower.includes("autonome ai") ||
+    pLower.includes("ai-agent") ||
+    pLower.includes("ai agent") ||
+    pLower.includes("anbudsvakten") ||
+    pLower.includes("byggesaksvakten") ||
+    pLower.includes("kunstig intelligens") ||
+    pLower.includes("prisjustereren") ||
+    pLower.includes("automatiser overvåking") ||
+    pLower.includes("agent-plattform") ||
+    pLower.includes("agentplattform") ||
+    (pLower.includes("agent") && (pLower.includes("autonom") || pLower.includes("b2b") || pLower.includes("arbeidsflyt") || pLower.includes("anbud") || pLower.includes("doffin")));
+
   const isHealth =
-    pLower.includes("helse") ||
-    pLower.includes("klinikk") ||
-    pLower.includes("lege") ||
-    pLower.includes("pasient") ||
-    pLower.includes("doktor") ||
-    pLower.includes("medisin") ||
-    pLower.includes("terapi") ||
-    pLower.includes("fysio") ||
-    pLower.includes("tannlege") ||
-    pLower.includes("journal") ||
-    pLower.includes("helseapp") ||
-    pLower.includes("resept");
-  const isCarpenter = !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("platting") || pLower.includes("veranda") || pLower.includes("snekring") || pLower.includes("carpenter") || pLower.includes("treverk") || pLower.includes("byggmester"));
-  const isCraftsman = !isHealth && !isCarpenter && (pLower.includes("håndverk") || pLower.includes("tak") || pLower.includes("bad") || pLower.includes("maler") || pLower.includes("mester") || pLower.includes("oppussing"));
+    !isAiAgency && (
+      pLower.includes("helse") ||
+      pLower.includes("klinikk") ||
+      pLower.includes("lege") ||
+      pLower.includes("pasient") ||
+      pLower.includes("doktor") ||
+      pLower.includes("medisin") ||
+      pLower.includes("terapi") ||
+      pLower.includes("fysio") ||
+      pLower.includes("tannlege") ||
+      pLower.includes("journal") ||
+      pLower.includes("helseapp") ||
+      pLower.includes("resept")
+    );
+  const isCarpenter = !isAiAgency && !isHealth && (pLower.includes("snekker") || pLower.includes("tømrer") || pLower.includes("terrasse") || pLower.includes("platting") || pLower.includes("veranda") || pLower.includes("snekring") || pLower.includes("carpenter") || pLower.includes("treverk") || pLower.includes("byggmester"));
+  const isCraftsman = !isAiAgency && !isHealth && !isCarpenter && (
+    pLower.includes("håndverk") ||
+    pLower.includes("taktekking") ||
+    pLower.includes("takstein") ||
+    pLower.includes("takrenovering") ||
+    pLower.includes("baderom") ||
+    pLower.includes("malerarbeid") ||
+    pLower.includes("oppussing")
+  );
   const isVipps = pLower.includes("vipp") || pLower.includes("betaling");
   const isSalon =
-    pLower.includes("frisør") ||
-    pLower.includes("hår") ||
-    pLower.includes("salong") ||
-    pLower.includes("klipp") ||
-    pLower.includes("barber") ||
-    pLower.includes("styling") ||
-    pLower.includes("skjønnhet") ||
-    pLower.includes("beauty") ||
-    pLower.includes("negler");
+    !isAiAgency && (
+      pLower.includes("frisør") ||
+      pLower.includes("hår") ||
+      pLower.includes("salong") ||
+      pLower.includes("klipp") ||
+      pLower.includes("barber") ||
+      pLower.includes("styling") ||
+      pLower.includes("skjønnhet") ||
+      pLower.includes("beauty") ||
+      pLower.includes("negler")
+    );
   const isRedTheme =
     pLower.includes("rød") ||
     pLower.includes("red") ||
@@ -981,7 +1031,7 @@ export function generateAutonomousCode(
     pLower.includes("crimson") ||
     pLower.includes("rose");
   const isStore =
-    !isSalon && (
+    !isAiAgency && !isSalon && (
       pLower.includes("butikk") ||
       pLower.includes("nettbutikk") ||
       pLower.includes("shop") ||
@@ -991,7 +1041,7 @@ export function generateAutonomousCode(
       pLower.includes("sko")
     );
   const isRestaurant =
-    !isSalon && !isStore && (
+    !isAiAgency && !isSalon && !isStore && (
       pLower.includes("restaurant") ||
       pLower.includes("kafe") ||
       pLower.includes("cafe") ||
@@ -1001,17 +1051,19 @@ export function generateAutonomousCode(
       pLower.includes("bordbestilling") ||
       pLower.includes("catering")
     );
-  const isCRM = !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg"));
-  const isNetwork = !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b"));
+  const isCRM = !isAiAgency && !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("crm") || pLower.includes("pipeline") || pLower.includes("kunde") || pLower.includes("salg"));
+  const isNetwork = !isAiAgency && !isHealth && !isSalon && !isStore && !isRestaurant && (pLower.includes("nettverk") || pLower.includes("bedrift") || pLower.includes("portal") || pLower.includes("b2b"));
   const isFlorist =
-    pLower.includes("florist") ||
-    pLower.includes("blomst") ||
-    pLower.includes("bukett") ||
-    pLower.includes("blomsterhandler") ||
-    pLower.includes("binderi") ||
-    pLower.includes("plante") ||
-    pLower.includes("hage") ||
-    pLower.includes("botanikk");
+    !isAiAgency && (
+      pLower.includes("florist") ||
+      pLower.includes("blomst") ||
+      pLower.includes("bukett") ||
+      pLower.includes("blomsterhandler") ||
+      pLower.includes("binderi") ||
+      pLower.includes("plante") ||
+      pLower.includes("hage") ||
+      pLower.includes("botanikk")
+    );
   const isContact = pLower.includes("kontakt") || pLower.includes("skjema") || pLower.includes("sms");
 
   // Undersøk om brukeren spesifikt ba om å opprette en ny fil
@@ -1029,7 +1081,738 @@ export function generateAutonomousCode(
   let brandDisplayName = projectName && projectName !== "Web Dev" && projectName !== "Mitt Prosjekt"
     ? projectName
     : "Nordic Solutions AS";
-  if (isHealth) {
+
+  const brandMatch =
+    prompt.match(/(?:for|om)\s+["'«]([^"'»]+)["'»]/i) ||
+    prompt.match(/nettsiden for\s+["'«]?([^"'\n–(]+)/i);
+  if (brandMatch && brandMatch[1].trim().length > 2) {
+    brandDisplayName = brandMatch[1].trim();
+  } else if (isVikingnet) {
+    brandDisplayName = "Vikingnet — Autonome AI";
+  }
+
+  if (isAiAgency) {
+    pageContent = `'use client';
+
+import React, { useState } from 'react';
+import {
+  Sparkles,
+  Bot,
+  Zap,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  ChevronRight,
+  Activity,
+  Sliders,
+  Users,
+  Building2,
+  Clock,
+  Send,
+  Phone,
+  Mail,
+  Lock,
+  ExternalLink,
+  Check,
+  TrendingUp,
+  FileText
+} from 'lucide-react';
+
+export default function VikingnetAiAgencyApp() {
+  const [activeAgentTab, setActiveAgentTab] = useState(0);
+  const [selectedAgents, setSelectedAgents] = useState<string[]>([
+    'Byggesaksvakten (Plan & Bygg)',
+    'Doffin- & Anbudsvakten'
+  ]);
+  const [employees, setEmployees] = useState(15);
+  const [hourlyRate, setHourlyRate] = useState(950);
+  const [companyName, setCompanyName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  // Kalkuler ROI og tidsbesparelse
+  const hoursSavedPerMonth = employees * 18;
+  const monthlySavingsKr = hoursSavedPerMonth * hourlyRate;
+  const yearlySavingsKr = monthlySavingsKr * 12;
+
+  const agentsList = [
+    {
+      id: 'byggesaksvakten',
+      name: 'Byggesaksvakten (Plan & Bygg)',
+      badge: 'Mest etterspurt',
+      color: 'from-purple-600 to-indigo-600',
+      tagline: 'Kontinuerlig sanntidsovervåking av kommunale plan- og byggesaker.',
+      description: 'Overvåker plan- og bygningsetaten i alle landets kommuner. Varsler umiddelbart ved dispensasjonssøknader, nye rammetillatelser og nabovarsler innenfor dine definerte geografiske soner.',
+      metrics: { latency: '< 2 sekunder', coverage: '356 kommuner', accuracy: '99.8%' },
+      features: [
+        'Automatisk varsling i Microsoft Teams eller Slack',
+        'Ferdig utdrag av saksdokumenter og dispensasjonskrav',
+        'Tidlig innsikt før konkurrenter oppdager prosjektene',
+        'Eget kartgrensesnitt for geolokalisert overvåking'
+      ],
+      mockLogs: [
+        '09:14:02 • Innsyn motor: Skannet 48 nye saker i Oslo PBE',
+        '09:14:05 • AI Semantisk filter: Matchet dispensasjonssak Sak 2026/1842',
+        '09:14:06 • Dispatcher: Sendte prioritert varsel til Prosjektleder'
+      ]
+    },
+    {
+      id: 'doffinvakten',
+      name: 'Doffin- & Anbudsvakten',
+      badge: 'Anbud & Innkjøp',
+      color: 'from-blue-600 to-cyan-600',
+      tagline: 'Automatisk overvåking og tilbudsutkast fra Doffin og TED.',
+      description: 'Tråler offentlige og private anbudsportaler døgnet rundt. Matcher automatisk mot bedriftens CPV-koder og fagfelt, og genererer et førsteutkast til tilbudsbesvarelse på under 5 minutter.',
+      metrics: { latency: 'Sanntid', matchRate: '99.4%', timeSaved: '80% på anbud' },
+      features: [
+        'Doffin, TED og Mercell sanntidssynkronisering',
+        'Automatisk kravmatrise og kvalifikasjonssjekk',
+        'Ferdig Word/PDF utkast til tilbudsdokumentasjon',
+        'Varsler om konkurranser med få tilbydere'
+      ],
+      mockLogs: [
+        '10:02:11 • Doffin API: 14 nye kunngjøringer innen Bygg & Anlegg',
+        '10:02:14 • AI Vurdering: Matchet rammeavtale Bergen Kommune (Score: 96%)',
+        '10:02:19 • Generator: Produserte anbudssammendrag og ESPD-kontroll'
+      ]
+    },
+    {
+      id: 'prisjustereren',
+      name: 'KPI- & Prisjustereren',
+      badge: 'Finans & Margin',
+      color: 'from-emerald-600 to-teal-600',
+      tagline: 'Automatisk indeksregulering mot SSB og råvareindekser.',
+      description: 'Kobler kontrakter, timepriser og materialpåslag direkte mot Statistisk sentralbyrå (SSB) byggekostnadsindeks og konsumprisindeks (KPI). Sikrer at marginene aldri spises opp av inflasjon.',
+      metrics: { sync: 'SSB API Live', profitBoost: '+4.2% margin', errorRate: '0.0%' },
+      features: [
+        'Direkte API-oppslag mot SSB hver måned',
+        'Ferdig varslingsbrev til oppdragsgivere med lovhjemmel',
+        'Sømløs integrasjon mot Tripletex, PowerOffice og Visma',
+        'Full revisjonslogg over alle prisjusteringer'
+      ],
+      mockLogs: [
+        '11:00:00 • SSB Monitor: Ny Byggekostnadsindeks for boligblokk registrert',
+        '11:00:02 • Kalkulator: Beregnet +3.4% justering på 28 aktive rammeavtaler',
+        '11:00:05 • ERP Sync: Klargjorde oppdaterte timesatser i økonomisystem'
+      ]
+    },
+    {
+      id: 'kundedialog',
+      name: '24/7 B2B Kundedialog & Lead-Kvalifiserer',
+      badge: 'Vekst & Salg',
+      color: 'from-amber-600 to-orange-600',
+      tagline: 'Faglig kvalifisering og møtebooking uten ventetid.',
+      description: 'En intelligent agent som kan bedriftens tjenester, referanser og priser til fingerspissene. Besvarer tekniske spørsmål, siler ut useriøse forespørsler og booker møter med beslutningstakere.',
+      metrics: { response: '< 1.2 sek', conversion: '+42% leads', availability: '24/7/365' },
+      features: [
+        'Trent på bedriftens faglige referanser og dokumenter',
+        'Integrert med Outlook, Google Calendar og Teams',
+        'Automatisk opprettelse av leads i HubSpot eller CRM',
+        'Avansert spam- og botskjerming'
+      ],
+      mockLogs: [
+        '11:22:30 • Webkanal: Mottok forespørsel fra Entreprenør AS',
+        '11:22:32 • Lead kvalifisering: B2B aktør bekreftet (Omsetning > 40 MNOK)',
+        '11:22:35 • Kalender Agent: Booket 30 min Teams-møte tirsdag kl. 10:00'
+      ]
+    }
+  ];
+
+  const currentAgent = agentsList[activeAgentTab];
+
+  const toggleAgentSelection = (name: string) => {
+    setSelectedAgents((prev) =>
+      prev.includes(name)
+        ? (prev.length > 1 ? prev.filter((a) => a !== name) : prev)
+        : [...prev, name]
+    );
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactEmail.trim() && !contactPhone.trim()) {
+      alert('Vennligst oppgi e-post eller telefonnummer.');
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-[#7C3AED] selection:text-white">
+      {/* 1. Top Announcement Bar */}
+      <div className="bg-[#0D111A] border-b border-[#1C2333] px-4 py-2 text-center text-xs text-[#C4B5FD] font-medium flex items-center justify-center gap-2">
+        <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+        <span className="font-semibold">Norsk B2B AI-Infrastruktur:</span>
+        <span className="text-slate-300">Nøkkelferdige, autonome agenter for næringslivet</span>
+        <span className="hidden sm:inline text-slate-600">•</span>
+        <span className="hidden sm:inline text-emerald-400 font-mono">100% GDPR & ISO-standarder</span>
+      </div>
+
+      {/* 2. Header */}
+      <header className="sticky top-0 z-40 bg-[#07090E]/95 backdrop-blur-xl border-b border-[#1A202E] px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C3AED] via-[#6366F1] to-[#06B6D4] flex items-center justify-center text-white font-extrabold shadow-lg shadow-purple-950/60 text-sm">
+            VN
+          </div>
+          <div>
+            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <span>${brandDisplayName}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-950/90 text-[#C4B5FD] border border-purple-800/40">
+                Autonom AI
+              </span>
+            </h1>
+            <p className="text-[10px] text-slate-400">Nøkkelferdige AI-agenter i drift</p>
+          </div>
+        </div>
+
+        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
+          <a href="#agenter" className="hover:text-white transition">Våre Agenter</a>
+          <a href="#kalkulator" className="hover:text-white transition">ROI-Kalkulator</a>
+          <a href="#arbeidsflyt" className="hover:text-white transition">Arbeidsflyt</a>
+          <a href="#integrasjoner" className="hover:text-white transition">Integrasjoner</a>
+          <a href="#kontakt" className="hover:text-white transition">Kontakt</a>
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="#demo"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6366F1] hover:from-[#6D28D9] hover:to-[#4F46E5] text-white text-xs font-bold transition shadow-lg shadow-purple-950/40 flex items-center gap-1.5"
+          >
+            <span>Book 15 min demo</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </header>
+
+      {/* 3. Hero Section with Live AI Status */}
+      <section className="relative min-h-[540px] flex items-center justify-center py-20 px-4 overflow-hidden border-b border-[#171D2A]">
+        {/* Futuristic glowing backdrop */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(124,58,237,0.18),rgba(255,255,255,0))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#131926_1px,transparent_1px),linear-gradient(to_bottom,#131926_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] opacity-25" />
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/70 border border-purple-800/50 text-[#C4B5FD] text-xs font-medium shadow-inner">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Autonome agenter aktive i 356 kommuner & anbudsdatabaser</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
+            La autonome AI-agenter ta over <br />
+            <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent">
+              overvåking, anbud og drift
+            </span>
+          </h2>
+
+          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+            Vikingnet leverer skreddersydde, produksjonsklare AI-agenter for din B2B-bedrift. Fra sanntids varsling i plan- og byggesaker til automatisk tilbudsutforming på Doffin og dynamisk KPI-justering.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+            <a
+              href="#agenter"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#6366F1] hover:from-[#6D28D9] hover:to-[#4F46E5] text-white font-bold text-sm shadow-xl shadow-purple-950/50 transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Bot className="w-4 h-4" />
+              <span>Utforsk våre AI-agenter</span>
+            </a>
+            <a
+              href="#kalkulator"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#111622] hover:bg-[#181F2E] border border-[#212A3D] text-slate-200 font-semibold text-sm transition flex items-center justify-center gap-2"
+            >
+              <Sliders className="w-4 h-4 text-purple-400" />
+              <span>Beregn tidsbesparelse (ROI)</span>
+            </a>
+          </div>
+
+          {/* Metric Badges */}
+          <div className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto text-left">
+            <div className="p-3.5 rounded-2xl bg-[#0D121B] border border-[#1C2436]">
+              <p className="text-xl sm:text-2xl font-black text-white font-mono">1 450+</p>
+              <p className="text-xs text-slate-400 mt-0.5">Timer spart / mnd</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#0D121B] border border-[#1C2436]">
+              <p className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">&lt; 2 min</p>
+              <p className="text-xs text-slate-400 mt-0.5">Responstid på anbud</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#0D121B] border border-[#1C2436]">
+              <p className="text-xl sm:text-2xl font-black text-cyan-400 font-mono">99.4%</p>
+              <p className="text-xs text-slate-400 mt-0.5">Relevanstreffsikkerhet</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#0D121B] border border-[#1C2436]">
+              <p className="text-xl sm:text-2xl font-black text-purple-400 font-mono">100%</p>
+              <p className="text-xs text-slate-400 mt-0.5">Norsk skylagring & GDPR</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Interactive Agent Showcase */}
+      <section id="agenter" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto space-y-10">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+            Nøkkelferdige Løsninger
+          </span>
+          <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Velg agentene som transformerer din drift
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Hver agent er spesialisert på sitt fagfelt og opererer sømløst sammen med dine eksisterende verktøy.
+          </p>
+        </div>
+
+        {/* Tab navigation */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {agentsList.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => setActiveAgentTab(i)}
+              className={activeAgentTab === i ? "px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-[#7C3AED] text-white shadow-lg shadow-purple-950/60 border border-purple-400/40" : "px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-[#0E131E] text-slate-400 hover:text-white hover:bg-[#161D2B] border border-[#1E273A]"}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>{a.name.split(' (')[0]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Active agent detail card */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#0B0F17] border border-[#1E273A] rounded-3xl p-6 sm:p-10 shadow-2xl items-center">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-950/90 text-purple-300 border border-purple-800/50">
+                {currentAgent.badge}
+              </span>
+              <span className="text-xs text-emerald-400 font-mono flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                Aktiv sanntidsagent
+              </span>
+            </div>
+
+            <div>
+              <h4 className="text-2xl sm:text-3xl font-extrabold text-white">
+                {currentAgent.name}
+              </h4>
+              <p className="text-xs sm:text-sm text-purple-300 font-medium mt-1">
+                {currentAgent.tagline}
+              </p>
+              <p className="text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed">
+                {currentAgent.description}
+              </p>
+            </div>
+
+            {/* Feature bullets */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {currentAgent.features.map((feat, fi) => (
+                <div key={fi} className="flex items-start gap-2.5 text-xs text-slate-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap items-center gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => toggleAgentSelection(currentAgent.name)}
+                className={selectedAgents.includes(currentAgent.name) ? "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-500 text-white" : "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md bg-[#7C3AED] hover:bg-[#6D28D9] text-white"}
+              >
+                {selectedAgents.includes(currentAgent.name) ? (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Valgt i demo-forespørsel</span>
+                  </>
+                ) : (
+                  <>
+                    <Bot className="w-4 h-4" />
+                    <span>Legg til i min løsning</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href="#demo"
+                className="px-4 py-2.5 rounded-xl bg-[#141B26] hover:bg-[#1E2738] border border-[#232F44] text-xs font-semibold text-slate-200 transition"
+              >
+                Be om skreddersøm
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column: Live Mock Agent Execution Log */}
+          <div className="lg:col-span-5 bg-[#07090E] border border-[#1A2233] rounded-2xl p-5 font-mono text-xs shadow-inner space-y-4">
+            <div className="flex items-center justify-between border-b border-[#182030] pb-3">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Activity className="w-4 h-4 text-purple-400" />
+                <span className="font-semibold text-white">Live Kjørelogg</span>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/40">
+                Sanntid
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-[11px] leading-relaxed">
+              {currentAgent.mockLogs.map((log, li) => (
+                <div key={li} className="p-2.5 rounded-xl bg-[#0B0F17] border border-[#151D2C] text-slate-300">
+                  <p className="text-purple-300 font-semibold">{log.split(' • ')[0]}</p>
+                  <p className="text-slate-400 mt-0.5">{log.split(' • ')[1]}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-[#182030] flex items-center justify-between text-[10px] text-slate-500">
+              <span>Sikkerhet: E2E kryptert</span>
+              <span>Modell: Vikingnet Engine v4</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Interactive ROI & Time Saved Calculator */}
+      <section id="kalkulator" className="py-20 bg-[#090D14] border-y border-[#182030] px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+              Verdiberegning
+            </span>
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Hvor mye kan din bedrift spare?
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400">
+              Juster antall ansatte og timekostnad for å se estimert månedlig verdiskaping.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-[#0D121B] border border-[#1E273A] rounded-3xl p-6 sm:p-10 shadow-2xl">
+            {/* Sliders */}
+            <div className="md:col-span-7 space-y-8">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-300 flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-purple-400" />
+                    Antall ansatte i bedriften:
+                  </span>
+                  <span className="text-white text-base font-mono bg-purple-950/80 border border-purple-800/50 px-3 py-1 rounded-xl">
+                    {employees} ansatte
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="2"
+                  max="120"
+                  value={employees}
+                  onChange={(e) => setEmployees(Number(e.target.value))}
+                  className="w-full h-2 bg-[#1A2233] rounded-lg appearance-none cursor-pointer accent-[#7C3AED]"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <span>2 ansatte</span>
+                  <span>50 ansatte</span>
+                  <span>120+ ansatte</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-300 flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    Gjennomsnittlig timekostnad / salgspris:
+                  </span>
+                  <span className="text-white text-base font-mono bg-emerald-950/80 border border-emerald-800/50 px-3 py-1 rounded-xl">
+                    {hourlyRate} kr/t
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="550"
+                  max="2200"
+                  step="50"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  className="w-full h-2 bg-[#1A2233] rounded-lg appearance-none cursor-pointer accent-[#10B981]"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <span>550 kr/t</span>
+                  <span>1 200 kr/t</span>
+                  <span>2 200 kr/t</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Results display */}
+            <div className="md:col-span-5 bg-gradient-to-br from-[#121824] to-[#0A0D14] border border-[#212C42] rounded-2xl p-6 space-y-5 shadow-inner">
+              <div>
+                <p className="text-xs uppercase font-bold tracking-wider text-slate-400">
+                  Estimert tidsgevinst
+                </p>
+                <p className="text-3xl sm:text-4xl font-black text-white font-mono mt-1">
+                  {hoursSavedPerMonth.toLocaleString('no-NO')} timer
+                </p>
+                <p className="text-[11px] text-emerald-400 mt-1">
+                  Frigjort tid per måned til kjernevirksomhet
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1C2538]">
+                <p className="text-xs uppercase font-bold tracking-wider text-slate-400">
+                  Månedlig verdiskaping
+                </p>
+                <p className="text-2xl sm:text-3xl font-black text-[#A78BFA] font-mono mt-1">
+                  kr {monthlySavingsKr.toLocaleString('no-NO')},-
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Tilsvarer ca. kr {(yearlySavingsKr / 1000000).toFixed(1)} mill. årlig
+                </p>
+              </div>
+
+              <a
+                href="#demo"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#6366F1] hover:from-[#6D28D9] hover:to-[#4F46E5] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-purple-950/50 cursor-pointer"
+              >
+                <span>Sikre denne gevinsten nå</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Autonomous Workflow (3-step pipeline) */}
+      <section id="arbeidsflyt" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto space-y-12">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+            Sømløs Gjennomføring
+          </span>
+          <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Slik jobber agentene i din hverdag
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Fra datainnhenting til utført handling uten manuelt tastearbeid.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl bg-[#0C1017] border border-[#1E273A] space-y-4 relative">
+            <div className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-800/50 flex items-center justify-center text-purple-300 font-bold">
+              1
+            </div>
+            <h4 className="text-lg font-bold text-white">Sanntids Datainnhenting</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Agenten overvåker kontinuerlig offentlige registre, Doffin, kommunale innsynsløsninger, SSB eller bedriftens innboks for nye hendelser.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#0C1017] border border-[#1E273A] space-y-4 relative">
+            <div className="w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-800/50 flex items-center justify-center text-indigo-300 font-bold">
+              2
+            </div>
+            <h4 className="text-lg font-bold text-white">Autonom Analyse & Filtrering</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Vikingnet AI analyserer innholdet mot dine forretningsregler, fjerner støy, trekker ut nøkkeltall og vurderer relevans med 99.4% presisjon.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-[#0C1017] border border-[#1E273A] space-y-4 relative">
+            <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-800/50 flex items-center justify-center text-cyan-300 font-bold">
+              3
+            </div>
+            <h4 className="text-lg font-bold text-white">Umiddelbar Handling</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Ferdig tilbudsutkast i Word/PDF, prioritert varsel med direkte saksdokumenter i Teams, eller automatisk oppdatering i Tripletex og Visma.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Integrations & Security Grid */}
+      <section id="integrasjoner" className="py-16 bg-[#0A0D14] border-y border-[#182030] px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto space-y-8 text-center">
+          <div className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+              Integrert Økosystem
+            </span>
+            <h3 className="text-xl sm:text-3xl font-extrabold text-white">
+              Fungerer med programmene du allerede bruker
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            {['Microsoft Teams', 'Tripletex', 'Visma', 'Slack', 'PowerOffice', 'HubSpot', 'REST API'].map((tool, idx) => (
+              <div
+                key={idx}
+                className="p-3.5 rounded-xl bg-[#0D121B] border border-[#1D2638] text-xs font-semibold text-slate-300 flex items-center justify-center shadow-sm"
+              >
+                {tool}
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <ShieldCheck className="w-4 h-4" />
+              100% Norske servere
+            </span>
+            <span className="flex items-center gap-1.5 text-cyan-400">
+              <Lock className="w-4 h-4" />
+              Ingen trening på kundedata
+            </span>
+            <span className="flex items-center gap-1.5 text-purple-400">
+              <CheckCircle2 className="w-4 h-4" />
+              EU AI Act & GDPR-etterlevelse
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Demo Request & Multi-Agent Form */}
+      <section id="demo" className="py-20 px-4 sm:px-8 max-w-4xl mx-auto">
+        <div className="bg-[#0C1018] border border-[#1E273A] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6">
+          <div className="text-center space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+              Pilot & Demonstrasjon
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Start din pilot med Vikingnet AI
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400">
+              Velg hvilke agenter du ønsker en demonstrasjon av, så setter vi opp et testmiljø for din bedrift.
+            </p>
+          </div>
+
+          {submitted ? (
+            <div className="p-8 text-center bg-[#0F1624] border border-emerald-500/40 rounded-2xl space-y-4 animate-in fade-in duration-200">
+              <div className="w-14 h-14 rounded-full bg-emerald-950/80 border border-emerald-600/50 flex items-center justify-center text-emerald-400 mx-auto shadow-xl">
+                <Check className="w-8 h-8 stroke-[3]" />
+              </div>
+              <h4 className="text-xl font-bold text-white">Forespørsel mottatt!</h4>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                Takk for din henvendelse. Våre rådgivere klargjør nå en demonstrasjon av de valgte agentene:
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                {selectedAgents.map((a, i) => (
+                  <span key={i} className="px-3 py-1 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/50 text-xs font-semibold">
+                    ✓ {a}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-emerald-400 font-medium pt-2">
+                En rådgiver kontakter deg innen 2 timer på {contactEmail || contactPhone || 'oppgitt kontaktpunkt'}.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="px-6 py-2 rounded-xl bg-[#1A2234] hover:bg-[#253046] text-slate-200 text-xs font-semibold transition cursor-pointer mt-4"
+              >
+                Send ny henvendelse
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Agent checkboxes */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-300">
+                  Velg ønskede AI-agenter (klikk for å velge/fjerne):
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {agentsList.map((a) => {
+                    const isSelected = selectedAgents.includes(a.name);
+                    return (
+                      <div
+                        key={a.id}
+                        onClick={() => toggleAgentSelection(a.name)}
+                        className={isSelected ? "p-3 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between bg-purple-950/50 border-purple-500/60 text-white font-medium shadow-sm" : "p-3 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between bg-[#080B10] border-[#1C2538] text-slate-400 hover:text-white"}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Bot className={"w-4 h-4 " + (isSelected ? "text-purple-400" : "text-slate-500")} />
+                          <span>{a.name}</span>
+                        </div>
+                        <div
+                          className={"w-4 h-4 rounded-md flex items-center justify-center border " + (isSelected ? "bg-[#7C3AED] border-purple-400 text-white" : "border-slate-600 bg-transparent")}
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Form inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Bedriftsnavn</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="F.eks. Veidekke AS eller Norsk Bygg"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="w-full bg-[#080B10] border border-[#1E273A] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Arbeids-e-post</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="din.epost@bedrift.no"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    className="w-full bg-[#080B10] border border-[#1E273A] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Telefonnummer</label>
+                  <input
+                    type="tel"
+                    placeholder="+47 900 00 000"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    className="w-full bg-[#080B10] border border-[#1E273A] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#7C3AED] via-[#6366F1] to-[#06B6D4] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-xl shadow-purple-950/60 transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send demo-forespørsel for valgte agenter</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* 9. Footer */}
+      <footer id="kontakt" className="bg-[#05070A] border-t border-[#141A26] py-12 px-4 sm:px-8 text-xs text-slate-500 space-y-4 text-center">
+        <div className="flex items-center justify-center gap-2 text-white font-bold text-sm">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs">
+            VN
+          </div>
+          <span>${brandDisplayName}</span>
+        </div>
+        <p>Norsk B2B AI-Infrastruktur & Autonome Driftssystemer AS • Org.nr: 932 811 402 MVA</p>
+        <p>Stortingsgata 22, 0161 Oslo • post@vikingnet.no • Tlf: +47 21 00 00 00</p>
+        <div className="flex justify-center gap-4 text-slate-400 pt-2">
+          <span className="hover:text-white cursor-pointer">Personvernerklæring</span>
+          <span>•</span>
+          <span className="hover:text-white cursor-pointer">Brukervilkår</span>
+          <span>•</span>
+          <span className="hover:text-white cursor-pointer">Sikkerhet & Databehandleravtale (DPA)</span>
+        </div>
+        <p className="text-[11px] text-slate-600 pt-2">© 2026 ${brandDisplayName}. Alle rettigheter reservert.</p>
+      </footer>
+    </div>
+  );
+}
+`;
+  } else if (isHealth) {
     pageContent = `'use client';
 
 import React, { useState } from 'react';
